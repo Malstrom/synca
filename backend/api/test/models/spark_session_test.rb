@@ -27,14 +27,14 @@ class SparkSessionTest < ActiveSupport::TestCase
 
   test "both_answered? returns true when both answers present" do
     s = spark_sessions(:alice_spark)
-    s.initiator_answers = ["a1"]
-    s.partner_answers   = ["b2"]
+    s.initiator_answers = [ "a1" ]
+    s.partner_answers   = [ "b2" ]
     assert s.both_answered?
   end
 
   test "both_answered? returns false when only one side answered" do
     s = spark_sessions(:alice_spark)
-    s.initiator_answers = ["a1"]
+    s.initiator_answers = [ "a1" ]
     s.partner_answers   = nil
     assert_not s.both_answered?
   end
