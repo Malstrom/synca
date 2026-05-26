@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class JwtService
   ALGORITHM   = "HS256"
   ACCESS_EXP  = 15.minutes
