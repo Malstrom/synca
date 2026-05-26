@@ -1,24 +1,74 @@
-# README
+# Synca — Rails API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+REST API backend for the Synca dating app. Built with Rails 8 in API-only mode, PostgreSQL and JWT authentication.
 
-Things you may want to cover:
+## Requirements
 
-* Ruby version
+- Ruby 3.3.x
+- Rails 8.0.x
+- PostgreSQL 14+
+- Redis 7+
 
-* System dependencies
+## Local Setup
 
-* Configuration
+```bash
+# Install dependencies
+bundle install
 
-* Database creation
+# Configure environment variables
+cp config/database.yml.example config/database.yml
+cp .env.example .env
 
-* Database initialization
+# Create and migrate the database
+bin/rails db:create db:migrate
 
-* How to run the test suite
+# (Optional) Seed development data
+bin/rails db:seed
 
-* Services (job queues, cache servers, search engines, etc.)
+# Start the server
+bin/rails server
+```
 
-* Deployment instructions
+The API will be available at `http://localhost:3000`.
 
-* ...
+## Background Jobs
+
+Sidekiq is used for background processing (compatibility score calculation, push notifications).
+
+```bash
+# In a separate terminal
+bundle exec sidekiq
+```
+
+Sidekiq dashboard available at `/sidekiq` (development only).
+
+## Code Style
+
+RuboCop is configured with Rails Omakase rules.
+
+```bash
+# Check
+bundle exec rubocop
+
+# Auto-fix
+bundle exec rubocop -a
+```
+
+## Security
+
+```bash
+# Static analysis for vulnerabilities
+bundle exec brakeman
+```
+
+## Testing
+
+```bash
+# Run all tests
+bin/rails test
+
+# Run a specific file
+bin/rails test test/models/user_test.rb
+```
+
+## Project Structure

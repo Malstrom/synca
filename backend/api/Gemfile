@@ -1,47 +1,95 @@
 source "https://rubygems.org"
 
-# Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
+# ─── Core ─────────────────────────────────────────────
+
 gem "rails", "~> 8.0.3"
-# Use postgresql as the database for Active Record
+
+# PostgreSQL adapter
 gem "pg", "~> 1.1"
-# Use the Puma web server [https://github.com/puma/puma]
+
+# Puma web server
 gem "puma", ">= 5.0"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-# gem "jbuilder"
 
-# Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
-
-# Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem "tzinfo-data", platforms: %i[ windows jruby ]
-
-# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
-gem "solid_cache"
-gem "solid_queue"
-gem "solid_cable"
-
-# Reduces boot times through caching; required in config/boot.rb
+# Reduces boot times through caching
 gem "bootsnap", require: false
 
-# Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
-gem "kamal", require: false
+# Windows timezone support
+gem "tzinfo-data", platforms: %i[ windows jruby ]
 
-# Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
-gem "thruster", require: false
+# ─── API ──────────────────────────────────────────────
 
-# Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-# gem "image_processing", "~> 1.2"
+# Handle Cross-Origin requests from iOS/Android clients
+gem "rack-cors"
 
-# Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
-# gem "rack-cors"
+# Lightweight pagination for API endpoints
+gem "pagy"
 
-group :development, :test do
-  # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
+# ─── Auth ─────────────────────────────────────────────
+
+# Password hashing for has_secure_password
+gem "bcrypt", "~> 3.1.7"
+
+# JWT-based authentication via Devise
+gem "devise"
+gem "devise-jwt"
+
+# ─── Background Jobs, Cache & WebSocket ───────────────
+
+# DB-backed cache store (replaces Redis for caching)
+gem "solid_cache"
+
+# DB-backed background job queue (replaces Sidekiq)
+gem "solid_queue"
+
+# DB-backed Action Cable adapter (replaces Redis pub/sub)
+gem "solid_cable"
+
+# ─── Storage ──────────────────────────────────────────
+
+# Image processing for profile photo variants
+gem "image_processing", "~> 1.2"
+
+# AWS S3 for profile photo storage
+gem "aws-sdk-s3", require: false
+
+# ─── Business Logic ───────────────────────────────────
+
+# Role-based authorization (users can only modify their own resources)
+gem "pundit"
+
+# Clean service objects for matching and scoring logic
+gem "interactor"
+
+# ─── Development ──────────────────────────────────────
+group :development do
+  # Annotates models with DB schema info as comments
+  gem "annotate"
+
+  # Debugging
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 
-  # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
+  # Security vulnerability static analysis
   gem "brakeman", require: false
+end
 
-  # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
+# ─── Development & Test ───────────────────────────────
+group :development, :test do
+  # RuboCop with Rails cops for code style enforcement
   gem "rubocop-rails-omakase", require: false
+  gem "rubocop-rails", require: false
+
+  # Test factories for Minitest
+  gem "factory_bot_rails"
+
+  # Fake data generator for seeds and tests
+  gem "faker"
+end
+
+# ─── Test ─────────────────────────────────────────────
+group :test do
+  # Cleans database between Minitest runs
+  gem "database_cleaner-active_record"
+
+  # HTTP request mocking in tests
+  gem "webmock"
 end
