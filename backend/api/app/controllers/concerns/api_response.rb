@@ -32,4 +32,17 @@ module ApiResponse
       status: :unprocessable_entity
     )
   end
+
+  # Returns a standard auth payload with access + refresh tokens and basic user info.
+  # Used by RegistrationsController and SessionsController after successful auth.
+  def auth_response(user)
+    {
+      access_token:  JwtService.access_token(user),
+      refresh_token: JwtService.refresh_token(user),
+      user: {
+        id:    user.id,
+        email: user.email
+      }
+    }
+  end
 end
