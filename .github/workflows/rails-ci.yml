@@ -33,6 +33,27 @@ jobs:
       - name: Scan for Rails security vulnerabilities
         run: bin/brakeman --no-pager
 
+  gem_audit:
+    name: Gem CVE Audit (bundler-audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.1"
+          bundler-cache: true
+          working-directory: backend/api
+
+      - name: Update advisory database
+        run: bundle exec bundle-audit update
+
+      - name: Audit gems for CVEs
+        run: bundle exec bundle-audit check
+
   lint:
     name: Linting (RuboCop)
     runs-on: ubuntu-latest
@@ -48,8 +69,16 @@ jobs:
           bundler-cache: true
           working-directory: backend/api
 
-      - name: Lint code for consistent style
-        run: bin/rubocop -f github
+      - name: Run RuboCop autocorrect
+        run: bin/rubocop -a --format github
+
+      - name: Fail if autocorrect left uncommitted changes
+        run: |
+          if [ -n "$(git diff --name-only)" ]; then
+            echo "::error::RuboCop autocorrect produced changes. Run 'bundle exec rubocop -a' locally and commit the result."
+            git diff --name-only
+            exit 1
+          fi
 
   test:
     name: Tests + Coverage (Minitest)
