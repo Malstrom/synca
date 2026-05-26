@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Api
   module V1
     module Auth
@@ -17,9 +19,9 @@ module Api
 
         private
 
-        def register_params
-          params.require(:auth).permit(:email, :phone, :password, :auth_provider, :provider_uid)
-        end
+          def register_params
+            params.require(:auth).permit(:email, :phone, :password, :auth_provider, :provider_uid)
+          end
       end
     end
   end
