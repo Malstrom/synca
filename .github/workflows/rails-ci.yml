@@ -96,8 +96,7 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
         run: bin/rails test
 
-      - name: Publish coverage summary
-        if: always()
+      - name: Check coverage threshold (≥ 90%)
         run: |
           COVERAGE=$(ruby -rjson -e '
             data = JSON.parse(File.read("coverage/.resultset.json"))
@@ -113,8 +112,17 @@ jobs:
             pct = total_lines > 0 ? (covered_lines.to_f / total_lines * 100).round(2) : 0
             puts pct
           ')
+          echo "Coverage: ${COVERAGE}%"
           echo "## 📊 Test Coverage" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Coverage | **${COVERAGE}%** |" >> $GITHUB_STEP_SUMMARY
+          echo "| Threshold | **90%** |" >> $GITHUB_STEP_SUMMARY
+          # Fail if coverage < 90
+          ruby -e "exit 1 if ${COVERAGE}.to_f < 90" || {
+            echo "❌ Coverage ${COVERAGE}% is below the 90% threshold." >> $GITHUB_STEP_SUMMARY
+            echo "::error::Coverage ${COVERAGE}% is below the required 90% threshold"
+            exit 1
+          }
+          echo "✅ Coverage ${COVERAGE}% meets the 90% threshold." >> $GITHUB_STEP_SUMMARY
