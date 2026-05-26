@@ -47,6 +47,8 @@ Raw samples are **never** sent or stored on the backend.
 
 ## Matching Flow
 
+Synca supports both **1-to-1 matches** (standard dating) and **group matches** (e.g. friend groups, social events). Both use the same `matches` + `match_participants` structure.
+
 ```
 Client                          Backend
   |                                |
@@ -63,7 +65,10 @@ Each match object includes:
 ```json
 {
   "id": "uuid",
-  "profile": { "name": "...", "age": 29, "city": "Moscow", "photos": [...] },
+  "participants": [
+    { "user_id": 5,  "role": "initiator" },
+    { "user_id": 12, "role": "member" }
+  ],
   "compatibility": {
     "score": 82,
     "breakdown": {
@@ -77,13 +82,18 @@ Each match object includes:
 }
 ```
 
+### Match size
+
+- **MVP**: all matches are 1-to-1 (2 participants). The group feature is supported by the data model but not yet exposed in the UI or matching engine.
+- **v2+**: group matches with N participants will be enabled progressively.
+
 ## Date Proposal Flow
 
 ```
 User A                        Backend                     User B
   |                              |                           |
   |-- POST /date_proposals ----->|                           |
-  |   { user_b_id, time_slot }   |                           |
+  |   { match_id, time_slot }    |                           |
   |<-- 201 { proposal } ---------|                           |
   |                              |-- push notification ----->|
   |                              |                           |
@@ -91,6 +101,8 @@ User A                        Backend                     User B
   |                              |                           |
   |<-- push notification --------|                           |
 ```
+
+> Note: `match_id` replaces the old `user_b_id` field. The backend resolves participants from `match_participants`.
 
 ## Error Format
 
