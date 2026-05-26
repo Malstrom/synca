@@ -1,20 +1,9 @@
-alice:
-  email: alice@example.com
+one:
+  email: user_one@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
   auth_provider: 0
-  password_digest: <%= BCrypt::Password.create('password123') %>
 
-bob:
-  email: bob@example.com
+two:
+  email: user_two@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
   auth_provider: 0
-  password_digest: <%= BCrypt::Password.create('password123') %>
-
-carla:
-  email: carla@example.com
-  auth_provider: 0
-  password_digest: <%= BCrypt::Password.create('password123') %>
-
-social_user:
-  email: ~
-  phone: "+79001234567"
-  auth_provider: 1
-  provider_uid: "apple_uid_123"
