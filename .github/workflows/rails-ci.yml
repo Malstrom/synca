@@ -10,6 +10,9 @@ on:
     paths:
       - "backend/api/**"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 defaults:
   run:
     working-directory: backend/api
@@ -26,7 +29,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version-file: backend/api/.ruby-version
+          ruby-version: "3.3.1"
           bundler-cache: true
           working-directory: backend/api
 
@@ -44,7 +47,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version-file: backend/api/.ruby-version
+          ruby-version: "3.3.1"
           bundler-cache: true
           working-directory: backend/api
 
@@ -72,6 +75,7 @@ jobs:
     steps:
       - name: Install system packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config
+        working-directory: /tmp
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -79,7 +83,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version-file: backend/api/.ruby-version
+          ruby-version: "3.3.1"
           bundler-cache: true
           working-directory: backend/api
 
