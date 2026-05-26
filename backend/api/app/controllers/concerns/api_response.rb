@@ -1,0 +1,35 @@
+module ApiResponse
+  extend ActiveSupport::Concern
+
+  def render_success(data, status: :ok)
+    render json: data, status: status
+  end
+
+  def render_created(data)
+    render json: data, status: :created
+  end
+
+  def render_error(code:, message:, field: nil, status: :unprocessable_entity)
+    payload = { error: { code: code, message: message } }
+    payload[:error][:field] = field if field
+    render json: payload, status: status
+  end
+
+  def render_unauthorized(message: "Invalid or missing token")
+    render_error(code: "unauthorized", message: message, status: :unauthorized)
+  end
+
+  def render_not_found(resource = "Resource")
+    render_error(code: "not_found", message: "#{resource} not found", status: :not_found)
+  end
+
+  def render_validation_errors(record)
+    first = record.errors.first
+    render_error(
+      code: "validation_failed",
+      message: record.errors.full_messages.first,
+      field: first&.attribute&.to_s,
+      status: :unprocessable_entity
+    )
+  end
+end
