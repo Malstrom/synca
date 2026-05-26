@@ -4,9 +4,9 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       namespace :auth do
-        post :register
-        post :login
-        post :refresh
+        post "register", to: "registrations#create"
+        post "login",    to: "sessions#create"
+        post "refresh",  to: "tokens#create"
       end
     end
   end
