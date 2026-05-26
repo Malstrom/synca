@@ -1,6 +1,6 @@
 # Synca Litepaper
 
-**Version 1.2 — May 2026**
+**Version 1.3 — May 2026**
 *Confidential — For Investor and Partner Use Only*
 
 ---
@@ -117,6 +117,7 @@ Synca Spark is the bridge between the physical and digital world. When two peopl
 - **Trust Score boost**: both participants receive a verified IRL interaction badge, raising their Trust Score — making them more visible in the matching queue
 - **Retention hook**: the reward incentivizes existing users to keep attending community events and to re-engage with the app each time they meet someone interesting in person
 - **Anti-fake signal**: a Spark session between two real people in the same physical location is nearly impossible to fake — it functions as the strongest liveness verification in the system
+- **Group compatibility foundation**: each completed Spark session enriches the individual compatibility profile and contributes IRL-verified data points that will power the group matching layer in v2+
 
 **Reward mechanics by user type:**
 
@@ -139,7 +140,7 @@ Every profile carries a dynamic Trust Score composed of:
 - **Behavioral signals**: message patterns, external link sharing, emoji patterns correlated with transactional accounts
 - **Health data quality**: variance analysis — impossibly uniform data signals fabrication
 - **Cross-signal consistency**: music listening patterns that contradict stated chronotype lower the score
-- **Synca Spark IRL verification**: confirmed in-person sessions raise the Trust Score significantly
+- **Synca Spark IRL verification**: confirmed in-person sessions raise the Trust Score significantly; `irl_verification_count` is tracked per user and factored directly into the score
 
 Profiles below Trust Score thresholds receive progressively reduced visibility. They are not banned, not notified, and can raise their score by completing genuine onboarding steps including a Spark session.
 
@@ -182,6 +183,7 @@ Bot/TMA    Push Notify    Page (Stripe /
 
 - Raw health samples are processed exclusively on the user's device and are never transmitted
 - Only derived, aggregated metrics are sent to the backend: chronotype label, peak activity window, routine stability index, average activity level, recovery quality tier
+- Spark session micro-test answers are discarded immediately after the compatibility delta is computed — no behavioral survey responses are persisted long-term
 - Full GDPR Article 9 compliance for European markets
 - Russia data residency compliance (242-FZ): Russian user data stored on Yandex Cloud or VK Cloud
 
@@ -189,19 +191,21 @@ Bot/TMA    Push Notify    Page (Stripe /
 
 ```
 User A taps Spark
-    → Backend creates session token (UUID, TTL 10 min)
-    → App displays QR + 6-digit code
+    → Backend creates SparkSession record (UUID token, TTL 10 min, status: pending)
+    → App displays QR + 6-digit session_code
 
 User B scans QR
-    → Backend links both device tokens to session
+    → Backend links both device tokens to SparkSession (status: active)
     → Both apps enter synchronized micro-test flow (WebSocket)
 
 Micro-test completes
     → Both devices submit answers simultaneously
     → Backend computes instant compatibility delta from existing profiles
-    → Reward engine checks user tier and issues reward
+    → Answers discarded; compatibility_score written to SparkSession record
+    → Reward engine checks user tier → SparkReward records created
     → Both apps display result screen with score + date proposal
-    → Trust Score updated with IRL interaction event
+    → TrustScore.irl_verification_count incremented for both users
+    → SparkSession status → completed
 ```
 
 ### 5.4 Matching Engine Weights
@@ -259,6 +263,9 @@ Each Spark session awards both participants one free Premium week (free users) o
 **B2B Venue Partnerships**
 Gyms, saunas, padel courts, and cafés become active partners. Revenue share: 15–20% of each booked date experience. Spark sessions at partner venues carry a co-branded experience, reinforcing venue loyalty programs.
 
+**Group Date Packs (v2+)**
+Curated small-group activity experiences (morning runs, sauna sessions, padel) sold as premium packs, co-branded with venue partners. This monetization surface becomes available once the group compatibility layer is released and requires no additional data infrastructure beyond what is built in MVP and v1.
+
 ### 7.2 Unit Economics (Indicative)
 
 | Metric | Estimate | Basis |
@@ -303,7 +310,7 @@ Gyms, saunas, padel courts, and cafés become active partners. Revenue share: 15
 |---|---|
 | Cold start / low density | Dual-value dashboard; community seeding events; Synca Spark onboards two users per session |
 | HealthKit onboarding friction | Standalone health dashboard as immediate value; granular consent |
-| Privacy concerns (health data) | On-device aggregation; only derived metrics transmitted; GDPR-compliant architecture |
+| Privacy concerns (health data) | On-device aggregation; only derived metrics transmitted; Spark answers discarded post-computation; GDPR-compliant architecture |
 | Russia distribution friction | Telegram Mini App as primary product; RuStore for Android; Russian cloud data residency |
 | Spark abuse (fake IRL claims) | Session requires simultaneous active devices in same location; WebSocket sync; GPS proximity check |
 | Algorithm validation | Rapid feedback loop with first users; explicit outcome tracking; iterative weight calibration |
@@ -326,10 +333,11 @@ Beyond one-to-one matching, the compatibility engine has a natural extension int
 
 This **group layer** is not part of the MVP or v1 roadmap. It is identified as a medium-term product direction (v2+) for the following reasons:
 
-- The data infrastructure required — individual compatibility profiles — is fully built during MVP and v1 phases, making the group extension a low additional engineering effort
+- The data infrastructure required — individual compatibility profiles and IRL-verified `SparkSession` records — is fully built during MVP and v1 phases; the group extension is additive, not a re-architecture
 - Community events are already the primary acquisition channel; group matching formalizes this into a product feature rather than a pure marketing activity
-- It creates a new monetization surface: curated group experiences sold as premium date packs, co-branded with venue partners
-- It differentiates Synca from all one-to-one focused competitors in the niche matchmaking space and opens adjacency to the broader social networking category
+- It creates a new monetization surface: curated group experiences sold as premium date packs, co-branded with venue partners (see section 7.1)
+- It differentiates Synca from all one-to-one focused competitors in the niche matchmaking space and opens adjacency to the broader social networking and social wellness categories
+- Spark session data (IRL interaction counts, location-proximate pairings, compatibility deltas across multiple users) provides the training signal needed to validate group cohesion scoring before full rollout
 
 The group compatibility feature will be scoped and validated with community feedback during Wave 2 city launches (Seoul, Milan), where dense, event-oriented user bases make small-group testing most viable.
 
