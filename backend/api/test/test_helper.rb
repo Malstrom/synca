@@ -9,6 +9,12 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 
+SimpleCov.start "rails" do
+  minimum_coverage 90
+  add_filter "/app/mailers/application_mailer.rb"
+  add_filter "/app/jobs/application_job.rb"
+end
+
 module ActiveSupport
   class TestCase
     parallelize(workers: :number_of_processors)
