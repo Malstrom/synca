@@ -2,12 +2,8 @@ require "simplecov"
 SimpleCov.start "rails" do
   add_filter "/config/"
   add_filter "/test/"
-  formatter SimpleCov::Formatter::MultiFormatter.new(
-    [
-      SimpleCov::Formatter::HTMLFormatter,
-      SimpleCov::Formatter::JSONFormatter
-    ]
-  )
+  # HTMLFormatter for local browsing; .resultset.json is always written natively
+  formatter SimpleCov::Formatter::HTMLFormatter
 end
 
 ENV["RAILS_ENV"] ||= "test"
