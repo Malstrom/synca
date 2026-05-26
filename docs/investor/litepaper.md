@@ -1,6 +1,6 @@
 # Synca Litepaper
 
-**Version 1.1 — May 2026**
+**Version 1.2 — May 2026**
 *Confidential — For Investor and Partner Use Only*
 
 ---
@@ -281,6 +281,7 @@ Gyms, saunas, padel courts, and cafés become active partners. Revenue share: 15
 | Post-match | Up to users | Some prompts | Some guidance | **Pre-organized date proposal** |
 | Fake filter | Weak | Moderate | Moderate | **Multi-layer Trust Score + ghosting** |
 | Live IRL feature | None | None | None | **Synca Spark — synchronized live game + reward** |
+| Group / social layer | None | None | None | **Planned (v2+) — group compatibility events** |
 | Distribution Russia | Blocked | Blocked | Not present | **Telegram Mini App + RuStore** |
 | Health data | None | None | None | **Core signal** |
 | Music data | None | None | None | **Spotify integration (v1)** |
@@ -309,6 +310,31 @@ Gyms, saunas, padel courts, and cafés become active partners. Revenue share: 15
 
 ---
 
-## 11. The Ask
+## 11. Signal Expansion and Product Roadmap
+
+### 11.1 Signal Expansion
+
+| Phase | New Signals |
+|---|---|
+| MVP | Sleep, activity, routine stability, visual preference game, photo context AI |
+| Post-MVP v1 | Spotify music profile, travel behavior (Polarsteps / Maps), deep audio features |
+| Post-MVP v2 | Cross-signal health–music validation, predictive compatibility modeling, geolocation upgrade |
+
+### 11.2 Group Compatibility — Future Direction (v2+)
+
+Beyond one-to-one matching, the compatibility engine has a natural extension into **small-group social contexts**. The same lifestyle signals that power individual matches can be used to compose compatible groups of 4–8 people sharing sufficiently aligned chronotypes, activity levels, and lifestyle profiles — enabling Synca to propose curated group activities (morning runs, sauna sessions, padel games) rather than exclusively one-on-one dates.
+
+This **group layer** is not part of the MVP or v1 roadmap. It is identified as a medium-term product direction (v2+) for the following reasons:
+
+- The data infrastructure required — individual compatibility profiles — is fully built during MVP and v1 phases, making the group extension a low additional engineering effort
+- Community events are already the primary acquisition channel; group matching formalizes this into a product feature rather than a pure marketing activity
+- It creates a new monetization surface: curated group experiences sold as premium date packs, co-branded with venue partners
+- It differentiates Synca from all one-to-one focused competitors in the niche matchmaking space and opens adjacency to the broader social networking category
+
+The group compatibility feature will be scoped and validated with community feedback during Wave 2 city launches (Seoul, Milan), where dense, event-oriented user bases make small-group testing most viable.
+
+---
+
+## 12. The Ask
 
 *[To be completed: funding amount, use of funds breakdown, pre-money valuation, equity offered, and investor terms.]*
