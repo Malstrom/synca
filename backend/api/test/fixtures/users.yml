@@ -1,9 +1,9 @@
-one:
-  email: user_one@example.com
+alice:
+  email: alice@example.com
   password_digest: <%= BCrypt::Password.create('password') %>
   auth_provider: 0
 
-two:
-  email: user_two@example.com
+bob:
+  email: bob@example.com
   password_digest: <%= BCrypt::Password.create('password') %>
   auth_provider: 0

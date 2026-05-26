@@ -2,7 +2,7 @@ require "test_helper"
 
 class Api::V1::Auth::SessionsControllerTest < ApiTestCase
   setup do
-    @user = users(:one)
+    @user = users(:alice)
   end
 
   test "login con credenziali valide restituisce 200 e token" do

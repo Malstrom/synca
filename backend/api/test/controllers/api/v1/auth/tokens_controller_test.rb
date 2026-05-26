@@ -2,7 +2,7 @@ require "test_helper"
 
 class Api::V1::Auth::TokensControllerTest < ApiTestCase
   setup do
-    @user = users(:one)
+    @user = users(:alice)
   end
 
   test "refresh con token valido restituisce nuovo access_token" do
@@ -13,7 +13,7 @@ class Api::V1::Auth::TokensControllerTest < ApiTestCase
 
     assert_response :ok
     assert json[:access_token].present?
-    refute json.key?(:refresh_token) # non deve emettere un nuovo refresh
+    refute json.key?(:refresh_token)
   end
 
   test "refresh con access_token al posto del refresh restituisce 401" do

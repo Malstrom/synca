@@ -12,10 +12,8 @@ class Api::V1::Auth::RegistrationsControllerTest < ApiTestCase
   end
 
   test "register con email duplicata restituisce 422" do
-    existing = users(:one)
-
     post_json "/api/v1/auth/register",
-      params: { auth: { email: existing.email, password: "password123", auth_provider: 0 } }
+      params: { auth: { email: users(:alice).email, password: "password123", auth_provider: 0 } }
 
     assert_response :unprocessable_entity
     assert_equal "validation_failed", json.dig(:error, :code)
