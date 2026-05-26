@@ -1,6 +1,6 @@
 # Synca MVP — iOS App (SwiftUI)
 
-**Version 0.3 — May 2026**  
+**Version 0.4 — May 2026**  
 Target: implementable MVP in 4–6 weeks by 1 iOS dev + part-time CTO.
 
 ---
@@ -147,7 +147,32 @@ struct HealthSummaryPayload: Codable {
 }
 ```
 
-### 4.3 Spark Models
+### 4.3 Match Models
+
+The backend uses a `match_participants` join table instead of `user_a_id / user_b_id`.
+This allows the same model to represent both 1-to-1 and future group matches.
+
+```swift
+struct MatchParticipant: Codable {
+    let userId: Int
+    let role: String                // "initiator", "member"
+    let profile: MatchProfile?
+}
+
+struct MatchProfile: Codable {
+    let displayName: String
+    let photoURLMain: URL?
+}
+
+struct Match: Codable {
+    let id: Int
+    let status: String              // "proposed", "accepted", "rejected"
+    let compatibilityScore: Double
+    let participants: [MatchParticipant]
+}
+```
+
+### 4.4 Spark Models
 
 ```swift
 struct SparkSession: Codable {
@@ -201,7 +226,7 @@ No HRV or resting HR in the MVP; these can be added in later iterations.
 Responsibilities:
 
 - Manage tokens (access + refresh).
-- Call `/auth`, `/me`, `/health_summary`, `/preferences`, `/spark_sessions` endpoints.
+- Call `/auth`, `/me`, `/health_summary`, `/preferences`, `/spark_sessions`, `/matches` endpoints.
 
 ### 6.2 HealthService
 
@@ -217,7 +242,8 @@ Responsibilities:
 
 - Create/join session.
 - Submit micro-test answers.
-- Fetch result.
+- Fetch result (score + rewards).
+- On result received: update local `irl_verification_count` via `/me` refresh.
 - Optionally expose observable state (e.g., `@Published var currentSession: SparkSession?`).
 
 ---
@@ -235,6 +261,9 @@ Responsibilities:
 - Add push notifications (to nudge Spark sessions and engagement at peak times).
 - Integrate real payments (external webview + backend integration).
 - Expand the matching model and add a proper suggested-matches screen.
+- **Spark enhancements**: QR code scanner (AVFoundation), WebSocket for real-time session sync, animated result reveal.
+- **IRL verification**: surface `irl_verification_count` and `spark_verified` badge prominently in the profile UI as trust signals.
+- **Group Spark (v3+)**: the `Match` + `MatchParticipant` data model is already group-ready on the backend; the iOS client will need a multi-participant result screen and group match card when the engine enables it.
 
 ---
 
