@@ -1,6 +1,6 @@
 # Synca MVP — Backend (Rails API)
 
-**Version 0.4 — May 2026**  
+**Version 0.5 — May 2026**  
 Target: implementable in 4–6 weeks by a small team.
 
 ---
@@ -102,16 +102,27 @@ iOS / Android / Telegram
 
 ### 3.3 Matching & Spark
 
-**matches** (simple representation for now)
+**matches**
+
+A match groups N participants (minimum 2). For MVP all matches are 1-to-1, but the model supports group matches from day one.
 
 - `id` (PK)
-- `user_a_id` (FK → users)
-- `user_b_id` (FK → users)
 - `compatibility_score` (float, 0–100)
 - `status` (enum: `proposed`, `accepted`, `rejected`)
 - `accepted_at` (datetime, nullable)
 - `rejected_at` (datetime, nullable)
 - `created_at`, `updated_at`
+
+**match_participants** (join table between matches and users)
+
+- `id` (PK)
+- `match_id` (FK → matches)
+- `user_id` (FK → users)
+- `role` (enum: `initiator`, `member`)
+- `created_at`, `updated_at`
+- **Unique index** on `[match_id, user_id]`
+
+> **Why this structure?** Using a join table instead of `user_a_id / user_b_id` allows the same matching engine to handle both 1-to-1 dating matches and future group matches (e.g. friend groups, social events, run clubs) without any schema migration.
 
 **spark_sessions**
 
@@ -216,6 +227,24 @@ For the MVP we do not support complex versioning logic: we always update the lat
 
 This endpoint can be used by Spark and for internal debugging. Later it can become part of the background engine that generates real matches.
 
+- `GET /api/v1/matches`  
+  Returns all matches for the authenticated user, including participants and compatibility score.
+  Output example:
+
+  ```json
+  [
+    {
+      "id": 1,
+      "status": "accepted",
+      "compatibility_score": 82.5,
+      "participants": [
+        { "user_id": 5,  "role": "initiator", "profile": { "display_name": "Anna" } },
+        { "user_id": 12, "role": "member",    "profile": { "display_name": "Luca" } }
+      ]
+    }
+  ]
+  ```
+
 ---
 
 ## 5. Synca Spark — API & Flow
@@ -261,7 +290,7 @@ Allow two users who are physically together to:
    Auth required.  
    Logic: if both sides submitted answers:
    - compute `compatibility_score` using health summary + preference profile + micro-test;
-   - create (or update) a `match` between the two users;
+   - create (or update) a `match` between the two users via `match_participants`;
    - call Reward Engine to issue 1 reward per user (type depends on their plan: free → `premium_week`, premium → `match_credit`);
    - update Trust Score and `spark_verified`.  
    Output example:
@@ -311,12 +340,14 @@ Not in this iteration:
 - Fully automated matching engine generating match feeds.
 - Messaging/chat system.
 - Real payments (Stripe, YooMoney, SBP) — for now we can use mocks or a simple manual flag.
+- Group match UI and group compatibility scoring (data model is ready, UI/engine deferred to v2).
 
 Once this MVP backend is implemented, next steps:
 
 - Integrate the matching engine with a background job pipeline that proposes matches.
 - Integrate real payments.
 - Expand Trust Score model and antifraud logging.
+- Enable group matches in the matching engine and expose them in the API.
 
 ---
 
