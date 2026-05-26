@@ -2,7 +2,24 @@
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
 # Overwrite or add rules to create your own house style
-#
-# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
-# Layout/SpaceInsideArrayLiteralBrackets:
-#   Enabled: false
+
+# Add `# frozen_string_literal: true` at the top of every file (autocorrectable)
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always
+  AutoCorrect: true
+
+# Enforce 2-space indentation and allow autocorrect
+Layout/IndentationWidth:
+  Enabled: true
+  Width: 2
+  AutoCorrect: true
+
+Layout/IndentationConsistency:
+  Enabled: true
+  AutoCorrect: true
+
+Layout/IndentationStyle:
+  Enabled: true
+  EnforcedStyle: spaces
+  AutoCorrect: true
