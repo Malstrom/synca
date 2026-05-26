@@ -1,6 +1,6 @@
 # Synca MVP — Backend (Rails API)
 
-**Version 0.5 — May 2026**  
+**Version 0.6 — May 2026**  
 Target: implementable in 4–6 weeks by a small team.
 
 ---
@@ -26,7 +26,7 @@ Out of scope for the MVP backend:
 
 - **Rails API-only app** (no server-rendered views).
 - **PostgreSQL** primary database.
-- **Redis + Sidekiq** for background jobs and asynchronous processing.
+- **Solid Queue** for background jobs and asynchronous processing (built into Rails 8, no external dependencies).
 - Stateless API behind a load balancer.
 - Authentication: JWT or signed tokens (short-lived access token + refresh token).
 
@@ -35,9 +35,7 @@ iOS / Android / Telegram
         ↓
      Rails API
         ↓
- PostgreSQL + Redis
-        ↓
-      Sidekiq
+ PostgreSQL (app data + Solid Queue job store)
 ```
 
 ---
@@ -284,7 +282,7 @@ Allow two users who are physically together to:
 3. `POST /api/v1/spark_sessions/:id/submit_answers`  
    Auth required.  
    Input: `answers` (simple JSON, e.g. array of answer IDs).  
-   Logic: store `initiator_answers` or `partner_answers` depending on user; if both present, trigger scoring.
+   Logic: store `initiator_answers` or `partner_answers` depending on user; if both present, enqueue scoring job via Solid Queue (`spark` queue).
 
 4. `GET /api/v1/spark_sessions/:id/result`  
    Auth required.  
@@ -316,7 +314,7 @@ Allow two users who are physically together to:
 ### 5.3 Spark Business Rules (MVP)
 
 - Max 1 **active** Spark session per user at a time.
-- Sessions in `pending` or `active` expire after 10 minutes → `status = "expired"`.
+- Sessions in `pending` or `active` expire after 10 minutes → `status = "expired"` (handled by a Solid Queue recurring job).
 - Rewards:
   - Free user: `premium_week` (valid 7 days from activation).
   - Premium user: `match_credit` (valid 30 days).
@@ -440,40 +438,77 @@ CD (deployment) is out of scope for the very first MVP but this CI workflow shou
 
 ---
 
-## 10. Background Jobs: Redis & Sidekiq
+## 10. Background Jobs: Solid Queue
 
-For asynchronous work the backend uses **Redis** and **Sidekiq**. This is required for the MVP.
+The backend uses **Solid Queue** for asynchronous processing. Solid Queue is the default
+job backend in Rails 8 — it stores jobs in PostgreSQL and requires no additional
+infrastructure (no Redis, no separate process in development).
 
-- **Queue backend**: `ActiveJob` with `Sidekiq` adapter.
-  - In `config/application.rb` (or environment config) we will set:
-    - `config.active_job.queue_adapter = :sidekiq`.
-- **Redis**:
-  - Single Redis instance for MVP (can be upgraded to managed cluster later).
-  - Used exclusively by Sidekiq (no app-level key/value use in v0 to keep things simple).
+- **Queue adapter**: `ActiveJob` with `Solid Queue` adapter (default in Rails 8).
+  - Set in `config/application.rb`:
+    ```ruby
+    config.active_job.queue_adapter = :solid_queue
+    ```
+- **Job store**: PostgreSQL (same database as the app). No Redis required.
 - **Queues (MVP)**:
-  - `default`: general async tasks.
-  - `matching`: heavier matching-related jobs (simulations, batch recompute).
-  - `spark`: Spark-specific jobs (scoring, reward issuing).
-  - `mailers`: email delivery (if/when needed).
+  - `default` — general async tasks.
+  - `matching` — heavier matching-related jobs (simulations, batch recompute).
+  - `spark` — Spark-specific jobs (scoring, reward issuing, session expiry).
+  - `mailers` — email delivery (if/when needed).
 
 Examples of work that must run in background jobs:
 
 - Compute Spark compatibility score once both users have submitted answers.
 - Issue Spark rewards and update Trust Score.
-- Recompute compatibility scores in batch when we change matching weights.
-- Send transactional emails (if used) and, later, push notification triggers.
+- Expire Spark sessions after 10 minutes (`pending` → `expired`).
+- Recompute compatibility scores in batch when matching weights change.
+- Send transactional emails and, later, push notification triggers.
 
 **Local development**:
 
-- Sidekiq runs as a separate process (`bundle exec sidekiq`) pointing to the same Redis as Rails.
-- For console/testing we can rely on `ActiveJob` inline adapter when needed, but the default for development should still be Sidekiq to catch serialization issues early.
+- Solid Queue runs in-process via the Puma plugin (default Rails 8 behaviour) — no
+  separate worker process needed in development.
+- For tests, use `ActiveJob::TestHelper` to assert enqueued jobs; the `test` adapter
+  runs jobs synchronously so no worker process is required.
+
+**Configuration** (`config/queue.yml`):
+
+```yaml
+default: &default
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+  workers:
+    - queues: [spark, matching, mailers, default]
+      threads: 3
+      polling_interval: 0.1
+
+development:
+  <<: *default
+
+production:
+  <<: *default
+  workers:
+    - queues: [spark]
+      threads: 5
+      polling_interval: 0.1
+    - queues: [matching, mailers, default]
+      threads: 3
+      polling_interval: 0.5
+```
 
 **Testing**:
 
-- Use the `test` environment with `ActiveJob::TestHelper` to assert enqueued jobs.
-- Configure Sidekiq to use the inline/`test` adapter so that jobs run synchronously in tests, or rely on `ActiveJob` test helpers without starting a real Sidekiq process.
+```ruby
+# assert a job was enqueued
+assert_enqueued_with(job: SparkScoringJob, args: [spark_session.id]) do
+  post :submit_answers, params: { answers: [...] }
+end
+```
 
 **Operations (MVP)**:
 
-- Sidekiq web UI is optional for v0; if we enable it, it should be protected behind admin auth and not exposed publicly.
-- Redis and Sidekiq health should be monitored (even with simple liveness checks) since Spark and matching depend on them.
+- Solid Queue exposes a web UI via the `mission_control-jobs` gem (optional for v0).
+  If enabled, protect it behind admin authentication and do not expose it publicly.
+- Monitor job throughput and failures via standard Rails log output or a simple
+  health-check endpoint that queries the `solid_queue_jobs` table.
