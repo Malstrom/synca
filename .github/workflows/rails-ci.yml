@@ -2,11 +2,11 @@ name: CI — Rails API
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
       - "backend/api/**"
   pull_request:
-    branches: [main]
+    branches: [ main ]
     paths:
       - "backend/api/**"
 
@@ -52,7 +52,7 @@ jobs:
         run: bin/rubocop -f github
 
   test:
-    name: Tests (Minitest)
+    name: Tests + Coverage (Minitest)
     runs-on: ubuntu-latest
 
     services:
@@ -95,3 +95,26 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
         run: bin/rails test
+
+      - name: Publish coverage summary
+        if: always()
+        run: |
+          COVERAGE=$(ruby -rjson -e '
+            data = JSON.parse(File.read("coverage/.resultset.json"))
+            result = data.values.first["coverage"]
+            total_lines = 0; covered_lines = 0
+            result.each_value do |file|
+              next unless file.is_a?(Hash)
+              lines = file["lines"] || []
+              relevant = lines.compact
+              total_lines += relevant.size
+              covered_lines += relevant.count { |n| n > 0 }
+            end
+            pct = total_lines > 0 ? (covered_lines.to_f / total_lines * 100).round(2) : 0
+            puts pct
+          ')
+          echo "## 📊 Test Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Coverage | **${COVERAGE}%** |" >> $GITHUB_STEP_SUMMARY

@@ -2,6 +2,12 @@ require "simplecov"
 SimpleCov.start "rails" do
   add_filter "/config/"
   add_filter "/test/"
+  formatter SimpleCov::Formatter::MultiFormatter.new(
+    [
+      SimpleCov::Formatter::HTMLFormatter,
+      SimpleCov::Formatter::JSONFormatter
+    ]
+  )
 end
 
 ENV["RAILS_ENV"] ||= "test"

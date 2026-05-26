@@ -74,7 +74,7 @@ end
 
 # ─── Development & Test ───────────────────────────────
 group :development, :test do
-  # RuboCop with Rails cops for code style enforcement
+  # RuboCop with Rails cops for code style enforcement (includes rubocop-rails)
   gem "rubocop-rails-omakase", require: false
 
   # Test factories for Minitest
@@ -86,6 +86,9 @@ end
 
 # ─── Test ─────────────────────────────────────────────
 group :test do
+  # Code coverage reporting
+  gem "simplecov", require: false
+
   # Cleans database between Minitest runs
   gem "database_cleaner-active_record"
 
