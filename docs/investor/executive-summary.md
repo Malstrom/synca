@@ -65,7 +65,7 @@ Synca Spark serves three strategic goals simultaneously: it onboards two fully p
 ## Architecture
 
 ```
-iOS App (HealthKit)           ──┐
+iOS App (HealthKit)           ──┬
 Android App (Health Connect)  ──┤──→  Rails API Backend  ←──→  Telegram Bot / Mini App
 Spotify / Travel APIs         ──┘          ↕
                                      Web Payment Page
@@ -114,7 +114,7 @@ The global dating app market is valued at **$11.61 billion in 2025**, projected 
 
 **Synca Spark Reward Loop** — Each Spark session awards both participants one free Premium week or one free match credit, depending on their current plan. This creates a direct, measurable incentive to use Synca at every IRL social event and drives both acquisition and re-engagement.
 
-**B2B Venue Partnerships** — Gyms, saunas, padel courts, and cafés integrated into the date proposal system. Synca drives structured traffic; venues offer preferential rates packaged as "date packs".
+**B2B Venue Partnerships** — Gyms, saunas, padel courts, and cafés integrated into the date proposal system. Synca drives structured traffic; venues offer preferential rates packaged as “date packs”.
 
 **Commission-Free Payment Infrastructure** — Telegram Stars, YooMoney, SBP (Russia), Stripe via external link.
 
@@ -157,6 +157,18 @@ MVP                    Post-MVP v1              Post-MVP v2             v3
 ✓ Telegram Bot +
   payment infra
 ```
+
+---
+
+## Beyond 1-to-1: Group Compatibility (v3+)
+
+Synca's matching architecture is intentionally designed to support **group compatibility** from day one. The data model uses a participant join table rather than a fixed two-user structure, meaning the same engine that computes 1-to-1 lifestyle compatibility can be extended to evaluate and propose:
+
+- **Friend group formation**: compatible groups of 3–5 people with aligned sleep schedules and activity levels for shared experiences (hiking trips, gym sessions, travel groups)
+- **Social circle expansion**: recommending a compatible third person to an existing match pair
+- **Community clustering**: identifying naturally compatible micro-communities within a city for Synca-organized events
+
+This positions Synca as a **social compatibility platform** rather than a pure dating app — a TAM expansion that no current competitor is pursuing with objective behavioral data. Group compatibility features are scoped for v3 and will be activated progressively as city density thresholds make group matching viable.
 
 ---
 
