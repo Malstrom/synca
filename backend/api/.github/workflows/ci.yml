@@ -1,12 +1,22 @@
-name: CI
+name: CI — Rails API
 
 on:
-  pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - "backend/api/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/api/**"
+
+defaults:
+  run:
+    working-directory: backend/api
 
 jobs:
   scan_ruby:
+    name: Security Scan (Brakeman)
     runs-on: ubuntu-latest
 
     steps:
@@ -16,14 +26,17 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          ruby-version-file: backend/api/.ruby-version
           bundler-cache: true
+          working-directory: backend/api
 
-      - name: Scan for common Rails security vulnerabilities using static analysis
+      - name: Scan for Rails security vulnerabilities
         run: bin/brakeman --no-pager
 
   lint:
+    name: Linting (RuboCop)
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,33 +44,33 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          ruby-version-file: backend/api/.ruby-version
           bundler-cache: true
+          working-directory: backend/api
 
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
   test:
+    name: Tests (Minitest)
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
-        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
-
-      # redis:
-      #   image: redis
-      #   ports:
-      #     - 6379:6379
-      #   options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     steps:
-      - name: Install packages
+      - name: Install system packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config
 
       - name: Checkout code
@@ -66,12 +79,12 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          ruby-version-file: backend/api/.ruby-version
           bundler-cache: true
+          working-directory: backend/api
 
       - name: Run tests
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
-          # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
