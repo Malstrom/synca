@@ -1,0 +1,466 @@
+openapi: 3.1.0
+info:
+  title: Synca API
+  version: "1.0"
+  description: >
+    Synca is a health-based dating app. This API serves iOS and Android clients.
+    All health data is aggregated on device before being sent. Raw samples are never stored.
+  contact:
+    name: Synca Engineering
+servers:
+  - url: https://api.synca.app/api/v1
+    description: Production
+  - url: http://localhost:3000/api/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  /auth/signup:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user]
+              properties:
+                user:
+                  $ref: '#/components/schemas/UserSignup'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate an existing user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Get current user profile
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+    put:
+      tags: [Profile]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    city:
+                      type: string
+                    photos:
+                      type: array
+                      items:
+                        type: string
+                        format: uri
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /health_summaries:
+    post:
+      tags: [Health]
+      summary: Upload aggregated health metrics
+      description: >
+        Called after device-side aggregation. Raw HealthKit/Health Connect samples
+        must never be sent here.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [health_summary]
+              properties:
+                health_summary:
+                  $ref: '#/components/schemas/HealthSummaryInput'
+      responses:
+        '201':
+          description: Health summary stored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  created_at:
+                    type: string
+                    format: date-time
+
+  /preferences:
+    get:
+      tags: [Preferences]
+      summary: Get current user preference profile
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferenceProfile'
+          description: Preference profile
+    put:
+      tags: [Preferences]
+      summary: Update preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preference_profile:
+                  $ref: '#/components/schemas/PreferenceProfile'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreferenceProfile'
+
+  /matches:
+    get:
+      tags: [Matching]
+      summary: Get curated match list
+      description: Returns 3–5 profiles above the compatibility threshold.
+      responses:
+        '200':
+          description: Match list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Match'
+
+  /date_proposals:
+    get:
+      tags: [DateProposals]
+      summary: List date proposals for current user
+      responses:
+        '200':
+          description: List of proposals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date_proposals:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DateProposal'
+    post:
+      tags: [DateProposals]
+      summary: Create a new date proposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date_proposal]
+              properties:
+                date_proposal:
+                  type: object
+                  required: [user_b_id, suggested_time_slot]
+                  properties:
+                    user_b_id:
+                      type: string
+                      format: uuid
+                    suggested_time_slot:
+                      type: string
+                      format: date-time
+                    venue_note:
+                      type: string
+      responses:
+        '201':
+          description: Proposal created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DateProposal'
+
+  /date_proposals/{id}/accept:
+    post:
+      tags: [DateProposals]
+      summary: Accept a date proposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Proposal accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DateProposal'
+
+  /date_proposals/{id}/decline:
+    post:
+      tags: [DateProposals]
+      summary: Decline a date proposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Proposal declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DateProposal'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid auth token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+
+    UserSignup:
+      type: object
+      required: [name, age, gender, city]
+      properties:
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          example: "+79001234567"
+        name:
+          type: string
+        age:
+          type: integer
+          minimum: 18
+          maximum: 80
+        gender:
+          type: string
+          enum: [male, female, non_binary]
+        city:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        city:
+          type: string
+        photos:
+          type: array
+          items:
+            type: string
+            format: uri
+        trust_score:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    HealthSummaryInput:
+      type: object
+      required: [period]
+      properties:
+        period:
+          type: string
+          enum: [daily, weekly]
+        sleep_duration_avg:
+          type: number
+          format: float
+          description: Average sleep hours
+        sleep_variability:
+          type: number
+          format: float
+        chronotype:
+          type: string
+          enum: [morning, intermediate, evening]
+        social_jetlag:
+          type: number
+          format: float
+        activity_minutes:
+          type: integer
+        step_count_avg:
+          type: integer
+        rest_hr_avg:
+          type: integer
+
+    PreferenceProfile:
+      type: object
+      properties:
+        preferred_age_min:
+          type: integer
+        preferred_age_max:
+          type: integer
+        max_distance_km:
+          type: integer
+        chronotype_preference:
+          type: string
+          enum: [morning, intermediate, evening, any]
+        dealbreakers:
+          type: array
+          items:
+            type: string
+
+    Match:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        compatibility:
+          type: object
+          properties:
+            score:
+              type: integer
+              minimum: 0
+              maximum: 100
+            breakdown:
+              type: object
+              properties:
+                sleep:
+                  type: integer
+                activity:
+                  type: integer
+                lifestyle:
+                  type: integer
+                preferences:
+                  type: integer
+            summary:
+              type: string
+
+    DateProposal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_a_id:
+          type: string
+          format: uuid
+        user_b_id:
+          type: string
+          format: uuid
+        suggested_time_slot:
+          type: string
+          format: date-time
+        venue_note:
+          type: string
+        status:
+          type: string
+          enum: [suggested, accepted, declined, completed]
+        created_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            field:
+              type: string

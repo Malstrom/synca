@@ -1,0 +1,68 @@
+# ─── macOS ───────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+
+# ─── iOS / Xcode ─────────────────────────────────────
+apps/ios/**/*.ipa
+apps/ios/**/*.dSYM
+apps/ios/**/*.dSYM.zip
+apps/ios/**/build/
+apps/ios/**/DerivedData/
+apps/ios/**/xcuserdata/
+apps/ios/**/*.xcuserstate
+apps/ios/**/*.xccheckout
+apps/ios/**/*.moved-aside
+
+# ─── Swift Package Manager ───────────────────────────
+apps/ios/**/.build/
+apps/ios/**/Packages/
+apps/ios/**/Package.resolved
+
+# ─── CocoaPods ───────────────────────────────────────
+apps/ios/**/Pods/
+
+# ─── Carthage ────────────────────────────────────────
+apps/ios/**/Carthage/Build/
+
+# ─── Android / Kotlin / Gradle ───────────────────────
+*.iml
+apps/android/**/.gradle/
+apps/android/**/local.properties
+apps/android/**/.cxx/
+apps/android/**/*.apk
+apps/android/**/*.aab
+apps/android/**/release/
+
+# ─── Ruby / Rails ────────────────────────────────────
+backend/api/.bundle/
+backend/api/vendor/bundle/
+backend/api/log/
+backend/api/tmp/
+backend/api/storage/
+backend/api/coverage/
+backend/api/public/assets/
+backend/api/public/packs/
+backend/api/*.sqlite3
+backend/api/*.sqlite3-journal
+backend/api/config/credentials/*.key
+backend/api/config/master.key
+
+# ─── Secrets ─────────────────────────────────────────
+.env
+.env.*
+.env.local
+
+# ─── Fastlane ────────────────────────────────────────
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# ─── Editor / IDE ────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.direnv/
+.tool-versions
+.rubymate/
