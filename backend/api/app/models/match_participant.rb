@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MatchParticipant < ApplicationRecord
   belongs_to :match
   belongs_to :user

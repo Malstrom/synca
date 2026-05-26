@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SparkSession < ApplicationRecord
   EXPIRY_MINUTES = 10
 
@@ -28,14 +30,14 @@ class SparkSession < ApplicationRecord
 
   private
 
-  def generate_tokens
-    self.session_code ||= SecureRandom.random_number(10**6).to_s.rjust(6, "0")
-    self.qr_token     ||= SecureRandom.uuid
-  end
+    def generate_tokens
+      self.session_code ||= SecureRandom.random_number(10**6).to_s.rjust(6, "0")
+      self.qr_token     ||= SecureRandom.uuid
+    end
 
-  def one_active_session_per_initiator
-    return unless SparkSession.where(initiator_id: initiator_id, status: [ :pending, :active ]).exists?
+    def one_active_session_per_initiator
+      return unless SparkSession.where(initiator_id: initiator_id, status: [ :pending, :active ]).exists?
 
-    errors.add(:base, "initiator already has an active Spark session")
-  end
+      errors.add(:base, "initiator already has an active Spark session")
+    end
 end

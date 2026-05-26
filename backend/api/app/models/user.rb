@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class User < ApplicationRecord
   has_secure_password validations: false
 
@@ -33,9 +35,9 @@ class User < ApplicationRecord
 
   private
 
-  def email_or_phone_present
-    return if self.email.present? || phone.present? || !email?
+    def email_or_phone_present
+      return if self.email.present? || phone.present? || !email?
 
-    errors.add(:base, "email or phone is required for email auth")
-  end
+      errors.add(:base, "email or phone is required for email auth")
+    end
 end

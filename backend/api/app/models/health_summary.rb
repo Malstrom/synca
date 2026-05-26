@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class HealthSummary < ApplicationRecord
   belongs_to :user
 
@@ -21,9 +23,9 @@ class HealthSummary < ApplicationRecord
 
   private
 
-  def effective_range_valid
-    return unless effective_to && effective_from
+    def effective_range_valid
+      return unless effective_to && effective_from
 
-    errors.add(:effective_to, "must be after effective_from") if effective_to < effective_from
-  end
+      errors.add(:effective_to, "must be after effective_from") if effective_to < effective_from
+    end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Match < ApplicationRecord
   enum :status, { proposed: 0, accepted: 1, rejected: 2 }
 
@@ -20,8 +22,8 @@ class Match < ApplicationRecord
 
   private
 
-  def at_least_two_participants
-    # Enforced at service layer on create; skip if participants not yet persisted
-    true
-  end
+    def at_least_two_participants
+      # Enforced at service layer on create; skip if participants not yet persisted
+      true
+    end
 end
