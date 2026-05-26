@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class MatchTest < ActiveSupport::TestCase
@@ -42,4 +44,10 @@ class MatchTest < ActiveSupport::TestCase
     m.accepted!
     assert m.accepted?
   end
+
+  test "at_least_two_participants stub returns true" do
+  match = Match.new(compatibility_score: 80, status: :proposed)
+  # validation on: :create skips the stub in isolation; call directly
+  assert match.send(:at_least_two_participants)
+end
 end

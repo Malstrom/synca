@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "simplecov"
 SimpleCov.start "rails" do
   add_filter "/config/"
@@ -24,16 +26,16 @@ end
 class ApiTestCase < ActionDispatch::IntegrationTest
   private
 
-  def json
-    JSON.parse(response.body, symbolize_names: true)
-  end
+    def json
+      JSON.parse(response.body, symbolize_names: true)
+    end
 
-  def auth_headers(user)
-    token = JwtService.access_token(user)
-    { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
-  end
+    def auth_headers(user)
+      token = JwtService.access_token(user)
+      { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
+    end
 
-  def post_json(path, params: {})
-    post path, params: params.to_json, headers: { "Content-Type" => "application/json" }
-  end
+    def post_json(path, params: {})
+      post path, params: params.to_json, headers: { "Content-Type" => "application/json" }
+    end
 end

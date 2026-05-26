@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class SparkSessionTest < ActiveSupport::TestCase
@@ -49,5 +51,11 @@ class SparkSessionTest < ActiveSupport::TestCase
     duplicate = SparkSession.new(initiator: users(:bob), status: :pending)
     duplicate.valid?
     assert duplicate.errors[:base].any?
+  end
+
+  test "expired? returns true for old pending session" do
+    session = spark_sessions(:alice_spark)
+    session.update!(created_at: 11.minutes.ago, status: :pending)
+    assert session.expired?
   end
 end
