@@ -1,6 +1,6 @@
 # Synca Technical Whitepaper
 
-**Version 1.0 — May 2026**  
+**Version 1.1 — May 2026**  
 *Confidential — For Engineering, Security, and Technical Due Diligence Use Only*
 
 ***
@@ -19,10 +19,11 @@ This whitepaper describes the technical architecture, data model, matching algor
 
 1. **iOS Client** — SwiftUI app using HealthKit for health data, MusicKit for Apple Music (future), and local processing of raw samples.
 2. **Android Client** — Kotlin app using Health Connect for health data, Spotify SDK for music, and on-device aggregation.
-3. **Rails API Backend** — central service implementing all business logic: user management, signal ingestion, matching engine, trust scoring, date proposal generation, payment integration.
+3. **Rails API Backend** — central service implementing all business logic: user management, signal ingestion, matching engine, trust scoring, date proposal generation, Spark session orchestration, and payment integration.
 4. **Compatibility Engine** — stateless service or internal Rails module computing compatibility scores as a weighted combination of normalized features.
 5. **Trust & Safety Engine** — pipelines computing a dynamic Trust Score based on image, behavior, and cross-signal consistency.
-6. **Telegram Bot / Mini App** — WebApp client integrated with Telegram Bot API, used for acquisition, notifications, and payment flows.
+6. **Spark Session Manager** — real-time WebSocket orchestrator for live in-person compatibility sessions; manages session lifecycle, answer synchronization, instant score computation, and reward issuance.
+7. **Telegram Bot / Mini App** — WebApp client integrated with Telegram Bot API, used for acquisition, notifications, and payment flows.
 
 ### 2.2 Logical Architecture Diagram
 
@@ -35,28 +36,29 @@ This whitepaper describes the technical architecture, data model, matching algor
           │  Derived health & music data │
           ▼                              ▼
            ┌────────────────────────────┐
-           │        Rails API          │
-           │  (Ruby on Rails, JSON API)│
-           └───────────┬───────────────┘
+           │        Rails API            │
+           │  (Ruby on Rails, JSON API)  │
+           └───────────┬────────────────┘
                        │
-       ┌───────────────┼──────────────────────┐
-       ▼               ▼                      ▼
-┌─────────────┐  ┌──────────────┐     ┌────────────────┐
-│ Matching    │  │ Trust &      │     │ Telegram Bot / │
-│ Engine      │  │ Safety Engine│     │ Mini App (Web) │
-└────┬────────┘  └────┬─────────┘     └────────┬───────┘
-     │                │                        │
-     ▼                ▼                        ▼
-┌─────────────┐  ┌──────────────┐     ┌────────────────┐
-│ PostgreSQL  │  │ Object Store │     │ Payment Gateway│
-│ (Core DB)   │  │ (images, logs│     │ (Stripe/YooMoney│
-└─────────────┘  └──────────────┘     └────────────────┘
+       ┌─────────────┼──────────────────┐
+       ▼               ▼                  ▼
+┌─────────────┐  ┌─────────────┐  ┌───────────────┐
+│ Matching +   │  │ Trust &     │  │ Spark Session  │
+│ Compatibility│  │ Safety Eng. │  │ Manager (WS)   │
+└─────┤──────┘  └─────┤─────┘  └──────┤────────┘
+      │                  │               │
+      ▼                  ▼               ▼
+┌─────────────┐  ┌────────────┐  ┌──────────────┐
+│ PostgreSQL  │  │ Object Store│  │ Payment Gateway│
+│ (Core DB)   │  │ (images/logs)│  │ Stripe/YooMoney│
+└─────────────┘  └────────────┘  └──────────────┘
 ```
 
 Design principles:
 - Raw health and music samples are never transmitted — only derived aggregates
 - All client surfaces talk to the same Rails API
 - Trust & Safety logic can evolve independently from client releases
+- Spark Session Manager is a lightweight real-time layer; it does not persist raw answers, only the computed compatibility delta
 
 ***
 
@@ -105,12 +107,33 @@ Design principles:
 - `behavioral_score`: float
 - `health_consistency_score`: float
 - `music_consistency_score`: float
+- `irl_verification_count`: integer (incremented by completed Spark sessions)
 
 **Match**
 - `user_a_id`, `user_b_id`: fk
 - `compatibility_score`: float (0–1)
-- `dimensions_breakdown`: jsonb ({"sleep":0.82, "activity":0.76, ...})
+- `dimensions_breakdown`: jsonb (`{"sleep":0.82, "activity":0.76, ...}`)
 - `status`: enum (`proposed`, `accepted`, `declined`, `expired`)
+
+**SparkSession**
+- `initiator_id`, `partner_id`: fk to User
+- `session_code`: string (6-digit, TTL 10 min)
+- `qr_token`: string (UUID)
+- `status`: enum (`pending`, `active`, `completed`, `expired`)
+- `location_lat`, `location_lng`: float (approximate, for proximity check)
+- `initiator_answers`, `partner_answers`: jsonb (micro-test responses; discarded after score computation)
+- `compatibility_score`: float (instant delta computed at session end)
+- `reward_issued_initiator`, `reward_issued_partner`: boolean
+- `started_at`, `completed_at`: timestamp
+
+> Raw micro-test answers are retained only for the duration of the session and discarded immediately after the compatibility delta is computed. No behavioral survey data is persisted long-term.
+
+**SparkReward**
+- `user_id`: fk
+- `spark_session_id`: fk
+- `reward_type`: enum (`premium_trial_7d`, `match_credit`, `profile_boost_24h`)
+- `status`: enum (`pending`, `issued`, `redeemed`, `expired`)
+- `valid_until`: timestamp
 
 **DateProposal**
 - `match_id`: fk
@@ -135,6 +158,11 @@ Design principles:
 - Sleep stability index: `1 - normalized_std(sleep_start)`
 - Peak activity window derived from step count histogram across hours
 
+**Spark QR Engine:**
+- Generates a QR code from the session token returned by the backend
+- Establishes WebSocket connection to Spark Session Manager on session join
+- Submits micro-test answers and renders the result screen upon WebSocket event
+
 ### 4.2 Android App (Kotlin + Health Connect)
 
 Health Connect provides a unified interface for health data across Android OEMs, replacing Google Fit and standardizing API access from 2026 onward.
@@ -142,6 +170,7 @@ Health Connect provides a unified interface for health data across Android OEMs,
 - Use `HealthConnectClient` to read `SleepSessionRecord`, `StepsRecord`, `HeartRateRecord`
 - Schedule periodic background jobs using WorkManager to recompute aggregates
 - Support devices where tracking is via third-party apps (Garmin, Xiaomi) that sync into Health Connect
+- Full Spark QR functionality mirroring iOS implementation
 
 ### 4.3 Telegram Bot and Mini App
 
@@ -233,6 +262,7 @@ The Trust Score combines four independent layers:
 2. **Image forensics and metadata** — AI-generated image detection, EXIF analysis, compression pattern analysis
 3. **Behavioral patterns** — repetitive messages, external link sharing, scam-associated patterns
 4. **Cross-signal consistency** — listening patterns vs. claimed chronotype; health data variance analysis; photo context vs. lifestyle claims
+5. **IRL verification** — completed Spark sessions between users at the same physical location provide the strongest available liveness signal; each session increments `irl_verification_count` on the `TrustScore` record
 
 ### 6.2 Enforcement
 
@@ -252,11 +282,12 @@ This "selective ghosting" approach minimizes confrontational moderation while pu
 - Only derived, aggregate metrics from health, music, and travel data are transmitted
 - No raw health samples, per-second sensor readings, or precise travel trajectories are stored
 - Music data reduced to aggregated audio features, not detailed listening history
+- Spark session micro-test answers discarded immediately after score computation; only the resulting compatibility delta is persisted
 
 ### 7.2 Consent and Control
 
 - Fine-grained consent: users choose which domains to share (health, music, travel) and can revoke at any time
-- On-demand deletion: single action triggers full backend data erasure (GDPR "right to be forgotten")
+- On-demand deletion: single action triggers full backend data erasure (GDPR “right to be forgotten”)
 
 ### 7.3 GDPR and Special Category Data
 
@@ -285,8 +316,8 @@ Health data is treated as special category personal data under GDPR Article 9:
 ### 8.1 Apple HealthKit
 
 - Used only from native iOS app
-- Health data not sent to any third party besides Synca's own backend
-- Respects Apple's guidelines prohibiting use of health data for advertising
+- Health data not sent to any third party besides Synca’s own backend
+- Respects Apple’s guidelines prohibiting use of health data for advertising
 
 ### 8.2 Android Health Connect
 
@@ -320,11 +351,13 @@ Health data is treated as special category personal data under GDPR Article 9:
 - **Stateless backend**: horizontal scaling behind a load balancer; session state via JWT
 - **PostgreSQL**: primary data store with read replicas for analytical workloads; city/region partitioning as user base grows
 - **Async processing**: Sidekiq for background jobs — recomputing compatibility and trust scores, generating date proposals
+- **WebSocket layer**: Action Cable (Rails) handles Spark session real-time synchronization; horizontally scalable via Redis pub/sub adapter
 
 ### 9.2 Resilience
 
 - Graceful degradation: if travel or music signals unavailable, engine falls back to health + preference embedding
 - Circuit breakers for external integrations (Spotify, Yandex AI) to prevent cascading failures
+- Spark sessions self-expire after TTL; no orphaned sessions accumulate in the database
 
 ***
 
@@ -333,19 +366,22 @@ Health data is treated as special category personal data under GDPR Article 9:
 ### 10.1 Short-Term (0–12 Months)
 
 - Finalize iOS MVP with HealthKit integration, preference game, basic matching engine
+- Implement Spark Session Manager with WebSocket sync, QR engine, and reward issuance
 - Implement Telegram Bot and Mini App for Moscow launch
 - Integrate Yandex AI for photo context analysis in the Russian market
 - Roll out basic Spotify integration for music profile enrichment
 
 ### 10.2 Medium-Term (12–24 Months)
 
-- Launch Android app with Health Connect integration
+- Launch Android app with Health Connect integration and full Spark support
 - Add travel preference game and optional travel service integrations
 - Introduce basic learning-to-rank layer over hand-crafted compatibility scores
 - Harden Trust Score with additional image forensics and behavioral heuristics
+- **Group compatibility engine (v2 research phase)**: extend the pairwise compatibility model to compute a multi-user group cohesion score across 4–8 participants; validate algorithm design with anonymized data from seeding events
 
 ### 10.3 Long-Term (24+ Months)
 
+- **Group compatibility — production (v2+)**: surface curated small-group activity proposals (morning runs, sauna sessions, padel games) based on multi-user lifestyle alignment; introduce group date packs as a new monetization surface co-branded with venue partners. The underlying data infrastructure (individual compatibility profiles, SparkSession IRL data, venue integrations) is fully in place from earlier phases — the group layer is an additive feature, not a re-architecture.
 - Cross-signal predictive modeling
 - Publish anonymized aggregate findings on lifestyle compatibility and relationship success
 - API for third-party apps (gyms, wellness platforms) to integrate Synca compatibility signals
@@ -354,13 +390,14 @@ Health data is treated as special category personal data under GDPR Article 9:
 
 ## 11. Conclusion
 
-Synca's technical design centers on a single idea: compatibility is best inferred from how people actually live, not how they describe themselves. The combination of HealthKit/Health Connect data, music listening behavior, travel patterns, and visual preference embeddings creates a rich, multi-dimensional profile for each user — while respecting strict privacy constraints through on-device processing and data minimization.
+Synca’s technical design centers on a single idea: compatibility is best inferred from how people actually live, not how they describe themselves. The combination of HealthKit/Health Connect data, music listening behavior, travel patterns, visual preference embeddings, and live IRL sessions (Spark) creates a rich, multi-dimensional profile for each user — while respecting strict privacy constraints through on-device processing and data minimization.
 
 The architecture enables Synca to:
 - Launch in complex regulatory and distribution environments (Russia via Telegram Mini Apps)
 - Maintain a strong privacy and security posture suitable for GDPR and other modern data protection regimes
 - Scale to multiple cities and countries without re-architecting the core
+- Extend naturally from one-to-one matching into group compatibility experiences, leveraging the same data model built from day one
 
-Synca's differentiation is not a marketing veneer; it is embedded in the data model, the matching engine, and the privacy-first architecture.
+Synca’s differentiation is not a marketing veneer; it is embedded in the data model, the matching engine, and the privacy-first architecture.
 
 *For implementation details at code level (schemas, API contracts, client pseudocode), see the internal developer documentation repository.*
