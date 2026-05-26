@@ -76,7 +76,6 @@ end
 group :development, :test do
   # RuboCop with Rails cops for code style enforcement
   gem "rubocop-rails-omakase", require: false
-  gem "rubocop-rails", require: false
 
   # Test factories for Minitest
   gem "factory_bot_rails"

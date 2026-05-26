@@ -423,7 +423,6 @@ DEPENDENCIES
   pundit
   rack-cors
   rails (~> 8.0.3)
-  rubocop-rails
   rubocop-rails-omakase
   solid_cable
   solid_cache
