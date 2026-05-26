@@ -6,8 +6,7 @@ class SparkSessionTest < ActiveSupport::TestCase
   end
 
   test "generates session_code and qr_token on create" do
-    session = SparkSession.new(initiator: users(:carla))
-    # triggers before_validation
+    session = SparkSession.new(initiator: users(:bob))
     session.valid?
     assert_not_nil session.session_code
     assert_equal 6, session.session_code.length
@@ -41,14 +40,13 @@ class SparkSessionTest < ActiveSupport::TestCase
 
   test "stale scope returns old pending sessions" do
     old = spark_sessions(:pending_spark)
-    # simulate old record
     old.update_columns(created_at: 15.minutes.ago)
     assert_includes SparkSession.stale, old
   end
 
   test "one active session per initiator on create" do
-    # carla already has pending_spark in fixtures
-    duplicate = SparkSession.new(initiator: users(:carla), status: :pending)
+    # bob already has pending_spark in fixtures
+    duplicate = SparkSession.new(initiator: users(:bob), status: :pending)
     duplicate.valid?
     assert duplicate.errors[:base].any?
   end

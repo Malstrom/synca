@@ -1,9 +1,10 @@
 class JwtService
-  ALGORITHM  = "HS256"
-  ACCESS_EXP = 15.minutes
+  ALGORITHM   = "HS256"
+  ACCESS_EXP  = 15.minutes
   REFRESH_EXP = 30.days
 
-  SECRET = Rails.application.credentials.secret_key_base
+  # Prefer explicit env var so CI works without a master key file.
+  SECRET = ENV["SECRET_KEY_BASE"].presence || Rails.application.credentials.secret_key_base
 
   def self.encode(payload, exp: ACCESS_EXP)
     payload = payload.merge(exp: exp.from_now.to_i)

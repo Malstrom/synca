@@ -69,6 +69,11 @@ jobs:
           --health-timeout=5s
           --health-retries=3
 
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432
+      SECRET_KEY_BASE: a_dummy_secret_for_ci_at_least_64_chars_long_so_hmac_is_happy_1234
+
     steps:
       - name: Install system packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config
@@ -85,15 +90,9 @@ jobs:
           working-directory: backend/api
 
       - name: Set up database
-        env:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
         run: bin/rails db:create db:migrate
 
       - name: Run tests
-        env:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
         run: bin/rails test
 
       - name: Check coverage threshold (≥ 90%)
@@ -119,7 +118,6 @@ jobs:
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Coverage | **${COVERAGE}%** |" >> $GITHUB_STEP_SUMMARY
           echo "| Threshold | **90%** |" >> $GITHUB_STEP_SUMMARY
-          # Fail if coverage < 90
           ruby -e "exit 1 if ${COVERAGE}.to_f < 90" || {
             echo "❌ Coverage ${COVERAGE}% is below the 90% threshold." >> $GITHUB_STEP_SUMMARY
             echo "::error::Coverage ${COVERAGE}% is below the required 90% threshold"
