@@ -8,12 +8,15 @@ explanations (e.g. "Your sleep schedules are well aligned").
 
 ## Compatibility Domains
 
-| Domain      | Weight | Signals                                                        |
-|-------------|--------|----------------------------------------------------------------|
-| Sleep       | 35%    | Chronotype, sleep duration average, sleep regularity          |
-| Activity    | 25%    | Weekly active minutes, step patterns, rest HR trends          |
-| Lifestyle   | 25%    | Music taste (Spotify), travel frequency, routine consistency  |
-| Preferences | 15%    | Age range, distance, stated dealbreakers                      |
+| Domain      | Weight | Signals                                                              |
+|-------------|--------|----------------------------------------------------------------------|
+| Sleep       | 35%    | Chronotype, sleep duration average, sleep regularity, social jetlag |
+| Activity    | 30%    | Weekly active minutes, step patterns, peak energy window, rest HR   |
+| Lifestyle   | 20%    | Music taste (Spotify), travel frequency, routine consistency        |
+| Preferences | 15%    | Age range, distance, stated dealbreakers                            |
+
+> Weight distribution is indicative for MVP. Weights will be recalibrated per city as
+> outcome data accumulates (see Evolution Plan below).
 
 ## Health Data Used
 
@@ -29,6 +32,8 @@ Aggregated metrics computed on device and sent to backend:
 - `activity_minutes_avg` — average weekly active minutes
 - `rest_hr_avg` — resting heart rate average (if available)
 - `step_count_avg` — average daily steps
+- `peak_activity_window` — time-of-day window with highest activity density
+- `routine_stability_index` — how consistent the user's daily schedule is (0–1)
 
 ## Matching Flow
 
@@ -49,14 +54,33 @@ Aggregated metrics computed on device and sent to backend:
 
 Thresholds are configurable per city and will be tuned as real outcome data accumulates.
 
+## Synca Spark — Live IRL Signal
+
+When two users complete a `SparkSession` in person, the event contributes additional
+matching signal beyond passively collected health data:
+
+- The compatibility delta computed at session end enriches the pairwise score.
+- `TrustScore.irl_verification_count` is incremented for both users, increasing their
+  visibility in the matching pool.
+- Spark answers (micro-test responses) are **discarded immediately** after score computation
+  and are never persisted long-term.
+
+Spark sessions are the strongest liveness and compatibility signal available in the system
+because they require two real people in the same physical location at the same time.
+
 ## Anti-Fake Signal
 
 Compatibility scores are harder to game than profile photos because they are derived from
 continuous health data collected over weeks. A fake profile without health data gets a
-reduced `trust_score` and is ranked down or excluded from match pools.
+reduced `trust_score` and is ranked down or excluded from match pools. Completing a
+`SparkSession` with another verified user is the most effective way to increase trust visibility.
 
 ## Evolution Plan
 
-- **v0 (Matching rule-based):** filter by city/age/gender, no health signal.
-- **v1 (Health-based):** weighted score from HealthKit/Health Connect aggregates.
-- **v2 (Data-driven):** outcome feedback (date completed, rating) used to tune weights per user.
+- **v0 (rule-based):** filter by city/age/gender, no health signal.
+- **v1 (health-based):** weighted score from HealthKit/Health Connect aggregates.
+- **v2 (data-driven):** outcome feedback (date completed, rating) used to tune weights per user.
+- **v3 (group compatibility):** extend the pairwise model to compute a multi-user group
+  cohesion score across 4–8 participants; surface curated small-group activity proposals
+  (runs, sauna sessions, padel). The individual compatibility profiles and `SparkSession`
+  IRL data built in v1/v2 are the direct input to this layer — no re-architecture required.

@@ -29,6 +29,10 @@ Core principles:
 - **Anti-swipe-fatigue by design.** Profiles that are clearly incompatible are silently excluded.
 - **Trust first.** Every user has a TrustScore. Low-trust profiles are ranked down or gated.
 - **Real dates as the goal.** The app guides matched users toward a structured date proposal.
+- **IRL as a first-class signal.** Synca Spark lets two people meet in real life — at a gym,
+  sauna, or run club — and instantly compute compatibility on the spot. It is the strongest
+  liveness and trust signal in the system, and the primary acquisition mechanism at community
+  events.
 
 ## Target Users
 
@@ -45,6 +49,12 @@ Geographic focus (in order):
 Build the first dating platform where compatibility is grounded in behavioral data, not just
 self-reported preferences — and where every match has a real chance of becoming a real date.
 
-Eventually: extend compatibility signals to music (Spotify), travel patterns, and recovery
-behavior, and use outcome feedback (actual dates, follow-up ratings) to train a personalized
-matching model per user.
+Signal expansion roadmap:
+- **v1**: Spotify music profile, travel behavior (Polarsteps / Maps)
+- **v2**: Cross-signal validation, predictive compatibility modeling, outcome-based weight tuning
+- **v3+**: Group compatibility — the same lifestyle signals used for one-to-one matching
+  extended to compose and propose curated small groups (4–8 people) for shared activities
+  such as morning runs, sauna sessions, or padel games. This is not a pivot — it is a natural
+  extension of the core model, using the individual compatibility profiles and IRL Spark data
+  already accumulated in earlier phases. It broadens Synca's addressable market from dating
+  into the wider social wellness category.
