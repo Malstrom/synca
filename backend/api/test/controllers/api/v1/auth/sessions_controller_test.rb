@@ -5,7 +5,7 @@ class Api::V1::Auth::SessionsControllerTest < ApiTestCase
     @user = users(:alice)
   end
 
-  test "login con credenziali valide restituisce 200 e token" do
+  test "login with valid credentials returns 200 and tokens" do
     post_json "/api/v1/auth/login",
       params: { auth: { email: @user.email, password: "password" } }
 
@@ -14,7 +14,7 @@ class Api::V1::Auth::SessionsControllerTest < ApiTestCase
     assert json[:refresh_token].present?
   end
 
-  test "login con password errata restituisce 401" do
+  test "login with wrong password returns 401" do
     post_json "/api/v1/auth/login",
       params: { auth: { email: @user.email, password: "wrongpassword" } }
 
@@ -22,7 +22,7 @@ class Api::V1::Auth::SessionsControllerTest < ApiTestCase
     assert_equal "invalid_credentials", json.dig(:error, :code)
   end
 
-  test "login con email inesistente restituisce 401" do
+  test "login with unknown email returns 401" do
     post_json "/api/v1/auth/login",
       params: { auth: { email: "ghost@example.com", password: "password" } }
 

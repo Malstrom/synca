@@ -5,7 +5,7 @@ class Api::V1::Auth::TokensControllerTest < ApiTestCase
     @user = users(:alice)
   end
 
-  test "refresh con token valido restituisce nuovo access_token" do
+  test "refresh with valid token returns new access_token" do
     refresh_token = JwtService.refresh_token(@user)
 
     post_json "/api/v1/auth/refresh",
@@ -16,7 +16,7 @@ class Api::V1::Auth::TokensControllerTest < ApiTestCase
     refute json.key?(:refresh_token)
   end
 
-  test "refresh con access_token al posto del refresh restituisce 401" do
+  test "refresh with access_token instead of refresh_token returns 401" do
     access_token = JwtService.access_token(@user)
 
     post_json "/api/v1/auth/refresh",
@@ -26,7 +26,7 @@ class Api::V1::Auth::TokensControllerTest < ApiTestCase
     assert_equal "invalid_token", json.dig(:error, :code)
   end
 
-  test "refresh con token corrotto restituisce 401" do
+  test "refresh with corrupted token returns 401" do
     post_json "/api/v1/auth/refresh",
       params: { auth: { refresh_token: "not.a.valid.token" } }
 
