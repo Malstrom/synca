@@ -72,6 +72,9 @@ group :development do
 
   # Security vulnerability static analysis
   gem "brakeman", require: false
+
+  # CVE audit for gem dependencies
+  gem "bundler-audit", require: false
 end
 
 # ─── Development & Test ───────────────────────────────
