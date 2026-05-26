@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateSparkSessions < ActiveRecord::Migration[8.0]
   def change
     create_table :spark_sessions do |t|
