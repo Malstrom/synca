@@ -14,7 +14,7 @@ class SparkSession < ApplicationRecord
   before_validation :generate_tokens, on: :create
 
   scope :stale, -> {
-    where(status: [:pending, :active])
+    where(status: [ :pending, :active ])
       .where("created_at < ?", EXPIRY_MINUTES.minutes.ago)
   }
 
@@ -34,7 +34,7 @@ class SparkSession < ApplicationRecord
   end
 
   def one_active_session_per_initiator
-    return unless SparkSession.where(initiator_id: initiator_id, status: [:pending, :active]).exists?
+    return unless SparkSession.where(initiator_id: initiator_id, status: [ :pending, :active ]).exists?
 
     errors.add(:base, "initiator already has an active Spark session")
   end
