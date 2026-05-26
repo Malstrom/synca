@@ -1,0 +1,19 @@
+alice_health:
+  user: alice
+  chronotype: 0
+  avg_sleep_duration_minutes: 450
+  routine_stability_index: 0.82
+  activity_level: 1
+  recovery_score: 1
+  source: 0
+  effective_from: "2026-05-01"
+
+bob_health:
+  user: bob
+  chronotype: 2
+  avg_sleep_duration_minutes: 390
+  routine_stability_index: 0.45
+  activity_level: 0
+  recovery_score: 0
+  source: 0
+  effective_from: "2026-05-01"

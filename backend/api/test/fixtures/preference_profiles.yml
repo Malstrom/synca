@@ -1,0 +1,7 @@
+alice_prefs:
+  user: alice
+  travel_style: 2
+
+bob_prefs:
+  user: bob
+  travel_style: 1

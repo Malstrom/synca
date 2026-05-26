@@ -1,0 +1,20 @@
+alice_profile:
+  user: alice
+  display_name: Alice
+  birth_date: "1995-06-15"
+  gender: female
+  bio: Morning runner and coffee lover.
+  city: Moscow
+  trust_score: 75.0
+  spark_verified: true
+  photo_urls: []
+
+bob_profile:
+  user: bob
+  display_name: Bob
+  birth_date: "1992-03-20"
+  gender: male
+  city: Moscow
+  trust_score: 50.0
+  spark_verified: false
+  photo_urls: []

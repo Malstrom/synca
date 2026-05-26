@@ -1,0 +1,9 @@
+alice_initiator:
+  match: alice_bob_match
+  user: alice
+  role: 0
+
+bob_member:
+  match: alice_bob_match
+  user: bob
+  role: 1

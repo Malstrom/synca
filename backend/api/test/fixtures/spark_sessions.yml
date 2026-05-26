@@ -1,0 +1,16 @@
+alice_spark:
+  initiator: alice
+  partner: bob
+  status: 1
+  session_code: "123456"
+  qr_token: "550e8400-e29b-41d4-a716-446655440000"
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+pending_spark:
+  initiator: carla
+  status: 0
+  session_code: "999888"
+  qr_token: "660e8400-e29b-41d4-a716-446655440001"
+  reward_issued_initiator: false
+  reward_issued_partner: false
