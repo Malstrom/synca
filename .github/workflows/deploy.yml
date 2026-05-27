@@ -59,11 +59,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
 
-      - name: Deploy with Kamal
-        run: bin/kamal deploy
+      # TODO: re-enable once the production server is provisioned and
+      # KAMAL_SERVER_IP / KAMAL_SSH_PRIVATE_KEY secrets are set.
+      # - name: Deploy with Kamal
+      #   run: bin/kamal deploy
+      #
+      # - name: Run pending migrations
+      #   run: bin/kamal app exec "bin/rails db:migrate"
 
-      - name: Run pending migrations
-        run: bin/kamal app exec "bin/rails db:migrate"
+      - name: Deploy placeholder (server not yet provisioned)
+        run: echo "🟡 Kamal deploy skipped — production server not yet provisioned. Re-enable the deploy steps when KAMAL_SERVER_IP is ready."
 
       - name: Notify on failure
         if: failure()

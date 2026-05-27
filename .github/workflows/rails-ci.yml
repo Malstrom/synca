@@ -31,7 +31,8 @@ jobs:
           working-directory: backend/api
 
       - name: Scan for Rails security vulnerabilities
-        run: bin/brakeman --no-pager
+        # --ignore-config suppresses known false positives tracked in config/brakeman.ignore
+        run: bin/brakeman --no-pager --ignore-config config/brakeman.ignore
 
   gem_audit:
     name: Gem CVE Audit (bundler-audit)
