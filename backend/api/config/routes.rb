@@ -3,10 +3,10 @@
 Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
-    if Rails.env.development?
+  if Rails.env.development?
     mount Scalar::UI, at: "/api-docs"
   end
-  
+
   namespace :api do
     namespace :v1 do
       namespace :auth do

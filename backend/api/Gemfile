@@ -77,7 +77,7 @@ group :development do
   gem "bundler-audit", require: false
 
   # API Documentation
-  gem "scalar_ruby" 
+  gem "scalar_ruby"
 end
 
 # ─── Development & Test ───────────────────────────────
