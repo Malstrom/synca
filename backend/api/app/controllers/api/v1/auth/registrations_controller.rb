@@ -8,6 +8,15 @@ module Api
 
         # POST /api/v1/auth/register
         def create
+          unless register_params.key?(:auth_provider)
+            return render_error(
+              code: "validation_failed",
+              message: "Auth provider can't be blank",
+              field: "auth_provider",
+              status: :unprocessable_entity
+            )
+          end
+
           user = User.new(register_params)
 
           unless user.save

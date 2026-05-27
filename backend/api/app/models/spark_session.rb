@@ -6,6 +6,8 @@ class SparkSession < ApplicationRecord
   belongs_to :initiator, class_name: "User", inverse_of: :initiated_spark_sessions
   belongs_to :partner,   class_name: "User", optional: true, inverse_of: :joined_spark_sessions
 
+  has_many :spark_rewards, dependent: :destroy
+
   enum :status, { pending: 0, active: 1, completed: 2, expired: 3 }
 
   validates :session_code, presence: true, uniqueness: true, length: { is: 6 }

@@ -14,6 +14,15 @@ class Api::V1::Auth::SessionsControllerTest < ApiTestCase
     assert_response :ok
     assert json[:access_token].present?
     assert json[:refresh_token].present?
+    assert_equal @user.email, json.dig(:user, :email)
+  end
+
+  test "login with uppercase email is case-insensitive" do
+    post_json "/api/v1/auth/login",
+      params: { auth: { email: @user.email.upcase, password: "password" } }
+
+    assert_response :ok
+    assert json[:access_token].present?
   end
 
   test "login with wrong password returns 401" do
@@ -27,6 +36,14 @@ class Api::V1::Auth::SessionsControllerTest < ApiTestCase
   test "login with unknown email returns 401" do
     post_json "/api/v1/auth/login",
       params: { auth: { email: "ghost@example.com", password: "password" } }
+
+    assert_response :unauthorized
+    assert_equal "invalid_credentials", json.dig(:error, :code)
+  end
+
+  test "login with missing password returns 401" do
+    post_json "/api/v1/auth/login",
+      params: { auth: { email: @user.email } }
 
     assert_response :unauthorized
   end
