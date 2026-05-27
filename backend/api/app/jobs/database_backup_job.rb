@@ -6,10 +6,17 @@ class DatabaseBackupJob < ApplicationJob
   def perform
     timestamp = Time.current.strftime("%Y%m%d-%H%M%S")
     filename  = "synca-backup-#{timestamp}.dump"
-    dump_path = Rails.root.join("tmp", filename)
+    dump_path = Rails.root.join("tmp", filename).to_s
 
-    success = system("pg_dump #{ENV.fetch('DATABASE_URL')} -Fc -f #{dump_path}")
-    raise "pg_dump failed" unless success
+    # Pass arguments as separate array entries — never interpolate ENV vars into
+    # a shell string, which would allow command injection via a crafted DATABASE_URL.
+    _out, err, status = Open3.capture2e(
+      "pg_dump",
+      ENV.fetch("DATABASE_URL"),
+      "-Fc",
+      "-f", dump_path
+    )
+    raise "pg_dump failed: #{err}" unless status.success?
 
     s3 = Aws::S3::Resource.new(
       endpoint:          "https://storage.yandexcloud.net",
@@ -20,7 +27,7 @@ class DatabaseBackupJob < ApplicationJob
 
     s3.bucket(ENV.fetch("YC_BACKUP_BUCKET"))
       .object("backups/#{filename}")
-      .upload_file(dump_path.to_s)
+      .upload_file(dump_path)
 
     Rails.logger.info "[Backup] uploaded #{filename} to Yandex Object Storage"
   ensure
