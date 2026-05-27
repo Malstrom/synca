@@ -7,7 +7,26 @@ module Api
       def update
         health_summary = current_user.health_summary || current_user.build_health_summary
 
-        unless health_summary.update(health_summary_params)
+        unless effective_from_present?
+          return render_error(
+            code: "validation_failed",
+            message: "Effective from can't be blank",
+            field: "effective_from",
+            status: :unprocessable_entity
+          )
+        end
+
+        begin
+          saved = health_summary.update(health_summary_params)
+        rescue ArgumentError => e
+          return render_error(
+            code: "validation_failed",
+            message: e.message,
+            status: :unprocessable_entity
+          )
+        end
+
+        unless saved
           return render_validation_errors(health_summary)
         end
 
@@ -15,6 +34,10 @@ module Api
       end
 
       private
+
+        def effective_from_present?
+          params.dig(:health_summary, :effective_from).present?
+        end
 
         def health_summary_params
           params.require(:health_summary).permit(
