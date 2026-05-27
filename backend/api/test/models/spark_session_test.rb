@@ -47,8 +47,8 @@ class SparkSessionTest < ActiveSupport::TestCase
   end
 
   test "one active session per initiator on create" do
-    # bob already has pending_spark in fixtures
-    duplicate = SparkSession.new(initiator: users(:bob), status: :pending)
+    # charlie already owns pending_spark fixture (status: pending)
+    duplicate = SparkSession.new(initiator: users(:charlie), status: :pending)
     duplicate.valid?
     assert duplicate.errors[:base].any?
   end
