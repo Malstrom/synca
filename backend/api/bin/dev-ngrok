@@ -1,50 +1,90 @@
 #!/usr/bin/env bash
-# Starts Rails + ngrok and writes the tunnel URL to .env.ngrok at the repo root.
+# Starts Rails + Caddy (api.synca.local) + ngrok (public URL for device/webhooks).
+# Writes ngrok URL to .env.ngrok, destroys it on exit.
 # Usage: bin/dev-ngrok
+#
+# First run only — add local domain to /etc/hosts (requires sudo):
+#   sudo bash -c 'echo "127.0.0.1 api.synca.local" >> /etc/hosts'
+
 set -e
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../../" && pwd)"
 ENV_FILE="$REPO_ROOT/.env.ngrok"
+CADDYFILE="/tmp/Caddyfile-synca"
 
 cleanup() {
   echo ""
-  echo "Shutting down..."
-  kill "$RAILS_PID" "$NGROK_PID" 2>/dev/null || true
+  echo "🛑 Shutting down..."
+  kill "$RAILS_PID" 2>/dev/null || true
+  kill "$NGROK_PID" 2>/dev/null || true
+  kill "$CADDY_PID" 2>/dev/null || true
+  # Destroy .env.ngrok so the stale URL never persists
+  rm -f "$ENV_FILE"
+  rm -f "$CADDYFILE"
+  echo "🗑  .env.ngrok destroyed."
+  echo "👋 Done."
   exit 0
 }
 trap cleanup INT TERM
 
-# Check dependencies
-if ! command -v ngrok &>/dev/null; then
-  echo "❌ ngrok not found. Install it: brew install ngrok"
+# ── Dependency checks ────────────────────────────────────────────────────────
+for cmd in ngrok caddy ruby curl; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "❌ '$cmd' not found."
+    case $cmd in
+      ngrok)  echo "   Install: brew install ngrok" ;;
+      caddy)  echo "   Install: brew install caddy" ;;
+      ruby)   echo "   Install: rbenv or asdf" ;;
+    esac
+    exit 1
+  fi
+done
+
+# ── Check /etc/hosts ────────────────────────────────────────────────────────
+if ! grep -q "api.synca.local" /etc/hosts; then
+  echo ""
+  echo "⚠️  'api.synca.local' not found in /etc/hosts."
+  echo "   Run this once to add it (requires sudo):"
+  echo ""
+  echo "   sudo bash -c 'echo \"127.0.0.1 api.synca.local\" >> /etc/hosts'"
+  echo ""
+  echo "   Then re-run bin/dev-ngrok."
   exit 1
 fi
 
-if ! command -v ruby &>/dev/null; then
-  echo "❌ ruby not found."
-  exit 1
-fi
-
+# ── Start Rails ─────────────────────────────────────────────────────────────
 echo "🚀 Starting Rails on port 3000..."
-bin/rails s -p 3000 -b 0.0.0.0 &
+bin/rails s -p 3000 -b 127.0.0.1 &
 RAILS_PID=$!
 
-# Wait for Rails to be ready
 echo "⏳ Waiting for Rails to boot..."
 for i in $(seq 1 20); do
-  if curl -s http://localhost:3000/up | grep -q '"status":"ok"' 2>/dev/null || \
-     curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/up | grep -q '200'; then
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/up 2>/dev/null || true)
+  if [ "$STATUS" = "200" ]; then
     echo "✅ Rails is up."
     break
   fi
   sleep 1
 done
 
-echo "🌐 Starting ngrok tunnel..."
+# ── Start Caddy (local domain proxy) ────────────────────────────────────────
+# Writes a minimal Caddyfile that proxies api.synca.local → localhost:3000
+cat > "$CADDYFILE" <<EOF
+http://api.synca.local {
+  reverse_proxy 127.0.0.1:3000
+}
+EOF
+
+echo "🌐 Starting Caddy (http://api.synca.local → :3000)..."
+caddy run --config "$CADDYFILE" > /tmp/caddy-synca.log 2>&1 &
+CADDY_PID=$!
+sleep 1
+
+# ── Start ngrok (public URL for device / webhooks) ──────────────────────────
+echo "🌍 Starting ngrok tunnel..."
 ngrok http 3000 --log=stdout --log-level=warn > /tmp/ngrok-synca.log 2>&1 &
 NGROK_PID=$!
 
-# Wait for ngrok to register the tunnel
 echo "⏳ Waiting for ngrok tunnel..."
 NGROK_URL=""
 for i in $(seq 1 15); do
@@ -55,9 +95,7 @@ for i in $(seq 1 15); do
         t = tunnels.find { |t| t["proto"] == "https" }
         puts t["public_url"] if t
       ' 2>/dev/null || true)
-  if [ -n "$NGROK_URL" ]; then
-    break
-  fi
+  [ -n "$NGROK_URL" ] && break
   sleep 1
 done
 
@@ -66,17 +104,18 @@ if [ -z "$NGROK_URL" ]; then
   cleanup
 fi
 
-# Write to .env.ngrok at repo root
+# Write ngrok URL — will be destroyed on exit
 echo "BASE_URL=$NGROK_URL" > "$ENV_FILE"
 
+# ── Summary ──────────────────────────────────────────────────────────────────
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  🔗 Rails:     http://localhost:3000"
-echo "  🌍 ngrok:     $NGROK_URL"
-echo "  📖 API docs:  $NGROK_URL/api-docs"
-echo "  📝 Written:   .env.ngrok"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  🏠 Local:     http://api.synca.local   (Simulator)"
+echo "  🌍 Public:    $NGROK_URL"
+echo "  📖 API docs:  http://api.synca.local/api-docs"
+echo "  📝 .env.ngrok written (auto-deleted on exit)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "Press Ctrl+C to stop."
+echo "Press Ctrl+C to stop everything and clean up."
 
 wait $RAILS_PID
