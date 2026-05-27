@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Starts Rails + ngrok and writes the tunnel URL to .env.ngrok at the repo root.
+# Usage: bin/dev-ngrok
+set -e
+
+REPO_ROOT="$(cd "$(dirname "$0")/../../../" && pwd)"
+ENV_FILE="$REPO_ROOT/.env.ngrok"
+
+cleanup() {
+  echo ""
+  echo "Shutting down..."
+  kill "$RAILS_PID" "$NGROK_PID" 2>/dev/null || true
+  exit 0
+}
+trap cleanup INT TERM
+
+# Check dependencies
+if ! command -v ngrok &>/dev/null; then
+  echo "❌ ngrok not found. Install it: brew install ngrok"
+  exit 1
+fi
+
+if ! command -v ruby &>/dev/null; then
+  echo "❌ ruby not found."
+  exit 1
+fi
+
+echo "🚀 Starting Rails on port 3000..."
+bin/rails s -p 3000 -b 0.0.0.0 &
+RAILS_PID=$!
+
+# Wait for Rails to be ready
+echo "⏳ Waiting for Rails to boot..."
+for i in $(seq 1 20); do
+  if curl -s http://localhost:3000/up | grep -q '"status":"ok"' 2>/dev/null || \
+     curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/up | grep -q '200'; then
+    echo "✅ Rails is up."
+    break
+  fi
+  sleep 1
+done
+
+echo "🌐 Starting ngrok tunnel..."
+ngrok http 3000 --log=stdout --log-level=warn > /tmp/ngrok-synca.log 2>&1 &
+NGROK_PID=$!
+
+# Wait for ngrok to register the tunnel
+echo "⏳ Waiting for ngrok tunnel..."
+NGROK_URL=""
+for i in $(seq 1 15); do
+  NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null \
+    | ruby -rjson -e '
+        data = JSON.parse($stdin.read) rescue {}
+        tunnels = data["tunnels"] || []
+        t = tunnels.find { |t| t["proto"] == "https" }
+        puts t["public_url"] if t
+      ' 2>/dev/null || true)
+  if [ -n "$NGROK_URL" ]; then
+    break
+  fi
+  sleep 1
+done
+
+if [ -z "$NGROK_URL" ]; then
+  echo "❌ Could not get ngrok URL. Check /tmp/ngrok-synca.log"
+  cleanup
+fi
+
+# Write to .env.ngrok at repo root
+echo "BASE_URL=$NGROK_URL" > "$ENV_FILE"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  🔗 Rails:     http://localhost:3000"
+echo "  🌍 ngrok:     $NGROK_URL"
+echo "  📖 API docs:  $NGROK_URL/api-docs"
+echo "  📝 Written:   .env.ngrok"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Press Ctrl+C to stop."
+
+wait $RAILS_PID
