@@ -35,7 +35,15 @@ class ApiTestCase < ActionDispatch::IntegrationTest
       { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
     end
 
-    def post_json(path, params: {})
-      post path, params: params.to_json, headers: { "Content-Type" => "application/json" }
+    def post_json(path, params: {}, headers: {})
+      post path,
+        params: params.to_json,
+        headers: { "Content-Type" => "application/json" }.merge(headers)
+    end
+
+    def put_json(path, params: {}, headers: {})
+      put path,
+        params: params.to_json,
+        headers: { "Content-Type" => "application/json" }.merge(headers)
     end
 end
