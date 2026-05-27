@@ -24,34 +24,34 @@ module Api
         end
 
         def profile_payload
-          p = current_user.profile
-          return nil unless p
+          profile = current_user.profile
+          return nil unless profile
 
           {
-            display_name:   p.display_name,
-            bio:            p.bio,
-            city:           p.city,
-            photo_url_main: p.photo_url_main,
-            trust_score:    p.trust_score,
-            spark_verified: p.spark_verified
+            display_name:   profile.display_name,
+            bio:            profile.bio,
+            city:           profile.city,
+            photo_url_main: profile.photo_url_main,
+            trust_score:    profile.trust_score,
+            spark_verified: profile.spark_verified
           }
         end
 
         def health_summary_payload
-          hs = current_user.health_summary
-          return nil unless hs
+          health_summary = current_user.health_summary
+          return nil unless health_summary
 
           {
-            chronotype:                 hs.chronotype,
-            sleep_start_local:          hs.sleep_start_local,
-            sleep_end_local:            hs.sleep_end_local,
-            avg_sleep_duration_minutes: hs.avg_sleep_duration_minutes,
-            routine_stability_index:    hs.routine_stability_index,
-            activity_level:             hs.activity_level,
-            peak_energy_start_local:    hs.peak_energy_start_local,
-            peak_energy_end_local:      hs.peak_energy_end_local,
-            recovery_score:             hs.recovery_score,
-            source:                     hs.source
+            chronotype:                 health_summary.chronotype,
+            sleep_start_local:          health_summary.sleep_start_local,
+            sleep_end_local:            health_summary.sleep_end_local,
+            avg_sleep_duration_minutes: health_summary.avg_sleep_duration_minutes,
+            routine_stability_index:    health_summary.routine_stability_index,
+            activity_level:             health_summary.activity_level,
+            peak_energy_start_local:    health_summary.peak_energy_start_local,
+            peak_energy_end_local:      health_summary.peak_energy_end_local,
+            recovery_score:             health_summary.recovery_score,
+            source:                     health_summary.source
           }
         end
     end
