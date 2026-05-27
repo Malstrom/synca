@@ -1,16 +1,27 @@
 alice_spark:
   initiator: alice
   partner: bob
-  status: 1
+  status: 2
   session_code: "123456"
   qr_token: "550e8400-e29b-41d4-a716-446655440000"
-  reward_issued_initiator: false
-  reward_issued_partner: false
+  started_at: <%= 2.hours.ago.iso8601 %>
+  completed_at: <%= 1.hour.ago.iso8601 %>
+  initiator_answers: []
+  partner_answers: []
+  compatibility_score: 75.0
+  reward_issued_initiator: true
+  reward_issued_partner: true
 
-pending_spark:
+bob_spark:
   initiator: bob
-  status: 0
+  partner: alice
+  status: 2
   session_code: "999888"
   qr_token: "660e8400-e29b-41d4-a716-446655440001"
-  reward_issued_initiator: false
-  reward_issued_partner: false
+  started_at: <%= 3.hours.ago.iso8601 %>
+  completed_at: <%= 2.hours.ago.iso8601 %>
+  initiator_answers: []
+  partner_answers: []
+  compatibility_score: 80.0
+  reward_issued_initiator: true
+  reward_issued_partner: true
