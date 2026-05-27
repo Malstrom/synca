@@ -72,10 +72,11 @@ module Api
         end
 
         rewards = SparkReward.where(spark_session: @spark_session)
+        dimensions = build_dimensions
 
         render json: {
           compatibility_score: @spark_session.compatibility_score,
-          dimensions:          @spark_session.dimensions,
+          dimensions:          dimensions,
           rewards:             rewards.map { |reward| { type: reward.reward_type, status: reward.status } }
         }
       end
@@ -107,6 +108,22 @@ module Api
 
         def answers_param
           params.require(:spark_session).require(:answers)
+        end
+
+        # Recomputes dimensions live from health summaries when both are available.
+        # Falls back to an empty hash if health data is missing for either participant.
+        def build_dimensions
+          initiator_health = @spark_session.initiator.health_summary
+          partner_health   = @spark_session.partner&.health_summary
+
+          return {} unless initiator_health && partner_health
+
+          result = CompatibilityService.call(initiator_health, partner_health)
+          {
+            sleep_rhythm:    result.sleep,
+            energy_overlap:  result.activity,
+            lifestyle:       result.lifestyle
+          }
         end
 
         def spark_session_payload(spark_session)

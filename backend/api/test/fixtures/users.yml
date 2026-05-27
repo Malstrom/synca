@@ -12,3 +12,8 @@ charlie:
   email: charlie@example.com
   password_digest: <%= BCrypt::Password.create('password') %>
   auth_provider: 0
+
+dave:
+  email: dave@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  auth_provider: 0
