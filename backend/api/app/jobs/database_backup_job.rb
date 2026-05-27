@@ -37,15 +37,15 @@ class DatabaseBackupJob < ApplicationJob
 
   private
 
-  def upload_to_s3(filename, path)
-    Aws::S3::Resource.new(
-      endpoint:          "https://storage.yandexcloud.net",
-      region:            "ru-central1",
-      access_key_id:     ENV.fetch("YC_ACCESS_KEY_ID"),
-      secret_access_key: ENV.fetch("YC_SECRET_ACCESS_KEY")
-    )
-    .bucket(ENV.fetch("YC_BACKUP_BUCKET"))
-    .object("backups/#{filename}")
-    .upload_file(path)
-  end
+    def upload_to_s3(filename, path)
+      Aws::S3::Resource.new(
+        endpoint:          "https://storage.yandexcloud.net",
+        region:            "ru-central1",
+        access_key_id:     ENV.fetch("YC_ACCESS_KEY_ID"),
+        secret_access_key: ENV.fetch("YC_SECRET_ACCESS_KEY")
+      )
+      .bucket(ENV.fetch("YC_BACKUP_BUCKET"))
+      .object("backups/#{filename}")
+      .upload_file(path)
+    end
 end
