@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# bin/sync — pull + stage + commit + push in one command
+# Usage:
+#   bin/sync                          # auto-generates commit message from staged diff
+#   bin/sync "feat(auth): add JwtService"  # explicit message
+
+set -euo pipefail
+
+# Colors
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+
+log()  { echo -e "${GREEN}▶${NC} $1"; }
+warn() { echo -e "${YELLOW}⚠${NC}  $1"; }
+die()  { echo -e "${RED}✗${NC}  $1"; exit 1; }
+
+# 1. Stash local changes before pulling
+STASHED=false
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  log "Stashing local changes..."
+  git stash push -m "sync-auto-stash-$(date +%s)"
+  STASHED=true
+fi
+
+# 2. Pull remote with rebase (no conflicts from diverged histories)
+log "Pulling remote changes (rebase)..."
+git pull --rebase origin "$(git branch --show-current)" || {
+  warn "Rebase conflict — restoring stash and aborting"
+  git rebase --abort 2>/dev/null || true
+  $STASHED && git stash pop
+  die "Fix conflicts manually, then run bin/sync again"
+}
+
+# 3. Restore stashed changes
+if $STASHED; then
+  log "Restoring stashed changes..."
+  git stash pop || die "Stash pop failed — resolve manually with 'git stash show -p | git apply'"
+fi
+
+# 4. Stage everything (or let the user pass files as extra args)
+if [[ $# -gt 1 ]]; then
+  # bin/sync "message" file1 file2
+  MSG="$1"; shift
+  git add "$@"
+elif [[ $# -eq 1 ]]; then
+  # bin/sync "message"  → stage all
+  MSG="$1"
+  git add -A
+else
+  # bin/sync  → stage all + auto-generate message
+  git add -A
+  MSG=""
+fi
+
+# 5. Nothing to commit?
+if git diff --cached --quiet; then
+  log "Nothing to commit — already in sync."
+  exit 0
+fi
+
+# 6. Auto-generate commit message if not provided
+if [[ -z "$MSG" ]]; then
+  # Derive type from changed paths
+  CHANGED=$(git diff --cached --name-only)
+  
+  if echo "$CHANGED" | grep -q "^backend/api/app/models"; then
+    TYPE="feat(models)"
+  elif echo "$CHANGED" | grep -q "^backend/api/app/controllers"; then
+    TYPE="feat(api)"
+  elif echo "$CHANGED" | grep -q "^backend/api/app/jobs"; then
+    TYPE="fix(jobs)"
+  elif echo "$CHANGED" | grep -q "^backend/api/spec\|^backend/api/test"; then
+    TYPE="test"
+  elif echo "$CHANGED" | grep -q "^docs/"; then
+    TYPE="docs"
+  elif echo "$CHANGED" | grep -q "Gemfile"; then
+    TYPE="chore(deps)"
+  elif echo "$CHANGED" | grep -q "^backend/api/config"; then
+    TYPE="chore(config)"
+  elif echo "$CHANGED" | grep -q "^apps/ios"; then
+    TYPE="feat(ios)"
+  elif echo "$CHANGED" | grep -q "^apps/android"; then
+    TYPE="feat(android)"
+  else
+    TYPE="chore"
+  fi
+
+  # List files changed (max 3)
+  FILES=$(echo "$CHANGED" | head -3 | xargs -I{} basename {} | paste -sd ", ")
+  FILE_COUNT=$(echo "$CHANGED" | wc -l | tr -d ' ')
+  [[ $FILE_COUNT -gt 3 ]] && FILES="${FILES} (+$((FILE_COUNT - 3)) more)"
+
+  MSG="${TYPE}: update ${FILES}"
+  warn "Auto-generated message: \"${MSG}\""
+  warn "Override with: bin/sync \"your message\""
+fi
+
+# 7. Commit
+git commit -m "$MSG"
+
+# 8. Push
+log "Pushing to origin/$(git branch --show-current)..."
+git push origin "$(git branch --show-current)"
+
+log "Done ✓  →  $MSG"

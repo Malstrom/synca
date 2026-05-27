@@ -1,0 +1,20 @@
+current directory: /Users/igor/Projects/synca/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+/Users/igor/.rbenv/versions/3.3.1/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /Users/igor/Projects/synca/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260527-55284-ko1rwc sitelibdir\=./.gem.20260527-55284-ko1rwc clean
+
+current directory: /Users/igor/Projects/synca/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260527-55284-ko1rwc sitelibdir\=./.gem.20260527-55284-ko1rwc
+compiling debug.c
+compiling iseq_collector.c
+linking shared-object debug/debug.bundle
+ld: warning: -multiply_defined is obsolete
+
+current directory: /Users/igor/Projects/synca/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260527-55284-ko1rwc sitelibdir\=./.gem.20260527-55284-ko1rwc install
+/usr/local/bin/ginstall -c -m 0755 debug.bundle ./.gem.20260527-55284-ko1rwc/debug
+
+current directory: /Users/igor/Projects/synca/vendor/bundle/ruby/3.3.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260527-55284-ko1rwc sitelibdir\=./.gem.20260527-55284-ko1rwc clean
