@@ -36,4 +36,12 @@ class ApplicationControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal user.id, response.parsed_body["user_id"]
   end
+
+  test "malformed JWT token triggers rescue and returns 401" do
+    # A syntactically valid-looking but cryptographically broken token
+    # forces JWT::DecodeError inside authenticate_user!
+    malformed = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.INVALIDSIG"
+    get "/dummy_protected", headers: { "Authorization" => malformed }
+    assert_response :unauthorized
+  end
 end
