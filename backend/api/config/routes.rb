@@ -9,8 +9,9 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      get "me", to: "me#show"
-      put "me/profile", to: "profile#update"
+      get "me",              to: "me#show"
+      put "me/profile",      to: "profile#update"
+      put "me/health_summary", to: "health_summary#update"
 
       namespace :auth do
         post "register", to: "registrations#create"
