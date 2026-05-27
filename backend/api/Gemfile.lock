@@ -349,6 +349,7 @@ GEM
     ruby-vips (2.3.0)
       ffi (~> 1.12)
       logger
+    scalar_ruby (2.0.0)
     securerandom (0.4.1)
     simplecov (0.22.0)
       docile (~> 1.1)
@@ -435,6 +436,7 @@ DEPENDENCIES
   rack-cors
   rails (~> 8.0.3)
   rubocop-rails-omakase
+  scalar_ruby
   simplecov
   solid_cable
   solid_cache
