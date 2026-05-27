@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # test/jobs/database_backup_job_test.rb
 require "test_helper"
 

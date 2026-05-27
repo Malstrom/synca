@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Error tracking via GlitchTip (Sentry-compatible open-source)
 # Self-hosted as a Kamal accessory on the same VPS.
 # Set SENTRY_DSN in credentials or environment to activate.
