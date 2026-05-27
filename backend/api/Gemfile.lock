@@ -123,27 +123,8 @@ GEM
     debug (1.11.1)
       irb (~> 1.10)
       reline (>= 0.3.8)
-    devise (5.0.4)
-      bcrypt (~> 3.0)
-      orm_adapter (~> 0.1)
-      railties (>= 7.0)
-      responders
-      warden (~> 1.2.3)
-    devise-jwt (0.13.0)
-      devise (>= 4.0.0, < 6.0.0)
-      warden-jwt_auth (~> 0.10)
     docile (1.4.1)
     drb (2.2.3)
-    dry-auto_inject (1.2.1)
-      dry-core (~> 1.1)
-      zeitwerk (~> 2.6)
-    dry-configurable (1.4.0)
-      dry-core (~> 1.0)
-      zeitwerk (~> 2.6)
-    dry-core (1.2.0)
-      concurrent-ruby (~> 1.0)
-      logger
-      zeitwerk (~> 2.6)
     erb (6.0.4)
     erubi (1.13.1)
     et-orbi (1.4.0)
@@ -232,7 +213,6 @@ GEM
       racc (~> 1.4)
     nokogiri (1.19.3-x86_64-linux-musl)
       racc (~> 1.4)
-    orm_adapter (0.5.0)
     ostruct (0.6.3)
     pagy (43.5.5)
       json
@@ -313,9 +293,6 @@ GEM
     regexp_parser (2.12.0)
     reline (0.6.3)
       io-console (~> 0.5)
-    responders (3.2.0)
-      actionpack (>= 7.0)
-      railties (>= 7.0)
     rexml (3.4.4)
     rubocop (1.86.2)
       json (~> 2.3)
@@ -351,6 +328,13 @@ GEM
       logger
     scalar_ruby (2.0.0)
     securerandom (0.4.1)
+    sentry-rails (6.5.0)
+      railties (>= 5.2.0)
+      sentry-ruby (~> 6.5.0)
+    sentry-ruby (6.5.0)
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      logger
     simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -384,13 +368,6 @@ GEM
     unicode-emoji (4.2.0)
     uri (1.1.1)
     useragent (0.16.11)
-    warden (1.2.9)
-      rack (>= 2.0.9)
-    warden-jwt_auth (0.12.0)
-      dry-auto_inject (>= 0.8, < 2)
-      dry-configurable (>= 0.13, < 2)
-      jwt (>= 2.1, < 4)
-      warden (~> 1.2)
     webmock (3.26.2)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
@@ -423,12 +400,11 @@ DEPENDENCIES
   bundler-audit
   database_cleaner-active_record
   debug
-  devise
-  devise-jwt
   factory_bot_rails
   faker
   image_processing (~> 1.2)
   interactor
+  jwt (~> 3.2)
   pagy
   pg (~> 1.1)
   puma (>= 5.0)
@@ -437,6 +413,8 @@ DEPENDENCIES
   rails (~> 8.0.3)
   rubocop-rails-omakase
   scalar_ruby
+  sentry-rails
+  sentry-ruby
   simplecov
   solid_cable
   solid_cache
