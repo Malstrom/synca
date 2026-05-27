@@ -9,15 +9,25 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      get "me",              to: "me#show"
-      put "me/profile",      to: "profile#update"
-      put "me/health_summary", to: "health_summary#update"
+      get  "me",               to: "me#show"
+      put  "me/profile",       to: "profile#update"
+      put  "me/health_summary", to: "health_summary#update"
 
       namespace :auth do
         post "register", to: "registrations#create"
         post "login",    to: "sessions#create"
         post "refresh",  to: "tokens#create"
       end
+
+      resources :spark_sessions, only: [ :create ] do
+        member do
+          post :join
+          post :submit_answers
+          get  :result
+        end
+      end
+
+      resources :spark_rewards, only: [ :index ]
     end
   end
 end

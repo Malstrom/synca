@@ -30,6 +30,12 @@ class SparkSession < ApplicationRecord
     initiator_answers.present? && partner_answers.present?
   end
 
+  # Returns per-dimension breakdown stored from the last CompatibilityService result.
+  # Returns empty hash for MVP since dimensions are not yet persisted on the model.
+  def dimensions
+    {}
+  end
+
   private
 
     def generate_tokens
