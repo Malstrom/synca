@@ -25,6 +25,8 @@ class User < ApplicationRecord
                                        inverse_of: :partner
   has_many :spark_rewards, dependent: :destroy
 
+  before_save :normalize_email
+
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP },
                     uniqueness: { case_sensitive: false },
                     allow_nil: true
@@ -34,6 +36,10 @@ class User < ApplicationRecord
   validate  :email_or_phone_present
 
   private
+
+    def normalize_email
+      self.email = email&.downcase
+    end
 
     def email_or_phone_present
       return if self.email.present? || phone.present? || !email?
