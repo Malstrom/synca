@@ -1,33 +1,51 @@
 # frozen_string_literal: true
 
+require "zlib"
+
 class DatabaseBackupJob < ApplicationJob
   queue_as :default
 
+  TABLES = %w[
+    users profiles health_summaries preference_profiles
+    matches match_participants spark_sessions spark_rewards
+  ].freeze
+
   def perform
     timestamp = Time.current.strftime("%Y%m%d-%H%M%S")
-    filename  = "synca-backup-#{timestamp}.dump"
-    dump_path = Rails.root.join("tmp", filename).to_s
-    db_url    = ENV.fetch("DATABASE_URL")
+    filename  = "synca-backup-#{timestamp}.csv.gz"
+    tmp_path  = Rails.root.join("tmp", filename).to_s
 
-    # Arguments are passed as a separate array — no shell interpolation occurs.
-    # db_url and dump_path are assigned above; Brakeman false-positive suppressed.
-    # brakeman:ignore
-    _out, err, status = Open3.capture2e("pg_dump", db_url, "-Fc", "-f", dump_path)
-    raise "pg_dump failed: #{err}" unless status.success?
+    conn = ActiveRecord::Base.connection.raw_connection
 
-    s3 = Aws::S3::Resource.new(
+    Zlib::GzipWriter.open(tmp_path) do |gz|
+      TABLES.each do |table|
+        gz.write("-- TABLE: #{table}\n")
+        conn.copy_data("COPY #{table} TO STDOUT WITH (FORMAT csv, HEADER true)") do
+          while (row = conn.get_copy_data)
+            gz.write(row)
+          end
+        end
+        gz.write("\n")
+      end
+    end
+
+    upload_to_s3(filename, tmp_path)
+    Rails.logger.info "[Backup] uploaded #{filename} to Yandex Object Storage"
+  ensure
+    File.delete(tmp_path) if tmp_path && File.exist?(tmp_path)
+  end
+
+  private
+
+  def upload_to_s3(filename, path)
+    Aws::S3::Resource.new(
       endpoint:          "https://storage.yandexcloud.net",
       region:            "ru-central1",
       access_key_id:     ENV.fetch("YC_ACCESS_KEY_ID"),
       secret_access_key: ENV.fetch("YC_SECRET_ACCESS_KEY")
     )
-
-    s3.bucket(ENV.fetch("YC_BACKUP_BUCKET"))
-      .object("backups/#{filename}")
-      .upload_file(dump_path)
-
-    Rails.logger.info "[Backup] uploaded #{filename} to Yandex Object Storage"
-  ensure
-    File.delete(dump_path) if dump_path && File.exist?(dump_path)
+    .bucket(ENV.fetch("YC_BACKUP_BUCKET"))
+    .object("backups/#{filename}")
+    .upload_file(path)
   end
 end

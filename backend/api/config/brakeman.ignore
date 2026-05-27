@@ -1,26 +1,5 @@
 {
-  "ignored_warnings": [
-    {
-      "warning_type": "Command Injection",
-      "warning_code": 14,
-      "fingerprint": "BRAKEMAN_FP_DATABASE_BACKUP_JOB",
-      "check_name": "Execute",
-      "message": "Possible command injection",
-      "file": "app/jobs/database_backup_job.rb",
-      "line": 15,
-      "link": "https://brakemanscanner.org/docs/warning_types/command_injection/",
-      "code": null,
-      "render_path": null,
-      "location": {
-        "type": "method",
-        "class": "DatabaseBackupJob",
-        "method": "perform"
-      },
-      "user_input": null,
-      "confidence": "Medium",
-      "note": "False positive: Open3.capture2e is called with an array of arguments, not a shell string. No shell interpolation occurs. ENV.fetch(DATABASE_URL) is passed as a literal argument to execve."
-    }
-  ],
+  "ignored_warnings": [],
   "updated": "2026-05-27 00:00:00 +0000",
   "brakeman_version": "8.0.4"
 }
