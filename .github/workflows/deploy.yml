@@ -22,15 +22,16 @@ jobs:
       run:
         working-directory: backend/api
 
+    # App-level secrets (jwt_secret_key, etc.) live in credentials.yml.enc
+    # unlocked by RAILS_MASTER_KEY — no separate secret needed here.
     env:
       KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      KAMAL_SERVER_IP:         ${{ secrets.KAMAL_SERVER_IP }}
+      KAMAL_SERVER_HOST:       ${{ secrets.KAMAL_SERVER_HOST }}
       RAILS_MASTER_KEY:        ${{ secrets.RAILS_MASTER_KEY }}
       SECRET_KEY_BASE:         ${{ secrets.SECRET_KEY_BASE }}
       DATABASE_URL:            ${{ secrets.DATABASE_URL }}
-      JWT_SECRET_KEY:          ${{ secrets.JWT_SECRET_KEY }}
       POSTGRES_PASSWORD:       ${{ secrets.POSTGRES_PASSWORD }}
-      KAMAL_SERVER_IP:         ${{ secrets.KAMAL_SERVER_IP }}
-      KAMAL_SERVER_HOST:       ${{ secrets.KAMAL_SERVER_HOST }}
 
     steps:
       - name: Checkout code
