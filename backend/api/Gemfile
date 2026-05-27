@@ -28,12 +28,14 @@ gem "pagy"
 
 # ─── Auth ─────────────────────────────────────────────
 
-# Password hashing for has_secure_password
+# Password hashing via has_secure_password
+# No Devise: auth is handled with plain has_secure_password + JWT.
+# Devise would add unwanted view helpers, route macros, and session logic
+# that have no place in an API-only Rails app.
 gem "bcrypt", "~> 3.1.7"
 
-# JWT-based authentication via Devise
-gem "devise"
-gem "devise-jwt"
+# JWT token generation and verification (access + refresh tokens)
+gem "jwt", "~> 3.2"
 
 # ─── Background Jobs, Cache & WebSocket ───────────────
 
@@ -51,7 +53,7 @@ gem "solid_cable"
 # Image processing for profile photo variants
 gem "image_processing", "~> 1.2"
 
-# AWS S3 for profile photo storage
+# S3-compatible storage (Yandex Object Storage for RU, AWS S3 for other regions)
 gem "aws-sdk-s3", require: false
 
 # ─── Business Logic ───────────────────────────────────
@@ -61,6 +63,13 @@ gem "pundit"
 
 # Clean service objects for matching and scoring logic
 gem "interactor"
+
+# ─── Error Tracking ───────────────────────────────────
+
+# GlitchTip / Sentry-compatible error tracking
+# Activated only when SENTRY_DSN is set (no-op in development)
+gem "sentry-ruby"
+gem "sentry-rails"
 
 # ─── Development ──────────────────────────────────────
 group :development do
@@ -76,13 +85,13 @@ group :development do
   # CVE audit for gem dependencies
   gem "bundler-audit", require: false
 
-  # API Documentation
+  # Interactive API documentation (Scalar UI)
   gem "scalar_ruby"
 end
 
 # ─── Development & Test ───────────────────────────────
 group :development, :test do
-  # RuboCop with Rails cops for code style enforcement (includes rubocop-rails)
+  # RuboCop with Rails cops for code style enforcement
   gem "rubocop-rails-omakase", require: false
 
   # Test factories for Minitest
@@ -94,7 +103,7 @@ end
 
 # ─── Test ─────────────────────────────────────────────
 group :test do
-  # Code coverage reporting
+  # Code coverage reporting (threshold: >= 90%)
   gem "simplecov", require: false
 
   # Cleans database between Minitest runs

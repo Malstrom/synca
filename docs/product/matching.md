@@ -54,16 +54,46 @@ Aggregated metrics computed on device and sent to backend:
 
 Thresholds are configurable per city and will be tuned as real outcome data accumulates.
 
+## TrustScore
+
+Every user has a `trust_score` (float, 0.0–100.0) stored as a column on the `profiles`
+table — not as a separate model. This keeps the schema simple for MVP.
+
+Default value: **50.0** (neutral — neither boosted nor suppressed).
+
+Inputs that raise the score:
+
+- Email or phone verified
+- Profile completeness (display name, bio, photos)
+- `irl_verification_count` — incremented each time a SparkSession is completed with
+  another verified user
+- `spark_verified` flag — set after the first successful SparkSession
+
+Inputs that lower the score:
+
+- No-show reports from other users
+- Rude/harassment reports
+- Liveness check failure
+- Behavioral inconsistency signals
+
+Low TrustScore users are ranked down in the matching pool or gated from features.
+The `trust_score` column lives on `profiles` and is updated by `TrustScoreService`.
+
+> **Schema note:** `TrustScore` is referenced as a standalone model in some older docs
+> and in the README domain model list. The actual implementation uses a column on
+> `profiles` — simpler and sufficient for MVP. A dedicated `trust_score_events` table
+> may be added later for audit history.
+
 ## Synca Spark — Live IRL Signal
 
 When two users complete a `SparkSession` in person, the event contributes additional
 matching signal beyond passively collected health data:
 
 - The compatibility delta computed at session end enriches the pairwise score.
-- `TrustScore.irl_verification_count` is incremented for both users, increasing their
+- `trust_score` is incremented for both users on `profiles`, increasing their
   visibility in the matching pool.
-- Spark answers (micro-test responses) are **discarded immediately** after score computation
-  and are never persisted long-term.
+- Spark answers (micro-test responses) are **discarded immediately** after score
+  computation and are never persisted long-term.
 
 Spark sessions are the strongest liveness and compatibility signal available in the system
 because they require two real people in the same physical location at the same time.
@@ -73,7 +103,8 @@ because they require two real people in the same physical location at the same t
 Compatibility scores are harder to game than profile photos because they are derived from
 continuous health data collected over weeks. A fake profile without health data gets a
 reduced `trust_score` and is ranked down or excluded from match pools. Completing a
-`SparkSession` with another verified user is the most effective way to increase trust visibility.
+`SparkSession` with another verified user is the most effective way to increase trust
+visibility.
 
 ## Evolution Plan
 
