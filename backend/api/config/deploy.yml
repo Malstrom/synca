@@ -1,18 +1,13 @@
 # Synca API — Kamal deployment configuration
 # Docs: https://kamal-deploy.org
 
-# Service name — used to namespace containers on the VPS
 service: synca-api
-
-# Docker image pushed to GitHub Container Registry
 image: ghcr.io/malstrom/synca-api
 
-# Deploy target servers
 servers:
   web:
     - <%= ENV["KAMAL_SERVER_IP"] %>
 
-# Kamal-proxy: TLS termination via Let's Encrypt + Traefik
 proxy:
   ssl: true
   host: <%= ENV["KAMAL_SERVER_HOST"] %>   # e.g. api.synca.app
@@ -21,45 +16,47 @@ proxy:
     interval: 10
     threshold: 5
 
-# GitHub Container Registry credentials
 registry:
   server: ghcr.io
   username: malstrom
   password:
     - KAMAL_REGISTRY_PASSWORD
 
-# Environment variables injected into the Rails container
-# App-level secrets (jwt_secret_key, etc.) live in credentials.yml.enc
-# and are unlocked by RAILS_MASTER_KEY at boot — no need to list them here.
 env:
   secret:
-    - RAILS_MASTER_KEY   # decrypts credentials.yml.enc (contains jwt_secret_key)
+    - RAILS_MASTER_KEY
     - SECRET_KEY_BASE
     - DATABASE_URL
     - POSTGRES_PASSWORD
+    # Yandex Object Storage — backups
+    - YC_ACCESS_KEY_ID
+    - YC_SECRET_ACCESS_KEY
+    - YC_BACKUP_BUCKET
+    - YC_FOLDER_ID
+    # GlitchTip error tracking
+    - SENTRY_DSN
+    - GLITCHTIP_SECRET_KEY
+    - GLITCHTIP_DATABASE_URL
   clear:
     RAILS_ENV: production
     RAILS_LOG_TO_STDOUT: true
     RAILS_SERVE_STATIC_FILES: true
     SOLID_QUEUE_IN_PUMA: true
 
-# Persistent storage for Active Storage uploads
 volumes:
   - "synca_storage:/rails/storage"
 
-# Compiled asset path (bridged between deploys to avoid 404 on in-flight requests)
 asset_path: /rails/public/assets
 
-# Docker image builder — amd64 for Hetzner VPS
 builder:
   arch: amd64
 
-# PostgreSQL accessory — runs as a sidecar container on the same VPS
 accessories:
+  # PostgreSQL — sidecar, never exposed publicly
   db:
     image: postgres:16
     host: <%= ENV["KAMAL_SERVER_IP"] %>
-    port: "127.0.0.1:5432:5432"   # only accessible locally, never exposed
+    port: "127.0.0.1:5432:5432"
     env:
       secret:
         - POSTGRES_PASSWORD
@@ -69,10 +66,28 @@ accessories:
     directories:
       - synca_db_data:/var/lib/postgresql/data
 
-# Useful CLI shortcuts
+  # GlitchTip — self-hosted error tracking (Sentry-compatible)
+  # Access at http://<server-ip>:8000 — restrict in firewall to your IP only
+  glitchtip:
+    image: glitchtip/glitchtip:latest
+    host: <%= ENV["KAMAL_SERVER_IP"] %>
+    port: "127.0.0.1:8000:8000"
+    env:
+      secret:
+        - GLITCHTIP_SECRET_KEY
+        - GLITCHTIP_DATABASE_URL
+      clear:
+        GLITCHTIP_DOMAIN: http://localhost:8000
+        DEFAULT_AUTO_FIELD: django.db.models.AutoField
+        CELERY_WORKER_AUTOSCALE: "1,3"
+        CELERY_WORKER_MAX_TASKS_PER_CHILD: "10000"
+    directories:
+      - glitchtip_uploads:/code/uploads
+
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
   shell:   app exec --interactive --reuse "bash"
   logs:    app logs -f
   dbc:     app exec --interactive --reuse "bin/rails dbconsole"
   migrate: app exec "bin/rails db:migrate"
+  backup:  app exec "bin/rails runner 'DatabaseBackupJob.perform_now'"
