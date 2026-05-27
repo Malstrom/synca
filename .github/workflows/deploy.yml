@@ -1,0 +1,70 @@
+name: CD — Deploy to production
+
+on:
+  workflow_run:
+    workflows: ["CI — Rails API"]
+    types: [completed]
+    branches: [main]
+
+# Only one deploy at a time
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Kamal deploy
+    runs-on: ubuntu-latest
+    # Only deploy if CI passed
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    defaults:
+      run:
+        working-directory: backend/api
+
+    env:
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+      RAILS_MASTER_KEY:        ${{ secrets.RAILS_MASTER_KEY }}
+      SECRET_KEY_BASE:         ${{ secrets.SECRET_KEY_BASE }}
+      DATABASE_URL:            ${{ secrets.DATABASE_URL }}
+      JWT_SECRET_KEY:          ${{ secrets.JWT_SECRET_KEY }}
+      POSTGRES_PASSWORD:       ${{ secrets.POSTGRES_PASSWORD }}
+      KAMAL_SERVER_IP:         ${{ secrets.KAMAL_SERVER_IP }}
+      KAMAL_SERVER_HOST:       ${{ secrets.KAMAL_SERVER_HOST }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Ruby (for Kamal gem)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.1"
+          bundler-cache: true
+          working-directory: backend/api
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.KAMAL_SSH_PRIVATE_KEY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+
+      - name: Deploy with Kamal
+        run: bin/kamal deploy
+
+      - name: Run pending migrations
+        run: bin/kamal app exec "bin/rails db:migrate"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Deploy failed. Run 'kamal rollback' locally to revert."
