@@ -17,6 +17,10 @@ Rails.application.configure do
   # Enable server timing.
   config.server_timing = true
 
+  # Allow ngrok tunnels (free plan uses *.ngrok-free.app, paid uses custom subdomains).
+  config.hosts << /.*\.ngrok-free\.app/
+  config.hosts << /.*\.ngrok\.io/
+
   # Enable/disable Action Controller caching. By default Action Controller caching is disabled.
   # Run rails dev:cache to toggle Action Controller caching.
   if Rails.root.join("tmp/caching-dev.txt").exist?
