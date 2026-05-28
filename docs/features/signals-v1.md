@@ -12,10 +12,11 @@ Signals is the data ingestion layer of Synca. It collects, aggregates, and syncs
 behavioral data from external sources to build each user's compatibility profile.
 
 Raw data from external sources is **never stored on the backend**. All aggregation
-happens on-device. Only derived metrics are sent to and stored in `health_summaries`.
+happens on-device. Only derived metrics are sent to and stored in `user_signals`.
 
 Signal sources are added incrementally across phases. Each new source enriches the
-compatibility model without requiring re-architecture.
+compatibility model without requiring re-architecture. The `user_signals` table grows
+one column group per new source — one row per user at all times.
 
 ---
 
@@ -29,10 +30,10 @@ compatibility model without requiring re-architecture.
 1. After profile onboarding, user is prompted to connect Apple Health (iOS) or
    Health Connect (Android).
 2. App requests read-only permissions for sleep, steps, heart rate, and activity.
-3. `HealthAggregatorService` reads the last 30 days of samples and computes
+3. `SignalsAggregatorService` reads the last 30 days of samples and computes
    aggregated metrics entirely on-device.
-4. Aggregated metrics are sent to the backend (`POST /api/v1/health_summaries`).
-5. Backend stores the metrics in `health_summaries`. Raw samples are never transmitted.
+4. Aggregated metrics are sent to the backend (`POST /api/v1/user_signals`).
+5. Backend stores the metrics in `user_signals`. Raw samples are never transmitted.
 6. Metrics are refreshed automatically once per day in the background.
 7. User can manually trigger a refresh from the Profile screen.
 
@@ -59,9 +60,10 @@ profiles
   created_at             datetime
   updated_at             datetime
 
-health_summaries
+user_signals
   id                       bigint PK
   user_id                  bigint FK -> users NOT NULL UNIQUE
+  -- Step 1.0: health
   sleep_duration_avg       float     -- average nightly sleep hours (last 30 days)
   sleep_variability        float     -- standard deviation of nightly sleep duration
   chronotype               string    -- 'early_bird' | 'night_owl' | 'intermediate'
@@ -79,15 +81,15 @@ health_summaries
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/health_summaries` | Yes | Creates or updates the user's health summary |
-| GET | `/api/v1/health_summaries/me` | Yes | Returns the current user's health summary |
+| POST | `/api/v1/user_signals` | Yes | Creates the user's signal record |
+| GET | `/api/v1/user_signals/me` | Yes | Returns the current user's signals |
 
 Ref: `docs/api/openapi.yaml`
 
 ### Premium Gating
 
 None — Apple Health / Health Connect integration is free for all users.
-Without a health summary, the user cannot receive algorithm-origin matches
+Without a `user_signals` record, the user cannot receive algorithm-origin matches
 (premium feature), but Spark-origin matching still works.
 
 ### Open Questions
@@ -95,9 +97,8 @@ Without a health summary, the user cannot receive algorithm-origin matches
 - Minimum data threshold: how many days of data are required before the user
   enters the matching pool? (Suggested: 7 days minimum.)
 - What happens if the user revokes HealthKit permissions after onboarding?
-  Does their `health_summary` get stale-flagged or deleted?
-- Should `computed_at` be validated server-side to reject summaries older
-  than 48 hours?
+  Does their `user_signals` record get stale-flagged or deleted?
+- Should `computed_at` be validated server-side to reject signals older than 48 hours?
 
 ---
 
@@ -110,12 +111,11 @@ Without a health summary, the user cannot receive algorithm-origin matches
 
 1. User connects their Spotify or Yandex Music account from the Profile screen.
 2. App requests read-only OAuth access to listening history and top artists/genres.
-3. `MusicAggregatorService` computes a music taste profile on-device:
+3. `SignalsAggregatorService` computes a music taste profile on-device:
    - Top genres (weighted by listening time)
    - Energy and valence averages (from Spotify audio features)
    - Listening time-of-day pattern
-4. Music metrics are appended to the health summary sync
-   (`PATCH /api/v1/health_summaries`).
+4. Music metrics are appended via `PATCH /api/v1/user_signals`.
 5. `CompatibilityScoreService` includes music taste as a sub-signal within
    the Lifestyle domain (20% weight).
 
@@ -142,10 +142,10 @@ profiles
   created_at             datetime
   updated_at             datetime
 
-health_summaries
+user_signals
   id                       bigint PK
   user_id                  bigint FK -> users NOT NULL UNIQUE
-  -- Step 1.0 columns (unchanged)
+  -- Step 1.0: health (unchanged)
   sleep_duration_avg       float
   sleep_variability        float
   chronotype               string
@@ -155,7 +155,7 @@ health_summaries
   step_count_avg           float
   peak_activity_window     string
   routine_stability_index  float
-  -- Step 2.0 additions
+  -- Step 2.0: music
   music_top_genres         jsonb     -- e.g. ["hip-hop", "jazz", "electronic"]
   music_energy_avg         float     -- Spotify audio feature average (0.0-1.0)
   music_valence_avg        float     -- Spotify audio feature average (0.0-1.0)
@@ -168,7 +168,7 @@ identity_providers
   id          bigint PK
   user_id     bigint FK -> users NOT NULL
   provider    string NOT NULL   -- 'apple' | 'google' | 'vk' | 'spotify' | 'yandex_music'
-  uid         string NOT NULL
+  uid         string NOT NULL   -- unique ID issued by the provider
   created_at  datetime
   UNIQUE (provider, uid)
 ```
@@ -177,9 +177,9 @@ identity_providers
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/health_summaries` | Yes | Unchanged from Step 1.0 |
-| GET | `/api/v1/health_summaries/me` | Yes | Unchanged from Step 1.0 |
-| PATCH | `/api/v1/health_summaries` | Yes | Partial update — appends music metrics |
+| POST | `/api/v1/user_signals` | Yes | Unchanged from Step 1.0 |
+| GET | `/api/v1/user_signals/me` | Yes | Unchanged from Step 1.0 |
+| PATCH | `/api/v1/user_signals` | Yes | Partial update — appends music metrics |
 | POST | `/api/v1/auth/social` | No | Reused from Auth Step 2.0 for Spotify/Yandex OAuth |
 
 Ref: `docs/api/openapi.yaml`
@@ -206,13 +206,12 @@ everyone and serves as an incentive to connect more signal sources.
 ### User Flow
 
 1. User connects Polarsteps or grants access to location history.
-2. `TravelAggregatorService` computes travel behavior on-device:
+2. `SignalsAggregatorService` computes travel behavior on-device:
    - Average trips per year
    - Typical trip duration
    - Travel style (city vs nature vs mixed)
    - Preferred regions
-3. Travel metrics are appended to the health summary
-   (`PATCH /api/v1/health_summaries`).
+3. Travel metrics are appended via `PATCH /api/v1/user_signals`.
 4. `CompatibilityScoreService` includes travel behavior as a sub-signal
    within the Lifestyle domain.
 
@@ -239,10 +238,10 @@ profiles
   created_at             datetime
   updated_at             datetime
 
-health_summaries
+user_signals
   id                       bigint PK
   user_id                  bigint FK -> users NOT NULL UNIQUE
-  -- Step 1.0 columns (unchanged)
+  -- Step 1.0: health (unchanged)
   sleep_duration_avg       float
   sleep_variability        float
   chronotype               string
@@ -252,13 +251,13 @@ health_summaries
   step_count_avg           float
   peak_activity_window     string
   routine_stability_index  float
-  -- Step 2.0 columns (unchanged)
+  -- Step 2.0: music (unchanged)
   music_top_genres         jsonb
   music_energy_avg         float
   music_valence_avg        float
   music_peak_listening_window string
   music_source             string
-  -- Step 3.0 additions
+  -- Step 3.0: travel
   travel_trips_per_year    float     -- average number of trips per year
   travel_avg_duration_days float     -- average trip duration in days
   travel_style             string    -- 'city' | 'nature' | 'mixed'
@@ -271,9 +270,9 @@ health_summaries
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/health_summaries` | Yes | Unchanged from Step 1.0 |
-| GET | `/api/v1/health_summaries/me` | Yes | Unchanged from Step 1.0 |
-| PATCH | `/api/v1/health_summaries` | Yes | Partial update — appends travel metrics |
+| POST | `/api/v1/user_signals` | Yes | Unchanged from Step 1.0 |
+| GET | `/api/v1/user_signals/me` | Yes | Unchanged from Step 1.0 |
+| PATCH | `/api/v1/user_signals` | Yes | Partial update — appends travel metrics |
 
 Ref: `docs/api/openapi.yaml`
 
