@@ -4,27 +4,28 @@
 **Status:** Draft
 **Phase:** 3
 
-> **Canonical name:** `Moments` — previously called "date_proposals" in early drafts.
+> **Canonical name:** `Moments`.
 > The DB table is `moments`, the API resource is `/api/v1/moments`,
-> and the Rails model is `Moment`. The term "date_proposals" is deprecated
-> and must not appear anywhere in code or documentation.
+> and the Rails model is `Moment`.
+> The term **"date_proposals"** is **deprecated** and must not appear anywhere
+> in code, migrations, API paths, UI copy, or documentation.
 
 ---
 
 ## Overview
 
 Moments is the feature that transforms a match into a real-world appointment.
-It covers the full lifecycle of a date: proposal, negotiation, confirmation,
-completion, and post-date rating.
+It covers the full lifecycle of a meeting: proposal, negotiation, confirmation,
+completion, and post-meeting rating.
 
-A Moment can only be initiated between two profiles that have an active match.
+A Moment can only be initiated between two profiles that share an active match.
 
 -- ref: docs/features/matching-v1.md
 -- ref: docs/features/trust-v1.md
 
 ---
 
-## Step 1.0 — Date Proposal
+## Step 1.0 — Moment Proposal
 
 **Phase:** 3
 **Status:** Draft
@@ -32,7 +33,7 @@ A Moment can only be initiated between two profiles that have an active match.
 ### User Flow
 
 **Step 1 — Propose**
-1. User A opens a match and taps “Propose a date”.
+1. User A opens a match and taps “Propose a meeting”.
 2. Fills in: location (free text), date, time.
 3. Backend creates a `Moment` with `status: pending` and notifies User B.
 
@@ -40,16 +41,17 @@ A Moment can only be initiated between two profiles that have an active match.
 User B can:
 - **Accept** → `status` becomes `confirmed`. Both users receive a confirmation notification.
 - **Decline** → `status` becomes `declined`. No further action.
-- **Counter-propose** → creates a new `Moment` linked via `parent_id`, original is `superseded`.
-  User A receives a notification and can accept, decline, or counter again.
+- **Counter-propose** → creates a new `Moment` linked via `parent_id`,
+  original becomes `superseded`. User A is notified and can accept, decline, or
+  counter again.
 
-Counter-proposal chain is capped at 5 rounds to avoid infinite loops.
+Counter-proposal chain is capped at 5 rounds to prevent infinite loops.
 
 **Step 3 — Complete + Rate**
 After the scheduled date/time has passed, both users are prompted to mark the moment:
 - **Completed** → `status` becomes `completed`. Each user submits a rating (1–5 stars).
-- **No-show** → `status` becomes `no_show`. Reporter receives a trust delta; no-show
-  profile receives `−15` to `trust_score`.
+- **No-show** → `status` becomes `no_show`. The reporter is unaffected;
+  the no-show profile receives `−15` to `trust_score`.
 
 Ratings are private and feed into `TrustScore v1`.
 
@@ -58,7 +60,7 @@ Ratings are private and feed into `TrustScore v1`.
 ### DB Schema
 
 ```sql
--- Canonical table name: moments (not date_proposals)
+-- Canonical table name: moments
 moments
   id               bigint PK
   proposer_id      bigint FK -> profiles NOT NULL
@@ -81,20 +83,20 @@ moments
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/moments` | Yes | Creates a new date proposal |
+| POST | `/api/v1/moments` | Yes | Creates a new moment proposal |
 | GET | `/api/v1/moments` | Yes | Lists own moments (all statuses) |
 | GET | `/api/v1/moments/:id` | Yes | Returns a single moment |
 | PATCH | `/api/v1/moments/:id/accept` | Yes | Accepts a pending proposal |
 | PATCH | `/api/v1/moments/:id/decline` | Yes | Declines a pending proposal |
 | POST | `/api/v1/moments/:id/counter` | Yes | Creates a counter-proposal |
-| PATCH | `/api/v1/moments/:id/complete` | Yes | Marks moment as completed + submits rating |
+| PATCH | `/api/v1/moments/:id/complete` | Yes | Marks moment as completed and submits rating |
 | PATCH | `/api/v1/moments/:id/no_show` | Yes | Reports a no-show |
 
 Ref: `docs/api/openapi.yaml`
 
 ### Premium Gating
 
-None — date proposals are available on all tiers.
+None — moment proposals are available on all tiers.
 
 ### Open Questions
 
@@ -110,8 +112,8 @@ None — date proposals are available on all tiers.
 **Phase:** 4
 **Status:** Planned
 
-Completed moments and ratings are fed into `TrustScore v1` as behavioral signals.
-No-show events are also surfaced in the match list as a warning indicator for
+Completed moments and ratings feed into `TrustScore v1` as behavioral signals.
+No-show events are surfaced in the match list as a warning indicator for
 profiles with repeated no-shows.
 
 No new tables introduced in this step.
