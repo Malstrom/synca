@@ -2,22 +2,27 @@
 
 Synca uses **Minitest** (Rails default) for all backend tests. No RSpec.
 
+---
+
 ## Directory Structure
 
 ```text
-backend/api/test/
+test/
 ├── models/
 │   ├── user_test.rb
 │   ├── health_summary_test.rb
-│   ├── trust_score_test.rb
 │   ├── match_test.rb
-│   └── date_proposal_test.rb
+│   ├── spark_session_test.rb
+│   └── sync_room_test.rb
 ├── services/
 │   ├── matching/
 │   │   ├── matching_service_test.rb
 │   │   └── compatibility_score_service_test.rb
 │   └── trust/
 │       └── trust_score_service_test.rb
+├── jobs/
+│   ├── matching_job_test.rb
+│   └── spark_scoring_job_test.rb
 ├── controllers/
 │   └── api/
 │       └── v1/
@@ -25,17 +30,30 @@ backend/api/test/
 │           ├── profiles_controller_test.rb
 │           ├── health_summaries_controller_test.rb
 │           ├── matches_controller_test.rb
-│           └── date_proposals_controller_test.rb
+│           ├── spark_sessions_controller_test.rb
+│           └── sync_rooms_controller_test.rb
 ├── fixtures/
 │   ├── users.yml
 │   ├── health_summaries.yml
-│   └── preference_profiles.yml
+│   ├── preference_profiles.yml
+│   ├── matches.yml
+│   ├── spark_sessions.yml
+│   └── sync_rooms.yml
 └── test_helper.rb
 ```
+
+---
 
 ## test_helper.rb
 
 ```ruby
+require "simplecov"
+SimpleCov.start "rails" do
+  add_filter "/config/"
+  add_filter "/test/"
+  minimum_coverage 90
+end
+
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
@@ -43,41 +61,52 @@ require "rails/test_help"
 class ActiveSupport::TestCase
   fixtures :all
 
-  # Helper to parse JSON response body in controller tests.
   def json_response
     JSON.parse(response.body, symbolize_names: true)
   end
 end
 ```
 
-## Model Test Example
+> **Coverage target: ≥ 90% globally.** Core domain (matching, Spark, TrustScore,
+> SyncRoom admission) must reach 100%.
 
-File: `test/models/user_test.rb`
+---
+
+## Model Test Example — Match origin
+
+File: `test/models/match_test.rb`
 
 ```ruby
 require "test_helper"
 
-class UserTest < ActiveSupport::TestCase
-  test "is valid with required fields" do
-    user = User.new(name: "Alex", age: 28, gender: "male", city: "Moscow",
-                    email: "alex@example.com")
-    assert user.valid?
+class MatchTest < ActiveSupport::TestCase
+  test "defaults origin to spark" do
+    match = Match.new(compatibility_score: 80.0, status: :proposed)
+    assert match.spark?
   end
 
-  test "is invalid without name" do
-    user = User.new(age: 28, gender: "male", city: "Moscow")
-    assert_not user.valid?
-    assert_includes user.errors[:name], "can't be blank"
+  test "algorithm origin stores confidence" do
+    match = Match.new(
+      compatibility_score: 70.0,
+      status: :proposed,
+      origin: :algorithm,
+      algorithm_confidence: 0.85
+    )
+    assert match.algorithm?
+    assert_in_delta 0.85, match.algorithm_confidence
   end
 
-  test "age must be between 18 and 80" do
-    user = User.new(name: "Alex", age: 15, gender: "male", city: "Moscow")
-    assert_not user.valid?
+  test "spark origin has nil algorithm_confidence" do
+    match = matches(:alice_bob_spark)
+    assert match.spark?
+    assert_nil match.algorithm_confidence
   end
 end
 ```
 
-## Service Test Example
+---
+
+## Service Test Example — CompatibilityScoreService
 
 File: `test/services/matching/compatibility_score_service_test.rb`
 
@@ -120,7 +149,49 @@ class CompatibilityScoreServiceTest < ActiveSupport::TestCase
 end
 ```
 
-## Controller Test Example
+---
+
+## Job Test Example — MatchingJob (algorithm origin)
+
+File: `test/jobs/matching_job_test.rb`
+
+```ruby
+require "test_helper"
+
+class MatchingJobTest < ActiveJob::TestCase
+  test "creates algorithm-origin match when score is above threshold" do
+    user = users(:alex)
+    candidate = users(:maria)
+
+    # Both users need a complete health summary
+    assert user.health_summary.present?
+    assert candidate.health_summary.present?
+
+    assert_difference "Match.algorithm.count", 1 do
+      MatchingJob.perform_now
+    end
+
+    match = Match.algorithm.last
+    assert match.algorithm?
+    assert_not_nil match.algorithm_confidence
+    assert match.compatibility_score >= 65
+  end
+
+  test "does not create match when score is below threshold" do
+    # Fixture with incompatible health summaries
+    users(:night_owl)   # chronotype: night_owl
+    users(:early_bird)  # chronotype: early_bird, opposite schedule
+
+    assert_no_difference "Match.count" do
+      MatchingJob.perform_now
+    end
+  end
+end
+```
+
+---
+
+## Controller Test Example — Matches
 
 File: `test/controllers/api/v1/matches_controller_test.rb`
 
@@ -130,16 +201,17 @@ require "test_helper"
 class Api::V1::MatchesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = users(:alex)
-    @token = generate_token_for(@user) # helper defined in test_helper.rb
+    @token = generate_token_for(@user)
   end
 
-  test "GET /api/v1/matches returns match list" do
+  test "GET /api/v1/matches returns match list with origin" do
     get api_v1_matches_url,
         headers: { "Authorization" => "Bearer #{@token}" }
     assert_response :success
     body = json_response
     assert body.key?(:matches)
-    assert_kind_of Array, body[:matches]
+    first_match = body[:matches].first
+    assert_includes %w[spark algorithm], first_match[:origin]
   end
 
   test "GET /api/v1/matches returns 401 without token" do
@@ -149,51 +221,40 @@ class Api::V1::MatchesControllerTest < ActionDispatch::IntegrationTest
 end
 ```
 
-## Fixture Example
+---
 
-File: `test/fixtures/users.yml`
+## Conventions
 
-```yaml
-alex:
-  name: Alex
-  age: 28
-  gender: male
-  city: Moscow
-  email: alex@example.com
+- One test file per model, service, job, or controller.
+- Test method names in English, describe the exact behavior under test.
+- Use `setup` for shared state within a test class.
+- Prefer real objects and fixtures over mocks; use mocks only for external HTTP calls
+  and third-party services.
+- Each test asserts one thing. Split complex scenarios into multiple small tests.
+- Keep fixtures minimal: only the fields needed for the test.
+- Never use `require "minitest/mock"` — `Minitest::Mock` is already available via
+  `test_helper`. Requiring it explicitly breaks Bootsnap on Ruby 3.3.
+- Never place test files inside `app/` — Zeitwerk will attempt to autoload them.
+- Gems with `require: false` (e.g. `aws-sdk-s3`) must be explicitly required in
+  any test file that references their constants.
 
-maria:
-  name: Maria
-  age: 27
-  gender: female
-  city: Moscow
-  email: maria@example.com
-```
+---
 
 ## Running Tests
 
 ```bash
-# All tests
-cd backend/api
+# All tests (runs SimpleCov, fails if coverage < 90%)
 bundle exec rails test
 
 # Single file
-bundle exec rails test test/models/user_test.rb
+bundle exec rails test test/models/match_test.rb
 
 # Single test by name
-bundle exec rails test test/models/user_test.rb -n "test_is_valid_with_required_fields"
+bundle exec rails test test/models/match_test.rb -n "test_defaults_origin_to_spark"
 
 # Only model tests
 bundle exec rails test test/models
 
-# Only service tests
-bundle exec rails test test/services
+# Only job tests
+bundle exec rails test test/jobs
 ```
-
-## Conventions
-
-- One test file per model, service, or controller.
-- Test method names start with `test_` and describe the exact behavior under test.
-- Use `setup` for shared fixtures within a test class.
-- Prefer real objects over mocks; use mocks only for external HTTP calls.
-- Each test asserts one thing. Split complex scenarios into multiple small tests.
-- Keep fixtures minimal: only the fields needed for the test.
