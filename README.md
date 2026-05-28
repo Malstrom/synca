@@ -27,25 +27,34 @@ Health data is never exposed between users. Only derived compatibility scores ar
 
 ## Core Pillars
 
-1. **Health profile generation**
+1. **Signal generation**
    The app reads authorized HealthKit / Health Connect data and transforms it into aggregated
    metrics (weekly averages, chronotype, activity score). Raw samples are never shared.
+   See [signals-v1.md](docs/features/signals-v1.md).
 
 2. **Compatibility scoring**
    A matching engine compares aggregated health profiles and produces a 0–100 score with a
    domain breakdown (sleep, activity, lifestyle).
+   See [matching-v1.md](docs/features/matching-v1.md).
 
 3. **Anti-swipe-fatigue design**
    Users receive very few matches per day (high quality over high volume).
-   Profiles that are a bad fit are silently excluded (“ghostED”) by the algorithm.
+   Profiles that are a bad fit are silently excluded ("ghostED") by the algorithm.
+   See [matching-v1.md](docs/features/matching-v1.md).
 
 4. **Trust & Safety**
-   Every user has a TrustScore that factors in liveness verification, profile completeness,
+   Every user has a trust score that factors in liveness verification, profile completeness,
    and behavioral signals. Low-trust profiles are ranked down or gated.
+   See [trust-v1.md](docs/features/trust-v1.md).
 
-5. **Date proposals**
-   Matched users are guided toward a real date via structured proposals (time, place,
+5. **Moments**
+   Matched users are guided toward a real meetup via structured moment proposals (time, place,
    confirmation by both sides), tracked to measure real-world outcomes.
+   See [moments-v1.md](docs/features/moments-v1.md).
+
+6. **Circles and offline activation**
+   Synca extends beyond private matching with circles and offline spark flows.
+   See [circles-v1.md](docs/features/circles-v1.md) and [spark-v1.md](docs/features/spark-v1.md).
 
 ---
 
@@ -72,11 +81,13 @@ synca/
 ├── backend/
 │   └── api/
 ├── docs/
+│   ├── features/
 │   ├── product/
 │   ├── api/
+│   ├── architecture/
+│   ├── tech/
 │   ├── infra/
-│   │   └── deployment.md
-│   └── roadmap/
+│   └── investor/
 ├── .github/
 │   └── workflows/
 │       ├── rails-ci.yml   ← CI (test + lint + security)
@@ -84,6 +95,15 @@ synca/
 ├── .gitignore
 └── README.md
 ```
+
+Documentation entry points:
+
+- Product vision: [docs/product/vision.md](docs/product/vision.md)
+- Product roadmap: [docs/product/roadmap.md](docs/product/roadmap.md)
+- API spec: [docs/api/openapi.yaml](docs/api/openapi.yaml)
+- iOS architecture: [docs/architecture/ios-structure.md](docs/architecture/ios-structure.md)
+- Android architecture: [docs/architecture/android-structure.md](docs/architecture/android-structure.md)
+- Backend conventions: [docs/tech/backend.md](docs/tech/backend.md)
 
 ---
 
@@ -95,21 +115,27 @@ apps/ios/Synca/
 │   ├── Models/
 │   ├── Services/
 │   │   ├── HealthKit/
-│   │   ├── Matching/
-│   │   └── API/
+│   │   ├── API/
+│   │   ├── Auth/
+│   │   └── ActionCable/
 │   ├── ViewModels/
 │   ├── Views/
 │   │   ├── Onboarding/
 │   │   ├── Dashboard/
-│   │   ├── Health/
+│   │   ├── Signals/
 │   │   ├── Matching/
-│   │   ├── DateProposals/
+│   │   ├── Moments/
+│   │   ├── Circles/
+│   │   ├── Spark/
+│   │   ├── Trust/
 │   │   └── Auth/
 │   ├── Resources/
 │   └── SyncaApp.swift
 ├── Synca.xcodeproj/
 └── SyncaTests/
 ```
+
+Full reference: [docs/architecture/ios-structure.md](docs/architecture/ios-structure.md)
 
 ---
 
@@ -127,12 +153,17 @@ apps/android/Synca/
 │       │   ├── ui/
 │       │   │   ├── onboarding/
 │       │   │   ├── matching/
-│       │   │   ├── dateproposals/
+│       │   │   ├── moments/
+│       │   │   ├── circles/
+│       │   │   ├── spark/
+│       │   │   ├── trust/
 │       │   │   └── profile/
 │       │   └── SyncaApp.kt
 │       └── res/
 └── build.gradle
 ```
+
+Full reference: [docs/architecture/android-structure.md](docs/architecture/android-structure.md)
 
 ---
 
@@ -143,51 +174,43 @@ backend/api/
 ├── app/
 │   ├── controllers/api/v1/
 │   ├── models/
+│   ├── channels/
+│   ├── jobs/
 │   └── services/
-│       ├── matching/
-│       └── trust/
 ├── bin/
 │   └── dev-ngrok     ← one-command dev environment
 ├── config/
 │   ├── deploy.yml    ← Kamal production config
+│   ├── recurring.yml
 │   └── environments/
 │       └── development.rb
 └── db/
     └── schema.rb
 ```
 
+Backend README: [backend/api/README.md](backend/api/README.md)
+
 ---
 
 ## Main Models
 
-### iOS Domain Models
-
-- `HealthDayValue`
-- `SleepDayValue`
-- `HealthSummary` (aggregated, sent to backend)
-- `MatchingProfile`
-- `CompatibilityBreakdown`
-- `MatchCandidate`
-- `SwipeAction`
-- `DateProposal`
-
-### Android Domain Models
-
-- `HealthSummary` (aggregated via Health Connect)
-- `MatchingProfile`
-- `CompatibilityBreakdown`
-- `DateProposal`
-
-### Backend Domain Models
+### Shared Canonical Models
 
 - `User`
-- `HealthSummary`
+- `Signal`
 - `PreferenceProfile`
-- `TrustScore`
 - `Match`
-- `DateProposal`
+- `Moment`
+- `Circle`
+- `Spark`
 - `Subscription`
 - `Transaction`
+
+### Notes on naming
+
+- `Signal` is the canonical name; avoid legacy references such as `HealthSummary`.
+- `Moment` is the canonical name; avoid legacy references such as `DateProposal`.
+- Trust score is a product concept and ranking dimension, not a canonical standalone model name.
 
 ---
 
@@ -205,17 +228,21 @@ The compatibility score is a weighted sum across four domains:
 Output: a single `score` 0–100 with a per-domain breakdown shown to users in plain language
 (e.g. “Your sleep schedules are well aligned”).
 
+See [docs/features/matching-v1.md](docs/features/matching-v1.md).
+
 ---
 
-## TrustScore
+## Trust & Safety
 
-Every user has a `TrustScore` (0–100) computed from:
+Every user has a trust score (0–100) computed from:
 
 - **Identity:** phone/email verification, liveness check.
 - **Profile:** completeness, photo quality.
 - **Behavior:** no-show rate, reports received, consistency across signals.
 
-Low TrustScore profiles are ranked down in matching or gated from features.
+Low-trust profiles are ranked down in matching or gated from features.
+
+See [docs/features/trust-v1.md](docs/features/trust-v1.md).
 
 ---
 
@@ -223,21 +250,25 @@ Low TrustScore profiles are ranked down in matching or gated from features.
 
 Base path: `/api/v1`
 
-| Method | Endpoint                      | Description                      |
-|--------|-------------------------------|----------------------------------|
-| POST   | `/auth/register`              | Register a new user              |
-| POST   | `/auth/login`                 | Authenticate                     |
-| GET    | `/users/me`                   | Get current user profile         |
-| GET/PUT| `/profile`                    | Get / update profile             |
-| POST   | `/health_summaries`           | Upload aggregated health data    |
-| GET/PUT| `/preferences`                | Get / update preferences         |
-| GET    | `/matches`                    | Get curated match list           |
-| GET    | `/date_proposals`             | List date proposals              |
-| POST   | `/date_proposals`             | Create a date proposal           |
-| POST   | `/date_proposals/:id/accept`  | Accept a proposal                |
-| POST   | `/date_proposals/:id/decline` | Decline a proposal               |
+| Method | Endpoint                  | Description                    |
+|--------|---------------------------|--------------------------------|
+| POST   | `/auth/register`          | Register a new user            |
+| POST   | `/auth/login`             | Authenticate                   |
+| GET    | `/users/me`               | Get current user profile       |
+| GET/PUT| `/profile`                | Get / update profile           |
+| POST   | `/signals`                | Upload aggregated signals      |
+| GET/PUT| `/preferences`            | Get / update preferences       |
+| GET    | `/matches`                | Get curated match list         |
+| GET    | `/moments`                | List moments                   |
+| POST   | `/moments`                | Create a moment                |
+| POST   | `/moments/:id/accept`     | Accept a moment                |
+| POST   | `/moments/:id/decline`    | Decline a moment               |
+| GET    | `/circles`                | List circles                   |
+| GET    | `/spark`                  | Get Spark session status       |
+| POST   | `/trust/verify_phone`     | Start phone verification       |
+| POST   | `/trust/verify_liveness`  | Submit liveness verification   |
 
-Full spec: `docs/api/endpoints.md` — interactive UI at `/api-docs`.
+Full spec: [docs/api/openapi.yaml](docs/api/openapi.yaml).
 
 ---
 
@@ -308,7 +339,7 @@ apps/ios/Synca/
 
 - Minimum deployment target: **iOS 17+**
 - Set `BASE_URL = http://api.synca.local` in the Debug scheme environment variables.
-- For physical device testing, read `BASE_URL` from `.env.ngrok` (see `docs/infra/deployment.md`).
+- For physical device testing, read `BASE_URL` from `.env.ngrok` (see [docs/infra/deployment.md](docs/infra/deployment.md)).
 
 ### Android
 
@@ -327,7 +358,7 @@ apps/android/Synca/
 
 ### Continuous Integration (on every push/PR to `main`)
 
-File: `.github/workflows/rails-ci.yml`
+File: [.github/workflows/rails-ci.yml](.github/workflows/rails-ci.yml)
 
 Four jobs run in parallel:
 
@@ -340,14 +371,14 @@ Four jobs run in parallel:
 
 ### Continuous Deployment (after CI passes on `main`)
 
-File: `.github/workflows/deploy.yml`
+File: [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
 
-```
+```text
 CI passes → Build Docker image → Push ghcr.io → Kamal deploy → db:migrate
 ```
 
 > CD is configured but requires a VPS to be provisioned.
-> See `docs/infra/deployment.md` for the full setup guide.
+> See [docs/infra/deployment.md](docs/infra/deployment.md) for the full setup guide.
 
 ### Required GitHub Secrets
 
@@ -395,11 +426,11 @@ Add in `Settings → Secrets and variables → Actions`:
 Example branch names:
 
 ```text
-feat/health-profile
+feat/signals
 feat/matching-engine
 feat/trust-score
 feat/android-health-connect
-feat/date-proposals
+feat/moments
 fix/auth-token-refresh
 ```
 
@@ -407,17 +438,17 @@ fix/auth-token-refresh
 
 ## Development Roadmap (summary)
 
-Full roadmap: `docs/roadmap/Synca_Roadmap_Tecnica_0-24_mesi.md`
+Full roadmap: [docs/product/roadmap.md](docs/product/roadmap.md)
 
 | Phase | Timeline   | Focus                                                |
 |-------|------------|------------------------------------------------------|
 | 0–1   | Month 0–1  | Foundation: monorepo, CI/CD, environments            |
-| 1     | Month 1–3  | iOS MVP: auth, HealthKit, profiles, matching v0      |
-| 2     | Month 3–6  | Matching health-based v1, TrustScore v0              |
-| 3     | Month 6–9  | Android app, Payments, Premium tier                  |
-| 4     | Month 9–12 | Date Proposals, Trust & Safety v1                    |
-| 5     | Month 12–18| Matching v2 (data-driven), Analytics                 |
-| 6     | Month 18–24| Multi-city scaling, Localisation (RU/EN/IT/TH/PT/ES) |
+| 1     | Month 1–3  | iOS MVP: auth, signals, profiles, matching v0        |
+| 2     | Month 3–6  | Matching health-based v1, trust v0                   |
+| 3     | Month 6–9  | Android app, payments, premium tier                  |
+| 4     | Month 9–12 | Moments, trust & safety v1                           |
+| 5     | Month 12–18| Matching v2 (data-driven), analytics                 |
+| 6     | Month 18–24| Multi-city scaling, localisation (RU/EN/IT/TH/PT/ES) |
 
 ---
 

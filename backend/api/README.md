@@ -2,6 +2,18 @@
 
 REST API backend for the Synca dating app. Built with Rails 8 in API-only mode, PostgreSQL, JWT authentication and the Rails Solid Stack (Solid Queue, Solid Cache, Solid Cable).
 
+See also:
+
+- Root overview: [../../README.md](../../README.md)
+- API spec: [../../docs/api/openapi.yaml](../../docs/api/openapi.yaml)
+- Backend conventions: [../../docs/tech/backend.md](../../docs/tech/backend.md)
+- Matching spec: [../../docs/features/matching-v1.md](../../docs/features/matching-v1.md)
+- Signals spec: [../../docs/features/signals-v1.md](../../docs/features/signals-v1.md)
+- Moments spec: [../../docs/features/moments-v1.md](../../docs/features/moments-v1.md)
+- Circles spec: [../../docs/features/circles-v1.md](../../docs/features/circles-v1.md)
+- Spark spec: [../../docs/features/spark-v1.md](../../docs/features/spark-v1.md)
+- Trust spec: [../../docs/features/trust-v1.md](../../docs/features/trust-v1.md)
+
 ## Requirements
 
 | Tool | Version |
@@ -72,7 +84,15 @@ bin/rails server
 
 ## Background Jobs
 
-Solid Queue is used for background processing (compatibility scoring, push notifications, Spark session expiry). It runs on PostgreSQL — no Redis required.
+Solid Queue is used for background processing. Current job surface includes matching refresh,
+Spark session expiry, moment reminders, photo moderation and recurring maintenance flows.
+
+Relevant docs:
+
+- Matching: [../../docs/features/matching-v1.md](../../docs/features/matching-v1.md)
+- Spark: [../../docs/features/spark-v1.md](../../docs/features/spark-v1.md)
+- Moments: [../../docs/features/moments-v1.md](../../docs/features/moments-v1.md)
+- Trust: [../../docs/features/trust-v1.md](../../docs/features/trust-v1.md)
 
 ```bash
 # Jobs are processed automatically when the server starts in development.
@@ -146,18 +166,18 @@ Triggered on every push or PR touching `backend/api/**`.
 | `lint` | RuboCop | Code style enforcement |
 | `test` | Minitest + SimpleCov | Test suite + coverage ≥ 90% |
 
-Workflow: [`/.github/workflows/rails-ci.yml`](../../.github/workflows/rails-ci.yml)
+Workflow: [../../.github/workflows/rails-ci.yml](../../.github/workflows/rails-ci.yml)
 
 ### Continuous Deployment
 
 Triggered automatically after CI passes on `main`.
 
-```
+```text
 CI passes → Build Docker image → Push ghcr.io → Kamal deploy → db:migrate
 ```
 
-Workflow: [`/.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml)
-Full guide: [`/docs/infra/deployment.md`](../../docs/infra/deployment.md)
+Workflow: [../../.github/workflows/deploy.yml](../../.github/workflows/deploy.yml)
+Full guide: [../../docs/infra/deployment.md](../../docs/infra/deployment.md)
 
 ---
 
@@ -286,12 +306,13 @@ All four services must be active before go-live. Use this as a final gate:
 
 ## Project Structure
 
-```
+```text
 backend/api/
 ├── app/
 │   ├── controllers/    # API controllers (versioned under /api/v1)
 │   ├── models/         # ActiveRecord models
 │   ├── services/       # Service objects (matching, scoring, trust)
+│   ├── channels/       # Action Cable channels for circles and realtime flows
 │   ├── policies/       # Pundit authorization policies
 │   └── jobs/           # Solid Queue background jobs
 │       └── database_backup_job.rb
@@ -312,6 +333,15 @@ backend/api/
     ├── controllers/
     └── jobs/
 ```
+
+Domain docs:
+
+- Matching: [../../docs/features/matching-v1.md](../../docs/features/matching-v1.md)
+- Signals: [../../docs/features/signals-v1.md](../../docs/features/signals-v1.md)
+- Moments: [../../docs/features/moments-v1.md](../../docs/features/moments-v1.md)
+- Circles: [../../docs/features/circles-v1.md](../../docs/features/circles-v1.md)
+- Spark: [../../docs/features/spark-v1.md](../../docs/features/spark-v1.md)
+- Trust: [../../docs/features/trust-v1.md](../../docs/features/trust-v1.md)
 
 ## Environment Variables
 
