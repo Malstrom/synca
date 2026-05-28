@@ -72,7 +72,7 @@ Signal expansion roadmap:
   all members have verified Spark sessions with the creator. Three room types:
   - `duo` (2 members) — the standard 1-to-1 match chat
   - `small_group` (3–8 members) — friends, aperitivo, weekend plans; full Spark graph required
-  - `event` (9–22 members) — calcetto, escape room, padel; each member needs ≥1 Spark with creator
+  - `event_room` (9–22 members) — calcetto, escape room, padel; each member needs ≥1 Spark with creator
 - **v3+**: Predictive group compatibility engine — extend pairwise scores to model multi-user
   group cohesion. Broadens Synca's addressable market from dating into the wider social wellness
   category. No re-architecture required: individual compatibility profiles and `SparkSession`
