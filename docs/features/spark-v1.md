@@ -9,16 +9,16 @@
 ## Overview
 
 Spark is the core IRL (in-real-life) interaction mechanism of Synca. It allows two users
-who are physically co-located to initiate a proximity-based session, answer a short
-micro-test together, and receive a real-time compatibility score.
+who are physically co-located to initiate a proximity-based session and receive a
+real-time compatibility score derived exclusively from their passive `signals`.
 
 A completed `SparkSession` is the strongest trust and compatibility signal in the system
 because it requires two verified users in the same physical location at the same time.
-It is the prerequisite for creating a Match with `origin: :spark` and for joining or
-creating any Sync Room.
+No questionnaire or manual input is required — the fact that two people choose to
+initiate a Spark together is itself a meaningful intent signal.
 
-Spark answers (micro-test responses) are **discarded immediately** after score computation
-and are never persisted long-term.
+Spark is the prerequisite for creating a Match with `origin: :spark` and for joining
+or creating any Sync Room.
 
 ---
 
@@ -40,23 +40,22 @@ Both users confirm presence on their own device
         ↓
 SparkSession created  (status: :pending)
         ↓
-Micro-test: both users answer 3 quick questions independently
-        ↓
 CompatibilityScoreService computes pairwise score
-using signals (health, music, travel) + micro-test answers
+using both users' signals (health, music, travel)
         ↓
 score >= 50  →  Match created  (origin: :spark)
              →  trust_score incremented for both users
              →  SparkSession status: :completed
 score <  50  →  no Match created
              →  SparkSession status: :completed  (stored for analytics)
-        ↓
-Micro-test answers discarded immediately
 ```
 
 The compatibility score is **never shown as a raw number** to users.
 It is translated into plain-language explanations
 (e.g. "Your sleep schedules are well aligned").
+
+Scoring is fully passive — no questions, no manual input. The intent signal
+is the Spark initiation itself.
 
 ### DB Schema
 
@@ -108,7 +107,7 @@ spark_sessions
   compatibility_score  float             -- nil until scoring completes
   score_breakdown      jsonb             -- domain sub-scores (never shown raw to users)
   match_created        boolean NOT NULL DEFAULT false
-  expires_at           datetime NOT NULL -- session expires if not completed within 10 min
+  expires_at           datetime NOT NULL -- session expires if neither confirms within 10 min
   completed_at         datetime
   created_at           datetime
   updated_at           datetime
@@ -133,16 +132,15 @@ matches
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
 | POST | `/api/v1/spark_sessions` | Yes | Initiator creates a new SparkSession |
-| PATCH | `/api/v1/spark_sessions/:id/join` | Yes | Receiver joins the session |
-| PATCH | `/api/v1/spark_sessions/:id/submit` | Yes | User submits micro-test answers |
+| PATCH | `/api/v1/spark_sessions/:id/join` | Yes | Receiver confirms presence and joins |
 | GET | `/api/v1/spark_sessions/:id` | Yes | Returns session status and result |
 | GET | `/api/v1/spark_sessions` | Yes | Lists the current user's past sessions |
 
 Ref: `docs/api/openapi.yaml`
 
-Scoring is triggered server-side automatically once both users have submitted
-their micro-test answers. The client polls `GET /api/v1/spark_sessions/:id`
-or listens via Action Cable for the `spark_session:scored` event.
+Scoring is triggered server-side automatically once both users have confirmed
+presence (`join`). The client polls `GET /api/v1/spark_sessions/:id` or listens
+via Action Cable for the `spark_session:scored` event.
 
 ### Premium Gating
 
@@ -155,10 +153,9 @@ the more Spark sessions happen, the richer the compatibility data for everyone.
   or should we ship QR only first (simpler, no BLE permission edge cases)?
 - Session expiry window: 10 minutes is the suggested default — is this too short
   for noisy environments (concerts, gyms)?
-- Micro-test question set: how many questions (suggested: 3) and who owns the
-  question bank? Should questions be randomized per session?
-- What happens if only one user submits answers before the session expires?
-  Is a partial score computed or is the session voided?
+- What happens if a user has no `signals` record yet (never connected Apple Health)?
+  Should scoring fall back to a partial score (Preferences domain only) or should
+  the SparkSession be blocked until signals are available?
 
 ---
 
@@ -174,22 +171,20 @@ User A opens "Start Group Spark"
         ↓
 App broadcasts BLE signal to multiple nearby users
         ↓
-Users B, C, D... accept the invite
+Users B, C, D... confirm presence and join
         ↓
 GroupSparkSession created  (status: :pending)
         ↓
-Each user completes the micro-test independently
-        ↓
 CompatibilityScoreService computes pairwise score
-for EVERY pair in the group
+for EVERY pair in the group using their signals
         ↓
 For each pair with score >= 50:
   →  Match created  (origin: :spark)
   →  trust_score incremented for both users
 For the group as a whole:
-  →  Sync Room eligible if every pair has a verified Spark
+  →  Sync Room eligible if every required pair has a verified Spark
         ↓
-Micro-test answers discarded immediately
+SparkSession status: :completed
 ```
 
 ### DB Schema
@@ -217,8 +212,7 @@ spark_session_participants
   id                bigint PK
   spark_session_id  bigint FK -> spark_sessions NOT NULL
   user_id           bigint FK -> users NOT NULL
-  answers_submitted boolean NOT NULL DEFAULT false
-  submitted_at      datetime
+  confirmed_at      datetime
   created_at        datetime
   UNIQUE (spark_session_id, user_id)
 
@@ -242,7 +236,6 @@ matches
 |--------|------|---------------|-------------|
 | POST | `/api/v1/spark_sessions` | Yes | Creates a duo or group SparkSession (type in body) |
 | POST | `/api/v1/spark_sessions/:id/participants` | Yes | User joins a group session |
-| PATCH | `/api/v1/spark_sessions/:id/submit` | Yes | User submits micro-test answers |
 | GET | `/api/v1/spark_sessions/:id` | Yes | Returns session status and per-pair results |
 | GET | `/api/v1/spark_sessions` | Yes | Lists the current user's past sessions |
 
@@ -250,8 +243,7 @@ Ref: `docs/api/openapi.yaml`
 
 ### Premium Gating
 
-None — Group Spark sessions are free for all users. Individual Match creation
-from group sessions follows standard Match premium rules.
+None — Group Spark sessions are free for all users.
 
 ### Open Questions
 
@@ -259,5 +251,5 @@ from group sessions follows standard Match premium rules.
   compatibility, but UI may cap lower for usability.)
 - Should the group initiator see a summary of all pairwise scores after completion,
   or only their own pairs?
-- If some participants do not submit answers before expiry, should partial scoring
-  proceed for the pairs that did complete?
+- If some participants do not confirm presence before expiry, should partial scoring
+  proceed for the pairs that did confirm?
