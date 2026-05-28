@@ -4,23 +4,24 @@
 **Status:** Draft
 **Phase:** 5
 
-> **Canonical name:** `Circles` — previously called "Sync Rooms" in early drafts.
-> All code, API paths, and documentation must use `circles` / `Circles`.
-> The term "Sync Rooms" is deprecated and must not appear anywhere.
+> **Canonical name:** `Circles`.
+> All code, API paths, DB tables, and documentation must use `circles` / `Circles`.
+> The term **"Sync Rooms"** is **deprecated** and must not appear anywhere in code,
+> comments, migrations, UI copy, or documentation.
 
 ---
 
 ## Overview
 
-Circles are conversational spaces that exist only if a verified physical
-compatibility exists between all members. They are the digital continuation of
-a real-world Spark encounter — not a generic group chat.
+Circles are conversational spaces that exist only when a verified physical
+compatibility graph exists between all members. They are the digital continuation
+of a real-world Spark encounter — not a generic group chat.
 
 > A Circle is proof that the people inside it have actually met and been compatible.
 
 Three types exist, differentiated by size and admission rules. The `duo` type is
-the default channel for every match: every accepted match is a Circle of type
-`duo` under the hood.
+the default channel for every match: every accepted match creates a Circle of
+type `duo` under the hood.
 
 -- ref: docs/features/spark-v1.md
 -- ref: docs/features/matching-v1.md
@@ -31,9 +32,9 @@ the default channel for every match: every accepted match is a Circle of type
 
 | Type | Members | Admission rule | Use case |
 |------|---------|----------------|----------|
-| `duo` | 2 | 1 confirmed Spark between the two | Match chat |
-| `small_group` | 3–8 | Full graph: every pair ≥1 Spark | Friend group, aperitivo |
-| `event` | 9–22 | Every member ≥1 Spark with the creator | Calcetto, escape room, padel |
+| `duo` | 2 | 1 confirmed Spark between the two members | Match chat |
+| `small_group` | 3–8 | Full graph: every pair ≥1 confirmed Spark | Friend group, aperitivo |
+| `event` | 9–22 | Every member ≥1 confirmed Spark with the creator | Football, escape room, padel |
 
 ---
 
@@ -53,6 +54,7 @@ the default channel for every match: every accepted match is a Circle of type
 ### DB Schema
 
 ```sql
+-- Canonical table names: circles, circle_memberships, circle_messages
 circles
   id           bigint PK
   circle_type  string NOT NULL   -- 'duo' | 'small_group' | 'event'
