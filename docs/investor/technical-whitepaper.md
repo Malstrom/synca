@@ -1,6 +1,6 @@
 # Synca Technical Whitepaper
 
-**Version 1.1 — May 2026**  
+**Version 1.2 — May 2026**  
 *Confidential — For Engineering, Security, and Technical Due Diligence Use Only*
 
 ***
@@ -22,7 +22,7 @@ This whitepaper describes the technical architecture, data model, matching algor
 3. **Rails API Backend** — central service implementing all business logic: user management, signal ingestion, matching engine, trust scoring, date proposal generation, Spark session orchestration, and payment integration.
 4. **Compatibility Engine** — stateless service or internal Rails module computing compatibility scores as a weighted combination of normalized features.
 5. **Trust & Safety Engine** — pipelines computing a dynamic Trust Score based on image, behavior, and cross-signal consistency.
-6. **Spark Session Manager** — real-time WebSocket orchestrator for live in-person compatibility sessions; manages session lifecycle, answer synchronization, instant score computation, and reward issuance.
+6. **Spark Session Manager** — real-time WebSocket orchestrator for live in-person compatibility sessions; manages session lifecycle, answer synchronization, instant score computation, reward issuance, and automatic Match creation when score meets threshold.
 7. **Telegram Bot / Mini App** — WebApp client integrated with Telegram Bot API, used for acquisition, notifications, and payment flows.
 
 ### 2.2 Logical Architecture Diagram
@@ -40,12 +40,12 @@ This whitepaper describes the technical architecture, data model, matching algor
            │  (Ruby on Rails, JSON API)  │
            └───────────┬────────────────┘
                        │
-       ┌─────────────┼──────────────────┐
+       ┌─────────────┼───────────────────────┐
        ▼               ▼                  ▼
-┌─────────────┐  ┌─────────────┐  ┌───────────────┐
+┌─────────────┐  ┌────────────┐  ┌───────────────┐
 │ Matching +   │  │ Trust &     │  │ Spark Session  │
 │ Compatibility│  │ Safety Eng. │  │ Manager (WS)   │
-└─────┤──────┘  └─────┤─────┘  └──────┤────────┘
+└─────┬──────┘  └─────┬────┘  └──────┬────────┘
       │                  │               │
       ▼                  ▼               ▼
 ┌─────────────┐  ┌────────────┐  ┌──────────────┐
@@ -59,6 +59,7 @@ Design principles:
 - All client surfaces talk to the same Rails API
 - Trust & Safety logic can evolve independently from client releases
 - Spark Session Manager is a lightweight real-time layer; it does not persist raw answers, only the computed compatibility delta
+- When a Spark session produces a score above the match threshold, the Match record is created automatically with `origin: :spark`
 
 ***
 
@@ -110,10 +111,13 @@ Design principles:
 - `irl_verification_count`: integer (incremented by completed Spark sessions)
 
 **Match**
-- `user_a_id`, `user_b_id`: fk
+- `user_a_id`, `user_b_id`: fk to User
 - `compatibility_score`: float (0–1)
 - `dimensions_breakdown`: jsonb (`{"sleep":0.82, "activity":0.76, ...}`)
 - `status`: enum (`proposed`, `accepted`, `declined`, `expired`)
+- `origin`: enum (`spark`, `algorithm`) — identifies how the match was created
+- `algorithm_confidence`: float (nil for `spark`-origin matches; confidence of the nightly job for `algorithm`-origin matches)
+- `spark_session_id`: fk to SparkSession (nil for `algorithm`-origin matches; set to the triggering session for `spark`-origin matches)
 
 **SparkSession**
 - `initiator_id`, `partner_id`: fk to User
@@ -141,6 +145,30 @@ Design principles:
 - `suggested_time_window`: tsrange
 - `activity_type`: enum (`walk`, `coffee`, `padel`, `sauna`, etc.)
 - `status`: enum (`pending`, `confirmed`, `rejected`)
+
+**SyncRoom** (v2+)
+- `id`: UUID
+- `name`: string (optional, for group rooms)
+- `created_by`: fk to User
+- `room_type`: enum (`duo`, `small_group`, `event_room`)
+- `created_at`: timestamp
+
+> A `duo` SyncRoom is semantically equivalent to a Match — it is the persistent conversational space between two matched users. `small_group` (3–8 members) requires a verified Spark between every pair of members. `event_room` (9–22 members) requires every member to have at least one verified Spark with the room creator.
+
+**SyncRoomMembership** (v2+)
+- `id`: UUID
+- `sync_room_id`: fk to SyncRoom
+- `user_id`: fk to User
+- `spark_session_id`: fk to SparkSession — the IRL-verified session proving the user's eligibility to join
+- `joined_at`: timestamp
+
+**SyncRoomMessage** (v2+)
+- `id`: UUID
+- `sync_room_id`: fk to SyncRoom
+- `sender_id`: fk to User
+- `body`: text
+- `read_at`: timestamp (nullable)
+- `created_at`: timestamp
 
 ***
 
@@ -194,6 +222,7 @@ Health Connect provides a unified interface for health data across Android OEMs,
 1. **Multi-signal fusion** — combine independent behavioral signals: health, music, travel, visual preference
 2. **Explainability** — compatibility scores decomposed into human-readable dimensions
 3. **Calibratability** — weights adjustable globally and per-user as data accrues
+4. **Dual origin** — matches can originate from a live Spark session (`origin: :spark`) or from the nightly `MatchingJob` algorithm run (`origin: :algorithm`); both paths produce the same `Match` record structure with distinct metadata
 
 ### 5.2 Feature Vectors
 
@@ -287,7 +316,7 @@ This "selective ghosting" approach minimizes confrontational moderation while pu
 ### 7.2 Consent and Control
 
 - Fine-grained consent: users choose which domains to share (health, music, travel) and can revoke at any time
-- On-demand deletion: single action triggers full backend data erasure (GDPR “right to be forgotten”)
+- On-demand deletion: single action triggers full backend data erasure (GDPR "right to be forgotten")
 
 ### 7.3 GDPR and Special Category Data
 
@@ -316,8 +345,8 @@ Health data is treated as special category personal data under GDPR Article 9:
 ### 8.1 Apple HealthKit
 
 - Used only from native iOS app
-- Health data not sent to any third party besides Synca’s own backend
-- Respects Apple’s guidelines prohibiting use of health data for advertising
+- Health data not sent to any third party besides Synca's own backend
+- Respects Apple's guidelines prohibiting use of health data for advertising
 
 ### 8.2 Android Health Connect
 
@@ -350,8 +379,8 @@ Health data is treated as special category personal data under GDPR Article 9:
 
 - **Stateless backend**: horizontal scaling behind a load balancer; session state via JWT
 - **PostgreSQL**: primary data store with read replicas for analytical workloads; city/region partitioning as user base grows
-- **Async processing**: Sidekiq for background jobs — recomputing compatibility and trust scores, generating date proposals
-- **WebSocket layer**: Action Cable (Rails) handles Spark session real-time synchronization; horizontally scalable via Redis pub/sub adapter
+- **Async processing**: Solid Queue (Rails built-in async processor) for background jobs — recomputing compatibility and trust scores, generating date proposals, running the nightly `MatchingJob`; no Redis or external queue broker required
+- **WebSocket layer**: Action Cable (Rails) handles Spark session real-time synchronization; horizontally scalable via Solid Cable adapter when concurrent connection count warrants it
 
 ### 9.2 Resilience
 
@@ -366,7 +395,8 @@ Health data is treated as special category personal data under GDPR Article 9:
 ### 10.1 Short-Term (0–12 Months)
 
 - Finalize iOS MVP with HealthKit integration, preference game, basic matching engine
-- Implement Spark Session Manager with WebSocket sync, QR engine, and reward issuance
+- Implement Spark Session Manager with WebSocket sync, QR engine, reward issuance, and automatic Match creation on threshold pass
+- Implement nightly `MatchingJob` (Solid Queue) for algorithm-originated matches (Premium users only)
 - Implement Telegram Bot and Mini App for Moscow launch
 - Integrate Yandex AI for photo context analysis in the Russian market
 - Roll out basic Spotify integration for music profile enrichment
@@ -377,11 +407,11 @@ Health data is treated as special category personal data under GDPR Article 9:
 - Add travel preference game and optional travel service integrations
 - Introduce basic learning-to-rank layer over hand-crafted compatibility scores
 - Harden Trust Score with additional image forensics and behavioral heuristics
-- **Group compatibility engine (v2 research phase)**: extend the pairwise compatibility model to compute a multi-user group cohesion score across 4–8 participants; validate algorithm design with anonymized data from seeding events
+- **Sync Room research phase (v2)**: design and validate group cohesion scoring across `small_group` (3–8) and `event_room` (9–22) types using anonymized Spark session data from seeding events
 
 ### 10.3 Long-Term (24+ Months)
 
-- **Group compatibility — production (v2+)**: surface curated small-group activity proposals (morning runs, sauna sessions, padel games) based on multi-user lifestyle alignment; introduce group date packs as a new monetization surface co-branded with venue partners. The underlying data infrastructure (individual compatibility profiles, SparkSession IRL data, venue integrations) is fully in place from earlier phases — the group layer is an additive feature, not a re-architecture.
+- **Sync Rooms — production (v2+)**: surface curated group activity proposals based on multi-user lifestyle alignment; introduce group date packs as a monetization surface co-branded with venue partners. The underlying data infrastructure (individual compatibility profiles, SparkSession IRL data, venue integrations) is fully in place from earlier phases — Sync Rooms are an additive feature, not a re-architecture.
 - Cross-signal predictive modeling
 - Publish anonymized aggregate findings on lifestyle compatibility and relationship success
 - API for third-party apps (gyms, wellness platforms) to integrate Synca compatibility signals
@@ -390,14 +420,15 @@ Health data is treated as special category personal data under GDPR Article 9:
 
 ## 11. Conclusion
 
-Synca’s technical design centers on a single idea: compatibility is best inferred from how people actually live, not how they describe themselves. The combination of HealthKit/Health Connect data, music listening behavior, travel patterns, visual preference embeddings, and live IRL sessions (Spark) creates a rich, multi-dimensional profile for each user — while respecting strict privacy constraints through on-device processing and data minimization.
+Synca's technical design centers on a single idea: compatibility is best inferred from how people actually live, not how they describe themselves. The combination of HealthKit/Health Connect data, music listening behavior, travel patterns, visual preference embeddings, and live IRL sessions (Spark) creates a rich, multi-dimensional profile for each user — while respecting strict privacy constraints through on-device processing and data minimization.
 
 The architecture enables Synca to:
 - Launch in complex regulatory and distribution environments (Russia via Telegram Mini Apps)
 - Maintain a strong privacy and security posture suitable for GDPR and other modern data protection regimes
 - Scale to multiple cities and countries without re-architecting the core
-- Extend naturally from one-to-one matching into group compatibility experiences, leveraging the same data model built from day one
+- Produce matches from two distinct origins (IRL Spark and nightly algorithm), each traceable in the data model via the `Match.origin` field
+- Extend naturally from one-to-one matching into Sync Room group experiences, leveraging the same data model built from day one
 
-Synca’s differentiation is not a marketing veneer; it is embedded in the data model, the matching engine, and the privacy-first architecture.
+Synca's differentiation is not a marketing veneer; it is embedded in the data model, the matching engine, and the privacy-first architecture.
 
 *For implementation details at code level (schemas, API contracts, client pseudocode), see the internal developer documentation repository.*

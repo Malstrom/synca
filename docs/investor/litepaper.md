@@ -1,6 +1,6 @@
 # Synca Litepaper
 
-**Version 1.3 — May 2026**
+**Version 1.4 — May 2026**
 *Confidential — For Investor and Partner Use Only*
 
 ---
@@ -88,13 +88,28 @@ Spotify OAuth integration exposes audio features across each user's listening hi
 
 ### 4.2 The Match Experience
 
-Synca does not show a feed. When the algorithm identifies a sufficiently strong bilateral match, a match proposal appears. The match card shows:
-- The person's photos and basic profile
-- A plain-language explanation of the compatibility
+Synca produces matches through two distinct origins, each with its own UX label so users always understand the source of the connection.
+
+#### 4.2.1 Match from Spark (Origin: IRL — available to all tiers)
+
+When two users complete a Spark session and their compatibility score meets or exceeds the match threshold, a Match is created automatically. Both users are notified immediately. The match card displays:
+- A **"Synca Confirmed"** badge — signalling a verified in-person origin
+- The compatibility snapshot computed during the live session
+- 1–3 concrete date proposals anchored to the activity context of their meeting location
+
+This is the primary match flow for MVP. It rewards genuine IRL interaction and produces the highest-quality matches in the system, because both users have already met and chosen to Spark.
+
+#### 4.2.2 Match from Algorithm (Origin: Curated — Premium feature)
+
+When the nightly `MatchingJob` identifies a sufficiently strong bilateral compatibility between two users who have not yet met, a match proposal is surfaced. The match card displays:
+- A **"Synca Suggests"** badge — distinguishing it clearly from IRL-verified matches
+- A plain-language explanation of the compatibility across key dimensions
 - A compatibility score broken into readable dimensions
 - 1–3 concrete date proposals: type of activity, suggested time window, approximate area of the city
 
 Both users see the proposal independently. If both accept, a chat opens — already anchored to the selected date context.
+
+Algorithm-originated matches are a **Premium-only feature**. Free-tier users can receive and complete Spark sessions and view their resulting IRL matches, but curated algorithmic suggestions require an active Premium subscription.
 
 ### 4.3 Synca Spark — Live In-Person Compatibility Game
 
@@ -109,6 +124,7 @@ Synca Spark is the bridge between the physical and digital world. When two peopl
    - **Instant compatibility snapshot** across the core dimensions (sleep rhythm alignment, energy profile, lifestyle score)
    - A **suggested first date proposal** based on their combined signals and current location context
    - A **reward for both**: one free week of Premium (for free-tier users) or one free curated match credit (for Premium users)
+5. If the compatibility score meets or exceeds the match threshold, a **Match record is created automatically** (`origin: :spark`) and both users are notified that they have a confirmed Synca connection.
 
 **Why Synca Spark matters strategically:**
 
@@ -117,7 +133,7 @@ Synca Spark is the bridge between the physical and digital world. When two peopl
 - **Trust Score boost**: both participants receive a verified IRL interaction badge, raising their Trust Score — making them more visible in the matching queue
 - **Retention hook**: the reward incentivizes existing users to keep attending community events and to re-engage with the app each time they meet someone interesting in person
 - **Anti-fake signal**: a Spark session between two real people in the same physical location is nearly impossible to fake — it functions as the strongest liveness verification in the system
-- **Group compatibility foundation**: each completed Spark session enriches the individual compatibility profile and contributes IRL-verified data points that will power the group matching layer in v2+
+- **Group compatibility foundation**: each completed Spark session enriches the individual compatibility profile and contributes IRL-verified data points that will power the Sync Room group layer in v2+
 
 **Reward mechanics by user type:**
 
@@ -206,6 +222,8 @@ Micro-test completes
     → Both apps display result screen with score + date proposal
     → TrustScore.irl_verification_count incremented for both users
     → SparkSession status → completed
+    → If compatibility_score ≥ threshold → Match record created (origin: :spark, status: :proposed)
+    → Both users receive match notification
 ```
 
 ### 5.4 Matching Engine Weights
@@ -254,6 +272,13 @@ The playbook for every city:
 **Premium Subscription**
 Market-adjusted pricing (€7.99 Moscow, $8.99 Bangkok, €14.99 Milan, €16.99 Berlin/Dubai). All subscription payments processed outside App Store and Google Play — eliminating the standard 30% platform commission.
 
+Premium unlocks:
+- Algorithm-originated match suggestions ("Synca Suggests") — curated matches proposed proactively by the nightly matching engine, without requiring an in-person Spark
+- Unlimited active Sync Rooms (free tier: 1 active Duo room)
+- Event Room creation (groups of 9–22, e.g. football, padel tournaments)
+- Spark invite relay — share a Spark invite link with a third party to facilitate their in-person meeting
+- Detailed compatibility analytics per match
+
 **Pay-per-Match / Date Pack**
 Users purchase a single curated match or a ready-made date experience.
 
@@ -264,9 +289,23 @@ Each Spark session awards both participants one free Premium week (free users) o
 Gyms, saunas, padel courts, and cafés become active partners. Revenue share: 15–20% of each booked date experience. Spark sessions at partner venues carry a co-branded experience, reinforcing venue loyalty programs.
 
 **Group Date Packs (v2+)**
-Curated small-group activity experiences (morning runs, sauna sessions, padel) sold as premium packs, co-branded with venue partners. This monetization surface becomes available once the group compatibility layer is released and requires no additional data infrastructure beyond what is built in MVP and v1.
+Curated small-group activity experiences (morning runs, sauna sessions, padel) sold as premium packs, co-branded with venue partners. This monetization surface becomes available once the Sync Room group layer is released and requires no additional data infrastructure beyond what is built in MVP and v1.
 
-### 7.2 Unit Economics (Indicative)
+### 7.2 Feature Access by Tier
+
+| Feature | Free | Premium |
+|---|---|---|
+| Spark sessions | ✅ unlimited | ✅ unlimited |
+| Match from Spark (IRL origin) | ✅ | ✅ |
+| Match from Algorithm (curated) | ❌ | ✅ |
+| Sync Room Duo (1:1 chat) | ✅ 1 active | ✅ unlimited |
+| Sync Room Small Group (3–8) | ❌ | ✅ unlimited |
+| Event Room (9–22, e.g. football) | ❌ | ✅ |
+| Spark invite relay | ❌ | ✅ |
+| Detailed compatibility analytics | ❌ | ✅ |
+| Profile boost | ❌ | ✅ (via Spark reward) |
+
+### 7.3 Unit Economics (Indicative)
 
 | Metric | Estimate | Basis |
 |---|---|---|
@@ -288,7 +327,7 @@ Curated small-group activity experiences (morning runs, sauna sessions, padel) s
 | Post-match | Up to users | Some prompts | Some guidance | **Pre-organized date proposal** |
 | Fake filter | Weak | Moderate | Moderate | **Multi-layer Trust Score + ghosting** |
 | Live IRL feature | None | None | None | **Synca Spark — synchronized live game + reward** |
-| Group / social layer | None | None | None | **Planned (v2+) — group compatibility events** |
+| Group / social layer | None | None | None | **Sync Rooms — IRL-verified group spaces (v2+)** |
 | Distribution Russia | Blocked | Blocked | Not present | **Telegram Mini App + RuStore** |
 | Health data | None | None | None | **Core signal** |
 | Music data | None | None | None | **Spotify integration (v1)** |
@@ -327,19 +366,29 @@ Curated small-group activity experiences (morning runs, sauna sessions, padel) s
 | Post-MVP v1 | Spotify music profile, travel behavior (Polarsteps / Maps), deep audio features |
 | Post-MVP v2 | Cross-signal health–music validation, predictive compatibility modeling, geolocation upgrade |
 
-### 11.2 Group Compatibility — Future Direction (v2+)
+### 11.2 Sync Rooms — Group Compatibility Layer (v2+)
 
-Beyond one-to-one matching, the compatibility engine has a natural extension into **small-group social contexts**. The same lifestyle signals that power individual matches can be used to compose compatible groups of 4–8 people sharing sufficiently aligned chronotypes, activity levels, and lifestyle profiles — enabling Synca to propose curated group activities (morning runs, sauna sessions, padel games) rather than exclusively one-on-one dates.
+Beyond one-to-one matching, the compatibility engine has a natural extension into **group social contexts** through Sync Rooms — conversational spaces that exist only when a verified IRL compatibility graph exists between all members.
 
-This **group layer** is not part of the MVP or v1 roadmap. It is identified as a medium-term product direction (v2+) for the following reasons:
+**Sync Room taxonomy:**
 
-- The data infrastructure required — individual compatibility profiles and IRL-verified `SparkSession` records — is fully built during MVP and v1 phases; the group extension is additive, not a re-architecture
-- Community events are already the primary acquisition channel; group matching formalizes this into a product feature rather than a pure marketing activity
-- It creates a new monetization surface: curated group experiences sold as premium date packs, co-branded with venue partners (see section 7.1)
-- It differentiates Synca from all one-to-one focused competitors in the niche matchmaking space and opens adjacency to the broader social networking and social wellness categories
+| Type | Members | Spark rule | Use case |
+|---|---|---|---|
+| **Duo** | 2 | 1 verified Spark between the two members | 1:1 match chat (default post-match) |
+| **Small Group** | 3–8 | Every pair must have at least 1 verified Spark | Friend groups, recurring activity circles |
+| **Event Room** | 9–22 | Every member must have at least 1 verified Spark with the room creator | Football, padel tournaments, group outings |
+
+The Event Room relaxes the full-graph requirement intentionally: it is not realistic that all 10 players in a football game have met each other pairwise. The room creator acts as a social guarantor — each member has verified compatibility with them, establishing a trusted hub.
+
+The Sync Room layer is not part of the MVP or v1 roadmap. It is identified as a medium-term product direction (v2+) for the following reasons:
+
+- The data infrastructure required — individual compatibility profiles and IRL-verified `SparkSession` records — is fully built during MVP and v1 phases; the Sync Room extension is additive, not a re-architecture
+- Community events are already the primary acquisition channel; Sync Rooms formalize this into a product feature rather than a pure marketing activity
+- It creates a new monetization surface: Event Rooms and unlimited Small Groups are Premium-only features
+- It differentiates Synca from all one-to-one focused competitors and opens adjacency to the social wellness category
 - Spark session data (IRL interaction counts, location-proximate pairings, compatibility deltas across multiple users) provides the training signal needed to validate group cohesion scoring before full rollout
 
-The group compatibility feature will be scoped and validated with community feedback during Wave 2 city launches (Seoul, Milan), where dense, event-oriented user bases make small-group testing most viable.
+The Sync Room feature will be scoped and validated with community feedback during Wave 2 city launches (Seoul, Milan), where dense, event-oriented user bases make small-group testing most viable.
 
 ---
 
