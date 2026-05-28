@@ -59,7 +59,7 @@ Thresholds are configurable per city.
 
 | Origin | Trigger | UX label |
 |--------|---------|----------|
-| `:spark` | Two users complete a `SparkSession` in person | "Synca confermata" ✅ |
+| `:spark` | Two users complete a `Spark` in person | "Synca confermata" ✅ |
 | `:algorithm` | Nightly `MatchingJob` on signals | "Synca suggerita" 💡 |
 
 ```ruby
@@ -73,18 +73,18 @@ Spark-originated matches leave this field `nil`.
 ### Flow 1 — Spark-triggered (`:spark`)
 
 ```
-Both users confirm presence in SparkSession
+Both users confirm presence in Spark
         ↓
 CompatibilityScoreService.call(user_a, user_b)
         ↓
 score >= 50  →  Match.create!(origin: :spark, compatibility_score: score)
              →  trust_score incremented for both users on profiles
 score <  50  →  no Match created
-             →  SparkSession stored for analytics
+             →  Spark stored for analytics
 ```
 
-`CompatibilityScoreService` is called synchronously at session completion.
-Result is available to the client immediately via the `spark_session:scored`
+`CompatibilityScoreService` is called synchronously at spark completion.
+Result is available to the client immediately via the `spark:scored`
 Action Cable event.
 
 ### Flow 2 — Algorithm-triggered (`:algorithm`)
@@ -127,9 +127,9 @@ matches
   id                     bigint PK
   user_a_id              bigint FK -> users NOT NULL
   user_b_id              bigint FK -> users NOT NULL
-  spark_session_id       bigint FK -> spark_sessions  -- nil for algorithm-origin
-  origin                 integer NOT NULL DEFAULT 0   -- 0: spark | 1: algorithm
-  algorithm_confidence   float                        -- nil for spark-origin
+  spark_id               bigint FK -> sparks       -- nil for algorithm-origin
+  origin                 integer NOT NULL DEFAULT 0  -- 0: spark | 1: algorithm
+  algorithm_confidence   float                       -- nil for spark-origin
   compatibility_score    float NOT NULL
   score_breakdown        jsonb  -- domain sub-scores; never exposed raw to users
   status                 string NOT NULL DEFAULT 'active'
@@ -140,7 +140,7 @@ matches
 ```
 
 For `signals` schema see `docs/features/signals-v1.md`.
-For `spark_sessions` schema see `docs/features/spark-v1.md`.
+For `sparks` schema see `docs/features/spark-v1.md`.
 
 ### API Endpoints
 
