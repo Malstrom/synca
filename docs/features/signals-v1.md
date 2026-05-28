@@ -12,10 +12,10 @@ Signals is the data ingestion layer of Synca. It collects, aggregates, and syncs
 behavioral data from external sources to build each user's compatibility profile.
 
 Raw data from external sources is **never stored on the backend**. All aggregation
-happens on-device. Only derived metrics are sent to and stored in `user_signals`.
+happens on-device. Only derived metrics are sent to and stored in `signals`.
 
 Signal sources are added incrementally across phases. Each new source enriches the
-compatibility model without requiring re-architecture. The `user_signals` table grows
+compatibility model without requiring re-architecture. The `signals` table grows
 one column group per new source — one row per user at all times.
 
 ---
@@ -32,8 +32,8 @@ one column group per new source — one row per user at all times.
 2. App requests read-only permissions for sleep, steps, heart rate, and activity.
 3. `SignalsAggregatorService` reads the last 30 days of samples and computes
    aggregated metrics entirely on-device.
-4. Aggregated metrics are sent to the backend (`POST /api/v1/user_signals`).
-5. Backend stores the metrics in `user_signals`. Raw samples are never transmitted.
+4. Aggregated metrics are sent to the backend (`POST /api/v1/signals`).
+5. Backend stores the metrics in `signals`. Raw samples are never transmitted.
 6. Metrics are refreshed automatically once per day in the background.
 7. User can manually trigger a refresh from the Profile screen.
 
@@ -60,7 +60,7 @@ profiles
   created_at             datetime
   updated_at             datetime
 
-user_signals
+signals
   id                       bigint PK
   user_id                  bigint FK -> users NOT NULL UNIQUE
   -- Step 1.0: health
@@ -81,15 +81,15 @@ user_signals
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/user_signals` | Yes | Creates the user's signal record |
-| GET | `/api/v1/user_signals/me` | Yes | Returns the current user's signals |
+| POST | `/api/v1/signals` | Yes | Creates the user's signal record |
+| GET | `/api/v1/signals/me` | Yes | Returns the current user's signals |
 
 Ref: `docs/api/openapi.yaml`
 
 ### Premium Gating
 
 None — Apple Health / Health Connect integration is free for all users.
-Without a `user_signals` record, the user cannot receive algorithm-origin matches
+Without a `signals` record, the user cannot receive algorithm-origin matches
 (premium feature), but Spark-origin matching still works.
 
 ### Open Questions
@@ -97,7 +97,7 @@ Without a `user_signals` record, the user cannot receive algorithm-origin matche
 - Minimum data threshold: how many days of data are required before the user
   enters the matching pool? (Suggested: 7 days minimum.)
 - What happens if the user revokes HealthKit permissions after onboarding?
-  Does their `user_signals` record get stale-flagged or deleted?
+  Does their `signals` record get stale-flagged or deleted?
 - Should `computed_at` be validated server-side to reject signals older than 48 hours?
 
 ---
@@ -115,7 +115,7 @@ Without a `user_signals` record, the user cannot receive algorithm-origin matche
    - Top genres (weighted by listening time)
    - Energy and valence averages (from Spotify audio features)
    - Listening time-of-day pattern
-4. Music metrics are appended via `PATCH /api/v1/user_signals`.
+4. Music metrics are appended via `PATCH /api/v1/signals`.
 5. `CompatibilityScoreService` includes music taste as a sub-signal within
    the Lifestyle domain (20% weight).
 
@@ -142,7 +142,7 @@ profiles
   created_at             datetime
   updated_at             datetime
 
-user_signals
+signals
   id                       bigint PK
   user_id                  bigint FK -> users NOT NULL UNIQUE
   -- Step 1.0: health (unchanged)
@@ -177,9 +177,9 @@ identity_providers
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/user_signals` | Yes | Unchanged from Step 1.0 |
-| GET | `/api/v1/user_signals/me` | Yes | Unchanged from Step 1.0 |
-| PATCH | `/api/v1/user_signals` | Yes | Partial update — appends music metrics |
+| POST | `/api/v1/signals` | Yes | Unchanged from Step 1.0 |
+| GET | `/api/v1/signals/me` | Yes | Unchanged from Step 1.0 |
+| PATCH | `/api/v1/signals` | Yes | Partial update — appends music metrics |
 | POST | `/api/v1/auth/social` | No | Reused from Auth Step 2.0 for Spotify/Yandex OAuth |
 
 Ref: `docs/api/openapi.yaml`
@@ -211,7 +211,7 @@ everyone and serves as an incentive to connect more signal sources.
    - Typical trip duration
    - Travel style (city vs nature vs mixed)
    - Preferred regions
-3. Travel metrics are appended via `PATCH /api/v1/user_signals`.
+3. Travel metrics are appended via `PATCH /api/v1/signals`.
 4. `CompatibilityScoreService` includes travel behavior as a sub-signal
    within the Lifestyle domain.
 
@@ -238,7 +238,7 @@ profiles
   created_at             datetime
   updated_at             datetime
 
-user_signals
+signals
   id                       bigint PK
   user_id                  bigint FK -> users NOT NULL UNIQUE
   -- Step 1.0: health (unchanged)
@@ -270,9 +270,9 @@ user_signals
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/user_signals` | Yes | Unchanged from Step 1.0 |
-| GET | `/api/v1/user_signals/me` | Yes | Unchanged from Step 1.0 |
-| PATCH | `/api/v1/user_signals` | Yes | Partial update — appends travel metrics |
+| POST | `/api/v1/signals` | Yes | Unchanged from Step 1.0 |
+| GET | `/api/v1/signals/me` | Yes | Unchanged from Step 1.0 |
+| PATCH | `/api/v1/signals` | Yes | Partial update — appends travel metrics |
 
 Ref: `docs/api/openapi.yaml`
 
