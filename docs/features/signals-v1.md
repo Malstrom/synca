@@ -18,7 +18,7 @@ Signal sources are added incrementally across phases. Each new source enriches t
 compatibility model without requiring re-architecture. The `signals` table grows
 one column group per new source — one row per user at all times.
 
-Prerequisite: `users` and `profiles` tables (ref: `docs/features/auth-v1.md`).
+Prerequisite: `users` and `profiles` tables (ref: `docs/features/profile-v1.md`).
 
 ---
 
@@ -117,10 +117,10 @@ signals
   music_source                string    -- 'spotify' | 'yandex_music'
 ```
 
-New table introduced by this step (OAuth provider link, shared with auth):
+New table introduced by this step (OAuth provider link, shared with profile):
 
 ```sql
--- identity_providers: ref docs/features/auth-v1.md Step 2.0
+-- identity_providers: ref docs/features/profile-v1.md Step 2.0
 -- provider values extended: 'spotify' | 'yandex_music' added to existing set
 ```
 
@@ -131,7 +131,7 @@ New table introduced by this step (OAuth provider link, shared with auth):
 | POST | `/api/v1/signals` | Yes | Unchanged from Step 1.0 |
 | GET | `/api/v1/signals/me` | Yes | Unchanged from Step 1.0 |
 | PATCH | `/api/v1/signals` | Yes | Partial update — appends music metrics |
-| POST | `/api/v1/auth/social` | No | Reused from auth Step 2.0 for Spotify/Yandex OAuth |
+| POST | `/api/v1/auth/social` | No | Reused from profile Step 2.0 for Spotify/Yandex OAuth |
 
 Ref: `docs/api/openapi.yaml`
 

@@ -17,8 +17,9 @@ Authentication uses `has_secure_password` (bcrypt) + JWT. No dependency on
 Devise or Warden. The JWT is stored in the iOS Keychain and Android
 EncryptedSharedPreferences — never in unencrypted storage.
 
-This file owns the `users`, `profiles`, and `preference_profiles` tables.
-Every other feature that depends on users or profiles references this file.
+This file owns the `users`, `profiles`, `preference_profiles`, and
+`identity_providers` tables. Every other feature that depends on users or
+profiles references this file.
 
 ---
 
@@ -32,16 +33,20 @@ Every other feature that depends on users or profiles references this file.
 **Registration:**
 1. User opens the app for the first time and selects "Sign up".
 2. Enters email + password (minimum 8 characters).
-3. Backend creates `User` + `Profile`, returns a JWT.
-4. JWT saved to Keychain (iOS) / EncryptedSharedPreferences (Android).
+3. Backend creates `User` + `Profile`, returns a JWT access token and a refresh token.
+4. Tokens saved to Keychain (iOS) / EncryptedSharedPreferences (Android).
 5. User is redirected to the onboarding wizard.
 
 **Subsequent login:**
 1. User enters email + password.
-2. Backend validates credentials, returns a new JWT.
-3. App updates the token in Keychain.
+2. Backend validates credentials, returns a new access token and refresh token.
+3. App updates the tokens in Keychain.
 
-Token expiry: 30 days. No refresh token in Step 1.0.
+**Token refresh:**
+- Access token expiry: 30 days.
+- Refresh token expiry: 90 days.
+- Client sends `POST /api/v1/auth/refresh` with the refresh token to obtain a new access token.
+- Refresh tokens are single-use and rotated on each use.
 
 **Onboarding wizard (4 steps, none skippable):**
 The app stores progress locally and resumes from the last completed step
@@ -52,8 +57,9 @@ if the user quits mid-flow.
 - **Step 2 — Photos:** 1–6 photos, at least 1 required. Each photo is queued
   for moderation before being shown to other users.
 - **Step 3 — Bio:** free text, optional, max 300 chars.
-- **Step 4 — Preferences:** looking for (`man` | `woman` | `both`),
-  age range (default ±5 years), max distance in km (default 25).
+- **Step 4 — Preferences:** looking for (`man` | `woman` | `non_binary` | `any`),
+  age range (default ±5 years), max distance in km (default 25),
+  dealbreakers (optional), city (auto-filled from Step 1).
 
 On completion `profiles.onboarding_completed` is set to `true`.
 
@@ -62,14 +68,14 @@ On completion `profiles.onboarding_completed` is set to `true`.
 ```sql
 users
   id              bigint PK
-  email           string NOT NULL UNIQUE
-  password_digest string NOT NULL        -- bcrypt via has_secure_password
+  email           string UNIQUE         -- nullable for social-only accounts (Step 2.0)
+  password_digest string                -- nullable for social-only accounts (Step 2.0)
   created_at      datetime
   updated_at      datetime
 
 profiles
   id                     bigint PK
-  user_id                bigint FK -> users NOT NULL
+  user_id                bigint FK -> users NOT NULL UNIQUE
   display_name           string
   bio                    text
   date_of_birth          date NOT NULL
@@ -84,31 +90,45 @@ profiles
   created_at             datetime
   updated_at             datetime
 
+-- Canonical definition of preference_profiles.
+-- All other features must reference this file instead of re-defining this table.
 preference_profiles
   id              bigint PK
   profile_id      bigint FK -> profiles NOT NULL UNIQUE
-  looking_for     string NOT NULL   -- 'man' | 'woman' | 'both'
+  looking_for     string NOT NULL   -- 'man' | 'woman' | 'non_binary' | 'any'
   age_min         integer NOT NULL DEFAULT 18
   age_max         integer NOT NULL DEFAULT 99
   max_distance_km integer NOT NULL DEFAULT 25
+  gender_targets  jsonb   NOT NULL DEFAULT '[]'  -- mirrors looking_for as array e.g. ["woman","non_binary"]
+  dealbreakers    jsonb   NOT NULL DEFAULT '[]'  -- e.g. ["smoker","no_kids"]
+  city            string  NOT NULL               -- used by MatchingJob as candidate filter
   created_at      datetime
   updated_at      datetime
+
+refresh_tokens
+  id         bigint PK
+  user_id    bigint FK -> users NOT NULL
+  token      string NOT NULL UNIQUE   -- securely random, stored hashed
+  expires_at datetime NOT NULL
+  revoked_at datetime
+  created_at datetime
 ```
 
 ### API Endpoints
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/auth/register` | No | Creates `User` + `Profile`, returns JWT |
-| POST | `/api/v1/auth/login` | No | Validates credentials, returns JWT |
+| POST | `/api/v1/auth/register` | No | Creates `User` + `Profile`, returns access + refresh tokens |
+| POST | `/api/v1/auth/login` | No | Validates credentials, returns access + refresh tokens |
+| POST | `/api/v1/auth/refresh` | No | Exchanges refresh token for new access token |
 | GET | `/api/v1/auth/me` | Yes | Returns the current user from JWT |
-| DELETE | `/api/v1/auth/logout` | Yes | Invalidates the session on the client |
+| DELETE | `/api/v1/auth/logout` | Yes | Revokes the refresh token and invalidates the session |
 | GET | `/api/v1/profile` | Yes | Returns own profile |
 | PATCH | `/api/v1/profile` | Yes | Updates display_name, bio, city, gender, date_of_birth |
 | POST | `/api/v1/profile/photos` | Yes | Uploads a photo, returns updated photos array |
 | DELETE | `/api/v1/profile/photos/:index` | Yes | Removes photo at position index |
 | GET | `/api/v1/profile/preferences` | Yes | Returns own preference_profile |
-| PATCH | `/api/v1/profile/preferences` | Yes | Updates looking_for, age_min, age_max, max_distance_km |
+| PATCH | `/api/v1/profile/preferences` | Yes | Updates looking_for, age_min, age_max, max_distance_km, gender_targets, dealbreakers, city |
 
 JWT payload: `{ user_id: integer, exp: unix_timestamp }`
 All protected endpoints require: `Authorization: Bearer <token>`
@@ -121,9 +141,8 @@ None — registration, login, and profile management are available on all tiers.
 
 ### Open Questions
 
-- Add refresh token in Step 1.0 or defer to Step 2.0?
 - Is email verification mandatory before accessing the app, or optional in MVP?
-- Should `city` be a FK to a future `city_configs` table or a free string in MVP?
+- Should `city` in `preference_profiles` be a FK to a future `city_configs` table or a free string in MVP?
 - Photo ordering: drag-and-drop on client only, or persisted server-side?
 - Is the minimum of 1 photo enforced at the API level or client-side only?
 
@@ -140,7 +159,7 @@ None — registration, login, and profile management are available on all tiers.
 2. Provider returns an OAuth token to the client.
 3. Client sends the token to `POST /api/v1/auth/social`.
 4. Backend verifies the token, finds or creates `User` + `Profile`.
-5. Returns a Synca JWT. Flow is identical to Step 1.0 from this point on.
+5. Returns a Synca access token + refresh token. Flow is identical to Step 1.0 from this point on.
 
 If the provider email matches an existing account, the two are linked
 automatically via `identity_providers`.
@@ -149,8 +168,7 @@ automatically via `identity_providers`.
 
 ```sql
 -- users: email and password_digest become nullable for social-only accounts
--- email: was NOT NULL; now UNIQUE but nullable
--- password_digest: was NOT NULL; now nullable
+-- (already reflected in the Step 1.0 schema above)
 
 identity_providers
   id          bigint PK
@@ -165,7 +183,7 @@ identity_providers
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/auth/social` | No | Verifies OAuth token, returns Synca JWT |
+| POST | `/api/v1/auth/social` | No | Verifies OAuth token, returns Synca access + refresh tokens |
 
 ### Premium Gating
 

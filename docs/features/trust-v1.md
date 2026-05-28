@@ -18,9 +18,8 @@ Trust has three components:
 2. **Profile quality** — completeness score, photo moderation
 3. **Behavioral reputation** — reports, no-shows, Spark verifications
 
-`trust_score` is stored on `profiles` (introduced in `auth-v1.md`).
+`trust_score` is stored on `profiles` (introduced in `docs/features/profile-v1.md`).
 
--- ref: docs/features/auth-v1.md
 -- ref: docs/features/profile-v1.md
 -- ref: docs/features/spark-v1.md
 
@@ -51,7 +50,7 @@ excluded entirely.
 | No-show on confirmed date | −15 | Date marked no-show |
 | Photo rejected by moderation | −25 | Moderation action |
 
-Initial score on registration: `50.0` (set in `auth-v1.md`).
+Initial score on registration: `50.0` (set in `docs/features/profile-v1.md`).
 
 ### Thresholds
 
@@ -116,10 +115,9 @@ A selfie-based liveness check confirms that the person in the profile photo is
 real and present. Passed liveness adds `+15` to `trust_score` and sets
 `profiles.liveness_verified = true`.
 
-Extension to `profiles`:
+Extension to `profiles` (ref: `docs/features/profile-v1.md`):
 
 ```sql
--- ref: docs/features/auth-v1.md
 ALTER TABLE profiles ADD COLUMN liveness_verified boolean NOT NULL DEFAULT false;
 ALTER TABLE profiles ADD COLUMN liveness_verified_at datetime;
 ```

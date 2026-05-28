@@ -4,6 +4,10 @@
 **Status:** Draft
 **Phase:** 5
 
+> **Canonical name:** `Circles` — previously called "Sync Rooms" in early drafts.
+> All code, API paths, and documentation must use `circles` / `Circles`.
+> The term "Sync Rooms" is deprecated and must not appear anywhere.
+
 ---
 
 ## Overview

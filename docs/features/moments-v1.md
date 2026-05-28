@@ -1,8 +1,13 @@
-# Feature: Moments (Dates)
+# Feature: Moments
 **Version:** 1.0
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 3
+
+> **Canonical name:** `Moments` — previously called "date_proposals" in early drafts.
+> The DB table is `moments`, the API resource is `/api/v1/moments`,
+> and the Rails model is `Moment`. The term "date_proposals" is deprecated
+> and must not appear anywhere in code or documentation.
 
 ---
 
@@ -29,19 +34,19 @@ A Moment can only be initiated between two profiles that have an active match.
 **Step 1 — Propose**
 1. User A opens a match and taps “Propose a date”.
 2. Fills in: location (free text), date, time.
-3. Backend creates a `moment` with `status: pending` and notifies User B.
+3. Backend creates a `Moment` with `status: pending` and notifies User B.
 
 **Step 2 — Respond**
 User B can:
 - **Accept** → `status` becomes `confirmed`. Both users receive a confirmation notification.
 - **Decline** → `status` becomes `declined`. No further action.
-- **Counter-propose** → creates a new `moment` linked via `parent_id`, original is `superseded`.
+- **Counter-propose** → creates a new `Moment` linked via `parent_id`, original is `superseded`.
   User A receives a notification and can accept, decline, or counter again.
 
 Counter-proposal chain is capped at 5 rounds to avoid infinite loops.
 
 **Step 3 — Complete + Rate**
-After the scheduled date/time has passed, both users are prompted to mark the date:
+After the scheduled date/time has passed, both users are prompted to mark the moment:
 - **Completed** → `status` becomes `completed`. Each user submits a rating (1–5 stars).
 - **No-show** → `status` becomes `no_show`. Reporter receives a trust delta; no-show
   profile receives `−15` to `trust_score`.
@@ -53,22 +58,23 @@ Ratings are private and feed into `TrustScore v1`.
 ### DB Schema
 
 ```sql
+-- Canonical table name: moments (not date_proposals)
 moments
-  id            bigint PK
-  proposer_id   bigint FK -> profiles NOT NULL
-  receiver_id   bigint FK -> profiles NOT NULL
-  match_id      bigint FK -> matches NOT NULL
-  parent_id     bigint FK -> moments           -- set on counter-proposals
-  location      string NOT NULL
-  scheduled_at  datetime NOT NULL
-  status        string NOT NULL DEFAULT 'pending'
-                -- 'pending' | 'confirmed' | 'declined' | 'superseded'
-                -- 'completed' | 'no_show'
-  proposer_rating  integer                     -- 1-5, set on completion
-  receiver_rating  integer                     -- 1-5, set on completion
-  completed_at  datetime
-  created_at    datetime
-  updated_at    datetime
+  id               bigint PK
+  proposer_id      bigint FK -> profiles NOT NULL
+  receiver_id      bigint FK -> profiles NOT NULL
+  match_id         bigint FK -> matches NOT NULL
+  parent_id        bigint FK -> moments           -- set on counter-proposals
+  location         string NOT NULL
+  scheduled_at     datetime NOT NULL
+  status           string NOT NULL DEFAULT 'pending'
+                   -- 'pending' | 'confirmed' | 'declined' | 'superseded'
+                   -- 'completed' | 'no_show'
+  proposer_rating  integer                        -- 1-5, set on completion
+  receiver_rating  integer                        -- 1-5, set on completion
+  completed_at     datetime
+  created_at       datetime
+  updated_at       datetime
 ```
 
 ### API Endpoints
@@ -81,7 +87,7 @@ moments
 | PATCH | `/api/v1/moments/:id/accept` | Yes | Accepts a pending proposal |
 | PATCH | `/api/v1/moments/:id/decline` | Yes | Declines a pending proposal |
 | POST | `/api/v1/moments/:id/counter` | Yes | Creates a counter-proposal |
-| PATCH | `/api/v1/moments/:id/complete` | Yes | Marks date as completed + submits rating |
+| PATCH | `/api/v1/moments/:id/complete` | Yes | Marks moment as completed + submits rating |
 | PATCH | `/api/v1/moments/:id/no_show` | Yes | Reports a no-show |
 
 Ref: `docs/api/openapi.yaml`
@@ -99,12 +105,12 @@ None — date proposals are available on all tiers.
 
 ---
 
-## Step 2.0 — Reputation Signals from Dates
+## Step 2.0 — Reputation Signals from Moments
 
 **Phase:** 4
 **Status:** Planned
 
-Completed dates and ratings are fed into `TrustScore v1` as behavioral signals.
+Completed moments and ratings are fed into `TrustScore v1` as behavioral signals.
 No-show events are also surfaced in the match list as a warning indicator for
 profiles with repeated no-shows.
 
