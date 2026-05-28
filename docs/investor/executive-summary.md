@@ -40,17 +40,21 @@ Spotify API integration exposes audio features and listening time patterns. Musi
 
 ## Key Product Features
 
-**One Match at a Time**
-Synca does not present an infinite feed. The algorithm works in the background and surfaces a match only when conditions are genuinely met.
+**Two Match Origins — One Quality Bar**
+Synca generates matches through two complementary paths:
+- **Spark-origin** (`origin: spark`): created when two users complete a verified in-person Spark session. The highest-trust match type. Available on the free tier. Labeled *“Synca confermata”* in the UI.
+- **Algorithm-origin** (`origin: algorithm`): generated nightly by a background job that analyses health summaries across the user base. Increases match volume from day one for users who haven’t yet met in person. **Premium-only feature.** Labeled *“Synca suggerita”* in the UI.
+
+Both origins produce the same `Match` object and the same compatibility breakdown. The `origin` field allows the UI to communicate trust level transparently to the user.
 
 **Pre-Organized Date Proposals**
-After a match, Synca generates 1–3 concrete date proposals based on both users' energy peaks, sleep schedules, geographic proximity, and activity preferences.
+After a match, Synca generates 1–3 concrete date proposals based on both users’ energy peaks, sleep schedules, geographic proximity, and activity preferences.
 
 **Selective Ghosting System**
 Profiles showing patterns consistent with inauthenticity receive progressively reduced visibility without notification. A multi-layer Trust Score maintains community quality automatically.
 
 **Onboarding Preference Game**
-A short visual game using AI-generated person archetypes builds each user's preference embedding implicitly.
+A short visual game using AI-generated person archetypes builds each user’s preference embedding implicitly.
 
 **Synca Spark — Live In-Person Compatibility Game**
 When two people meet physically — at a gym, a sauna, a run club, or any social event — either person can open Synca and start a **Spark session**. The other user joins by scanning a QR code or entering a short session code. Over approximately 3 minutes, both complete a synchronized live compatibility mini-test directly on their devices. At the end, they receive:
@@ -60,19 +64,31 @@ When two people meet physically — at a gym, a sauna, a run club, or any social
 
 Synca Spark serves three strategic goals simultaneously: it onboards two fully profiled users in one session, it creates a natural viral loop at physical community events, and it provides a powerful retention hook by rewarding real-world social behavior. Every Spark session is also a Trust Score booster — two users who met in person and both completed the session receive a verified IRL interaction badge.
 
+**Sync Rooms — Verified Group Spaces (v2)**
+A Sync Room is a group conversation space that can only exist when all members have a verified Spark with the creator — anti-fake by design. Three room types:
+
+| Type | Members | Use case | Spark rule |
+|---|---|---|---|
+| `duo` | 2 | 1-to-1 match chat | 1 Spark between the 2 users |
+| `small_group` | 3–8 | Friends, aperitivo, weekend plans | Full Spark graph: every pair |
+| `event` | 9–22 | Calcetto, escape room, padel | Each member ≥1 Spark with creator |
+
+`small_group` and `event` rooms are premium-only. The `event` type unlocks large organized activities — calcetto, escape rooms, padel tournaments — creating a powerful retention surface and a natural B2B partnership anchor with venue operators.
+
 ---
 
 ## Architecture
 
 ```
-iOS App (HealthKit)           ──┬
-Android App (Health Connect)  ──┤──→  Rails API Backend  ←──→  Telegram Bot / Mini App
-Spotify / Travel APIs         ──┘          ↕
+iOS App (HealthKit)           ─┬
+Android App (Health Connect)  ─┤──→  Rails API Backend  ←──→  Telegram Bot / Mini App
+Spotify / Travel APIs         ─┘          ↕
                                      Web Payment Page
 ```
 
 - **Native apps** aggregate health data on-device. Raw samples never reach the server — only anonymized summaries.
-- **Rails API** runs all matching logic, trust scoring, date proposal generation, signal enrichment, Spark session management, and premium access management.
+- **Rails API** runs all matching logic (Spark-origin + algorithm-origin), trust scoring, date proposal generation, signal enrichment, Spark session management, Sync Room validation, and premium access management. Background jobs run via **Solid Queue** (no Redis dependency).
+- **Action Cable** (WebSocket, built into Rails) powers real-time Spark sessions and Sync Room messaging. Scales to tens of thousands of concurrent connections without additional infrastructure.
 - **Telegram Bot / Mini App** serves as the primary acquisition funnel and payment interface — critical for Russia where Telegram penetration reaches 64.4%.
 - **External payment page** processes all transactions outside App Store / Google Play, eliminating the 30% platform commission.
 
@@ -90,7 +106,7 @@ The global dating app market is valued at **$11.61 billion in 2025**, projected 
 | Ditto | AI, no swipe | $9.2M | No health/travel/music data |
 | Hinge | Curated mainstream | $550M+ revenue | No objective data, swipe model |
 
-**No existing competitor combines objective health biometrics, travel behavior, music profile, visual preference inference, live IRL Spark sessions, and pre-organized dates in a single platform — across international markets.**
+**No existing competitor combines objective health biometrics, travel behavior, music profile, visual preference inference, live IRL Spark sessions, verified group spaces, and pre-organized dates in a single platform — across international markets.**
 
 ### Seven-City Launch Map
 
@@ -108,13 +124,17 @@ The global dating app market is valued at **$11.61 billion in 2025**, projected 
 
 ## Business Model
 
-**Premium Subscription** — €12–15/month (market-adjusted). Free tier: health dashboard, onboarding games, limited match visibility. Premium: full match access, complete compatibility breakdown, date proposals, signal enrichment. All payments via Telegram or external web page — zero App Store commission.
+**Premium Subscription** — €12–15/month (market-adjusted).
+- Free tier: health dashboard, onboarding games, Spark-origin matches only (up to 3 active), basic match visibility.
+- Premium tier: algorithm-origin matches (*“Synca suggerita”*), unlimited active matches, complete compatibility breakdown, date proposals, Sync Rooms (`small_group` + `event`), signal enrichment.
+
+All payments via Telegram or external web page — zero App Store commission.
 
 **Pay-per-Match / Date Pack** — Curated match or ready-made date experience purchased individually.
 
 **Synca Spark Reward Loop** — Each Spark session awards both participants one free Premium week or one free match credit, depending on their current plan. This creates a direct, measurable incentive to use Synca at every IRL social event and drives both acquisition and re-engagement.
 
-**B2B Venue Partnerships** — Gyms, saunas, padel courts, and cafés integrated into the date proposal system. Synca drives structured traffic; venues offer preferential rates packaged as “date packs”.
+**B2B Venue Partnerships** — Gyms, saunas, padel courts, and cafés integrated into the date proposal and Sync Room event system. Synca drives structured traffic; venues offer preferential rates packaged as “date packs”. Event Rooms (9–22 members) are a natural anchor for venue co-branding.
 
 **Commission-Free Payment Infrastructure** — Telegram Stars, YooMoney, SBP (Russia), Stripe via external link.
 
@@ -154,21 +174,26 @@ MVP                    Post-MVP v1              Post-MVP v2             v3
   game (AI archetypes) + Basic travel signals    (Spotify)               compatibility
 ✓ Photo context AI     + Apple Music support   + Multi-source trust      modeling
 ✓ Synca Spark (IRL)                              scoring upgrade
+✓ Algorithm matching  + Sync Rooms v2          + Group compatibility
+  (premium, nightly)    (duo/group/event)         engine v1
 ✓ Telegram Bot +
   payment infra
 ```
 
 ---
 
-## Beyond 1-to-1: Group Compatibility (v3+)
+## Beyond 1-to-1: Sync Rooms & Group Compatibility
 
-Synca's matching architecture is intentionally designed to support **group compatibility** from day one. The data model uses a participant join table rather than a fixed two-user structure, meaning the same engine that computes 1-to-1 lifestyle compatibility can be extended to evaluate and propose:
+Synca's matching architecture is intentionally designed to support **group compatibility** from day one. The data model uses a participant join table rather than a fixed two-user structure.
 
-- **Friend group formation**: compatible groups of 3–5 people with aligned sleep schedules and activity levels for shared experiences (hiking trips, gym sessions, travel groups)
-- **Social circle expansion**: recommending a compatible third person to an existing match pair
-- **Community clustering**: identifying naturally compatible micro-communities within a city for Synca-organized events
+**Sync Rooms (v2)** are the first expression of this: verified group spaces where every member has a real-world Spark connection to the creator. This is not a generic group chat — it is a social graph built from physical encounters, anti-fake by structural design.
 
-This positions Synca as a **social compatibility platform** rather than a pure dating app — a TAM expansion that no current competitor is pursuing with objective behavioral data. Group compatibility features are scoped for v3 and will be activated progressively as city density thresholds make group matching viable.
+Three room types address progressively larger social contexts:
+- `duo` (2): the standard 1-to-1 match chat, already in MVP
+- `small_group` (3–8): friends, weekend plans, shared activities
+- `event` (9–22): calcetto, escape rooms, padel — the natural bridge to B2B venue partnerships
+
+**Group compatibility engine (v3+)** extends pairwise scores to model multi-user group cohesion — suggesting curated small groups for shared experiences (morning runs, sauna sessions, travel groups). This positions Synca as a **social compatibility platform** rather than a pure dating app, a TAM expansion that no current competitor is pursuing with objective behavioral data.
 
 ---
 
@@ -177,8 +202,9 @@ This positions Synca as a **social compatibility platform** rather than a pure d
 - Product architecture fully defined across all layers (iOS, Android, Rails backend, Telegram Bot, payment infrastructure)
 - Repository initialized as monorepo (iOS app, backend API, documentation)
 - iOS MVP in active development
-- Matching model defined: weighted scoring across 8 dimensions
+- Matching model defined: weighted scoring across 8 dimensions, dual origin (Spark + algorithm)
 - Synca Spark session flow designed and scoped
+- Sync Rooms architecture designed: `duo`, `small_group`, `event` room types
 - Market analysis completed across 7 cities
 - Telegram architecture and payment infrastructure scoped for Russian market launch
 
