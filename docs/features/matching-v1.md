@@ -19,6 +19,10 @@ The raw score (0–100) is **never exposed to users** — only plain-language in
 Matching deliberately produces **few, high-quality matches**. The system does not
 produce an infinite swipeable feed.
 
+Prerequisites:
+- `users`, `profiles` (ref: `docs/features/auth-v1.md`)
+- `signals` (ref: `docs/features/signals-v1.md`)
+
 ---
 
 ## Step 1.0 — Compatibility Score (Health Signals)
@@ -104,42 +108,9 @@ during the nightly batch run.
 
 ### DB Schema
 
+New tables introduced by this step:
+
 ```sql
-users
-  id              bigint PK
-  email           string UNIQUE
-  password_digest string
-  created_at      datetime
-  updated_at      datetime
-
-profiles
-  id                     bigint PK
-  user_id                bigint FK -> users NOT NULL
-  display_name           string
-  bio                    text
-  photos                 jsonb DEFAULT '[]'
-  trust_score            float NOT NULL DEFAULT 50.0
-  spark_verified         boolean NOT NULL DEFAULT false
-  irl_verification_count integer NOT NULL DEFAULT 0
-  premium                boolean NOT NULL DEFAULT false
-  created_at             datetime
-  updated_at             datetime
-
-signals
-  id                      bigint PK
-  user_id                 bigint FK -> users NOT NULL UNIQUE
-  sleep_duration_avg      float
-  sleep_variability       float
-  chronotype              string
-  social_jetlag           float
-  activity_minutes_avg    float
-  rest_hr_avg             float
-  step_count_avg          float
-  peak_activity_window    string
-  routine_stability_index float
-  computed_at             datetime
-  updated_at              datetime
-
 preference_profiles
   id              bigint PK
   user_id         bigint FK -> users NOT NULL UNIQUE
@@ -167,6 +138,9 @@ matches
   updated_at             datetime
   UNIQUE (user_a_id, user_b_id)
 ```
+
+For `signals` schema see `docs/features/signals-v1.md`.
+For `spark_sessions` schema see `docs/features/spark-v1.md`.
 
 ### API Endpoints
 
@@ -211,10 +185,9 @@ is premium only.
 
 ### Changes from Step 1.0
 
-- `CompatibilityScoreService` reads `music_top_genres`, `music_energy_avg`,
-  `music_valence_avg` from `signals` when available.
-- Music sub-score contributes to the **Lifestyle domain** (which grows from
-  `routine_stability_index` only in Step 1.0 to a richer set of sub-signals).
+- `CompatibilityScoreService` reads music columns from `signals` when available
+  (ref: `docs/features/signals-v1.md` Step 2.0).
+- Music sub-score contributes to the **Lifestyle domain**.
 - No schema change to `matches` — `score_breakdown` JSONB absorbs the new
   music sub-score naturally.
 - Users without music signals are scored only on health + preferences.
@@ -237,8 +210,8 @@ is premium only.
 
 ### Changes from Step 2.0
 
-- `CompatibilityScoreService` reads `travel_trips_per_year`, `travel_avg_duration_days`,
-  `travel_style`, `travel_regions` from `signals` when available.
+- `CompatibilityScoreService` reads travel columns from `signals` when available
+  (ref: `docs/features/signals-v1.md` Step 3.0).
 - Travel sub-score contributes to the **Lifestyle domain**.
 - No schema change to `matches`.
 

@@ -20,6 +20,11 @@ initiate a Spark together is itself a meaningful intent signal.
 Spark is the prerequisite for creating a Match with `origin: :spark` and for joining
 or creating any Sync Room.
 
+Prerequisites:
+- `users`, `profiles` (ref: `docs/features/auth-v1.md`)
+- `signals` (ref: `docs/features/signals-v1.md`)
+- `matches` (ref: `docs/features/matching-v1.md`)
+
 ---
 
 ## Step 1.0 — Proximity Spark (Bluetooth / QR)
@@ -59,43 +64,9 @@ is the Spark initiation itself.
 
 ### DB Schema
 
+New table introduced by this step:
+
 ```sql
-users
-  id              bigint PK
-  email           string UNIQUE
-  password_digest string
-  created_at      datetime
-  updated_at      datetime
-
-profiles
-  id                     bigint PK
-  user_id                bigint FK -> users NOT NULL
-  display_name           string
-  bio                    text
-  photos                 jsonb DEFAULT '[]'
-  trust_score            float NOT NULL DEFAULT 50.0
-  spark_verified         boolean NOT NULL DEFAULT false
-  irl_verification_count integer NOT NULL DEFAULT 0
-  premium                boolean NOT NULL DEFAULT false
-  created_at             datetime
-  updated_at             datetime
-
-signals
-  id                      bigint PK
-  user_id                 bigint FK -> users NOT NULL UNIQUE
-  -- Step 1.0: health
-  sleep_duration_avg      float
-  sleep_variability       float
-  chronotype              string
-  social_jetlag           float
-  activity_minutes_avg    float
-  rest_hr_avg             float
-  step_count_avg          float
-  peak_activity_window    string
-  routine_stability_index float
-  computed_at             datetime
-  updated_at              datetime
-
 spark_sessions
   id                   bigint PK
   initiator_id         bigint FK -> users NOT NULL
@@ -111,21 +82,9 @@ spark_sessions
   completed_at         datetime
   created_at           datetime
   updated_at           datetime
-
-matches
-  id                     bigint PK
-  user_a_id              bigint FK -> users NOT NULL
-  user_b_id              bigint FK -> users NOT NULL
-  spark_session_id       bigint FK -> spark_sessions  -- nil for algorithm-origin matches
-  origin                 integer NOT NULL DEFAULT 0   -- 0: spark | 1: algorithm
-  algorithm_confidence   float                        -- nil for spark-origin matches
-  compatibility_score    float NOT NULL
-  status                 string NOT NULL DEFAULT 'active'
-                         -- 'active' | 'drifted' | 'reconnected' | 'ended'
-  created_at             datetime
-  updated_at             datetime
-  UNIQUE (user_a_id, user_b_id)
 ```
+
+For `matches` schema see `docs/features/matching-v1.md`.
 
 ### API Endpoints
 
@@ -189,25 +148,18 @@ SparkSession status: :completed
 
 ### DB Schema
 
+Changes to existing tables from Step 1.0:
+
 ```sql
--- All Step 1.0 tables unchanged.
-
+-- spark_sessions: new column to distinguish duo vs group
 spark_sessions
-  id                   bigint PK
-  initiator_id         bigint FK -> users NOT NULL
-  receiver_id          bigint FK -> users         -- nil for group sessions
-  session_type         string NOT NULL DEFAULT 'duo'
-                       -- 'duo' | 'group'
-  status               string NOT NULL DEFAULT 'pending'
-  discovery_method     string NOT NULL
-  compatibility_score  float             -- nil for group sessions (per-pair scores used)
-  score_breakdown      jsonb
-  match_created        boolean NOT NULL DEFAULT false
-  expires_at           datetime NOT NULL
-  completed_at         datetime
-  created_at           datetime
-  updated_at           datetime
+  session_type  string NOT NULL DEFAULT 'duo'  -- 'duo' | 'group' (new)
+  receiver_id   bigint FK -> users              -- becomes nullable for group sessions
+```
 
+New table introduced by this step:
+
+```sql
 spark_session_participants
   id                bigint PK
   spark_session_id  bigint FK -> spark_sessions NOT NULL
@@ -215,19 +167,6 @@ spark_session_participants
   confirmed_at      datetime
   created_at        datetime
   UNIQUE (spark_session_id, user_id)
-
-matches
-  id                     bigint PK
-  user_a_id              bigint FK -> users NOT NULL
-  user_b_id              bigint FK -> users NOT NULL
-  spark_session_id       bigint FK -> spark_sessions
-  origin                 integer NOT NULL DEFAULT 0
-  algorithm_confidence   float
-  compatibility_score    float NOT NULL
-  status                 string NOT NULL DEFAULT 'active'
-  created_at             datetime
-  updated_at             datetime
-  UNIQUE (user_a_id, user_b_id)
 ```
 
 ### API Endpoints

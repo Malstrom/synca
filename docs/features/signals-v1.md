@@ -18,6 +18,8 @@ Signal sources are added incrementally across phases. Each new source enriches t
 compatibility model without requiring re-architecture. The `signals` table grows
 one column group per new source — one row per user at all times.
 
+Prerequisite: `users` and `profiles` tables (ref: `docs/features/auth-v1.md`).
+
 ---
 
 ## Step 1.0 — Apple Health / Health Connect
@@ -39,27 +41,9 @@ one column group per new source — one row per user at all times.
 
 ### DB Schema
 
+New table introduced by this step:
+
 ```sql
-users
-  id              bigint PK
-  email           string UNIQUE
-  password_digest string
-  created_at      datetime
-  updated_at      datetime
-
-profiles
-  id                     bigint PK
-  user_id                bigint FK -> users NOT NULL
-  display_name           string
-  bio                    text
-  photos                 jsonb DEFAULT '[]'
-  trust_score            float NOT NULL DEFAULT 50.0
-  spark_verified         boolean NOT NULL DEFAULT false
-  irl_verification_count integer NOT NULL DEFAULT 0
-  premium                boolean NOT NULL DEFAULT false
-  created_at             datetime
-  updated_at             datetime
-
 signals
   id                       bigint PK
   user_id                  bigint FK -> users NOT NULL UNIQUE
@@ -117,60 +101,27 @@ Without a `signals` record, the user cannot receive algorithm-origin matches
    - Listening time-of-day pattern
 4. Music metrics are appended via `PATCH /api/v1/signals`.
 5. `CompatibilityScoreService` includes music taste as a sub-signal within
-   the Lifestyle domain (20% weight).
+   the Lifestyle domain (ref: `docs/features/matching-v1.md`).
 
 ### DB Schema
 
+New columns added to `signals` in this step:
+
 ```sql
-users
-  id              bigint PK
-  email           string UNIQUE
-  password_digest string
-  created_at      datetime
-  updated_at      datetime
-
-profiles
-  id                     bigint PK
-  user_id                bigint FK -> users NOT NULL
-  display_name           string
-  bio                    text
-  photos                 jsonb DEFAULT '[]'
-  trust_score            float NOT NULL DEFAULT 50.0
-  spark_verified         boolean NOT NULL DEFAULT false
-  irl_verification_count integer NOT NULL DEFAULT 0
-  premium                boolean NOT NULL DEFAULT false
-  created_at             datetime
-  updated_at             datetime
-
 signals
-  id                       bigint PK
-  user_id                  bigint FK -> users NOT NULL UNIQUE
-  -- Step 1.0: health (unchanged)
-  sleep_duration_avg       float
-  sleep_variability        float
-  chronotype               string
-  social_jetlag            float
-  activity_minutes_avg     float
-  rest_hr_avg              float
-  step_count_avg           float
-  peak_activity_window     string
-  routine_stability_index  float
-  -- Step 2.0: music
-  music_top_genres         jsonb     -- e.g. ["hip-hop", "jazz", "electronic"]
-  music_energy_avg         float     -- Spotify audio feature average (0.0-1.0)
-  music_valence_avg        float     -- Spotify audio feature average (0.0-1.0)
-  music_peak_listening_window string -- time-of-day window with highest listening
-  music_source             string    -- 'spotify' | 'yandex_music'
-  computed_at              datetime
-  updated_at               datetime
+  -- Step 2.0: music (appended to existing table)
+  music_top_genres            jsonb     -- e.g. ["hip-hop", "jazz", "electronic"]
+  music_energy_avg            float     -- Spotify audio feature average (0.0-1.0)
+  music_valence_avg           float     -- Spotify audio feature average (0.0-1.0)
+  music_peak_listening_window string    -- time-of-day window with highest listening
+  music_source                string    -- 'spotify' | 'yandex_music'
+```
 
-identity_providers
-  id          bigint PK
-  user_id     bigint FK -> users NOT NULL
-  provider    string NOT NULL   -- 'apple' | 'google' | 'vk' | 'spotify' | 'yandex_music'
-  uid         string NOT NULL   -- unique ID issued by the provider
-  created_at  datetime
-  UNIQUE (provider, uid)
+New table introduced by this step (OAuth provider link, shared with auth):
+
+```sql
+-- identity_providers: ref docs/features/auth-v1.md Step 2.0
+-- provider values extended: 'spotify' | 'yandex_music' added to existing set
 ```
 
 ### API Endpoints
@@ -180,14 +131,13 @@ identity_providers
 | POST | `/api/v1/signals` | Yes | Unchanged from Step 1.0 |
 | GET | `/api/v1/signals/me` | Yes | Unchanged from Step 1.0 |
 | PATCH | `/api/v1/signals` | Yes | Partial update — appends music metrics |
-| POST | `/api/v1/auth/social` | No | Reused from Auth Step 2.0 for Spotify/Yandex OAuth |
+| POST | `/api/v1/auth/social` | No | Reused from auth Step 2.0 for Spotify/Yandex OAuth |
 
 Ref: `docs/api/openapi.yaml`
 
 ### Premium Gating
 
-None — music signal is free for all users. It increases match quality for
-everyone and serves as an incentive to connect more signal sources.
+None — music signal is free for all users.
 
 ### Open Questions
 
@@ -213,57 +163,19 @@ everyone and serves as an incentive to connect more signal sources.
    - Preferred regions
 3. Travel metrics are appended via `PATCH /api/v1/signals`.
 4. `CompatibilityScoreService` includes travel behavior as a sub-signal
-   within the Lifestyle domain.
+   within the Lifestyle domain (ref: `docs/features/matching-v1.md`).
 
 ### DB Schema
 
+New columns added to `signals` in this step:
+
 ```sql
-users
-  id              bigint PK
-  email           string UNIQUE
-  password_digest string
-  created_at      datetime
-  updated_at      datetime
-
-profiles
-  id                     bigint PK
-  user_id                bigint FK -> users NOT NULL
-  display_name           string
-  bio                    text
-  photos                 jsonb DEFAULT '[]'
-  trust_score            float NOT NULL DEFAULT 50.0
-  spark_verified         boolean NOT NULL DEFAULT false
-  irl_verification_count integer NOT NULL DEFAULT 0
-  premium                boolean NOT NULL DEFAULT false
-  created_at             datetime
-  updated_at             datetime
-
 signals
-  id                       bigint PK
-  user_id                  bigint FK -> users NOT NULL UNIQUE
-  -- Step 1.0: health (unchanged)
-  sleep_duration_avg       float
-  sleep_variability        float
-  chronotype               string
-  social_jetlag            float
-  activity_minutes_avg     float
-  rest_hr_avg              float
-  step_count_avg           float
-  peak_activity_window     string
-  routine_stability_index  float
-  -- Step 2.0: music (unchanged)
-  music_top_genres         jsonb
-  music_energy_avg         float
-  music_valence_avg        float
-  music_peak_listening_window string
-  music_source             string
-  -- Step 3.0: travel
+  -- Step 3.0: travel (appended to existing table)
   travel_trips_per_year    float     -- average number of trips per year
   travel_avg_duration_days float     -- average trip duration in days
   travel_style             string    -- 'city' | 'nature' | 'mixed'
   travel_regions           jsonb     -- e.g. ["Europe", "Southeast Asia"]
-  computed_at              datetime
-  updated_at               datetime
 ```
 
 ### API Endpoints

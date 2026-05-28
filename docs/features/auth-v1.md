@@ -41,6 +41,8 @@ Token expiry: 30 days. No refresh token in Step 1.0.
 
 ### DB Schema
 
+This step introduces the two core tables that every other feature depends on.
+
 ```sql
 users
   id              bigint PK
@@ -107,27 +109,18 @@ linked automatically via `identity_providers`.
 
 ### DB Schema
 
+Changes to existing tables from Step 1.0:
+
 ```sql
+-- users: email and password_digest become nullable for social-only accounts
 users
-  id              bigint PK
-  email           string UNIQUE          -- nullable for social-only accounts
-  password_digest string                 -- nullable for social-only accounts
-  created_at      datetime
-  updated_at      datetime
+  email           string UNIQUE          -- was NOT NULL; now nullable for social-only
+  password_digest string                 -- was NOT NULL; now nullable for social-only
+```
 
-profiles
-  id                     bigint PK
-  user_id                bigint FK -> users NOT NULL
-  display_name           string
-  bio                    text
-  photos                 jsonb DEFAULT '[]'
-  trust_score            float NOT NULL DEFAULT 50.0
-  spark_verified         boolean NOT NULL DEFAULT false
-  irl_verification_count integer NOT NULL DEFAULT 0
-  premium                boolean NOT NULL DEFAULT false
-  created_at             datetime
-  updated_at             datetime
+New table introduced by this step:
 
+```sql
 identity_providers
   id          bigint PK
   user_id     bigint FK -> users NOT NULL
