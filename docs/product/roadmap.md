@@ -1,85 +1,96 @@
 # Synca — Product Roadmap
 
-This document tracks the high-level product roadmap. For the full technical roadmap see:
-`docs/roadmap/Synca_Roadmap_Tecnica_0-24_mesi.md`
+This document defines **sequencing only**.
+Specs, schemas, and API details live exclusively in the feature docs under `docs/features/`.
 
-## Phase 1 — iOS MVP (Month 1–3)
+Each entry follows the pattern:
+`Feature — Step X.Y` → [`feature-file.md`](../features/feature-file.md)
 
-- [ ] User registration and login
-- [ ] HealthKit authorization and aggregation (sleep, steps)
-- [ ] Health profile generation and sync to backend
-- [ ] Preference profile setup
-- [ ] Matching v0 (rule-based: city, age, gender)
-- [ ] Basic match list UI
-- [ ] Telegram bot v0 (onboarding reminders, match notifications)
+---
 
-## Phase 2 — Health Matching + Trust + Spark (Month 3–6)
+## Phase 1 — iOS MVP · Month 0–3
 
-- [ ] Compatibility score v1 (sleep + activity + lifestyle)
-- [ ] Match list with compatibility breakdown (plain language)
-- [ ] TrustScore v0 (phone verification, profile completeness, behavior signals)
-- [ ] Anti-fake: low trust profiles ranked down
-- [ ] Telegram bot: match notifications + profile reminders
-- [ ] **Synca Spark v0**: QR session initiation, WebSocket sync, micro-test flow, instant
-      compatibility result screen, reward issuance (`SparkReward`), IRL verification count.
-      Spark-origin matches labeled *"Synca confermata"* in the UI.
-- [ ] **Algorithm matching v0** (`MatchingJob`): nightly job generates suggested matches from
-      health summaries; origin: `algorithm`; gated as premium feature from launch.
-      Algorithm-origin matches labeled *"Synca suggerita"* in the UI.
+> Goal: working iOS app, first real users, health data flowing.
 
-## Phase 3 — Android + Payments (Month 6–9)
+- Profile — Step 1.0 (registration, onboarding, JWT auth, refresh token) → [`profile-v1.md`](../features/profile-v1.md)
+- Signals — Step 1.0 (HealthKit: sleep + activity aggregation) → [`signals-v1.md`](../features/signals-v1.md)
+- Matching — v0 rule-based (city + age + gender filter, no score) → [`matching-v1.md`](../features/matching-v1.md)
 
-- [ ] Android app: onboarding, Health Connect, profile, match list
-- [ ] **Synca Spark on Android**: full feature parity with iOS
-- [ ] Premium subscription (iOS StoreKit + Android Play Billing + RU local provider)
-- [ ] Feature gating:
-  - Free tier: Spark-origin matches only, max 3 active matches
-  - Premium tier: algorithm-origin matches, unlimited active matches, Sync Rooms
-- [ ] Date proposal v0 (basic proposal creation and acceptance)
+---
 
-## Phase 4 — Date Proposals + Safety (Month 9–12)
+## Phase 2 — Health Matching + Trust + Spark · Month 3–6
 
-- [ ] Full date proposal flow (suggest, accept, decline, completed)
-- [ ] Liveness check integration
-- [ ] Image moderation (escort/nudity detection)
-- [ ] Reputation signals (no-show, reports)
-- [ ] TrustScore v1: includes behavioral reputation and `irl_verification_count` weighting
+> Goal: first compatibility scores, first IRL Sparks, anti-fake baseline.
 
-## Phase 5 — Sync Rooms (Month 12–15)
+- Matching — Step 1.0 (compatibility score: sleep + activity + preferences) → [`matching-v1.md`](../features/matching-v1.md)
+- Trust — Step 1.0 (TrustScore v0: phone verification, completeness, behavior) → [`trust-v1.md`](../features/trust-v1.md)
+- Spark — Step 1.0 (Proximity Spark via BLE/QR, scoring, SparkReward) → [`spark-v1.md`](../features/spark-v1.md)
 
-- [ ] **Sync Room `duo`**: 1-to-1 match chat as a Sync Room (replaces raw match chat)
-- [ ] **Sync Room `small_group`** (3–8 members): requires full Spark graph between all members.
-      Use cases: group of friends, aperitivo, weekend plans.
-- [ ] **Sync Room `event`** (9–22 members): each member needs ≥1 Spark with the creator.
-      Use cases: calcetto, escape room, padel. Creator acts as social guarantor.
-- [ ] Spark invite flow: creator can send a deep-link invite to facilitate a Spark between
-      two members who have not yet met, enabling them to join the group.
-- [ ] Action Cable broadcast for real-time group messaging
-- [ ] Sync Room premium gating: `small_group` and `event` rooms are premium-only
+---
 
-## Phase 6 — Matching v2 + Analytics (Month 15–21)
+## Phase 3 — Android + Payments · Month 6–9
 
-- [ ] Outcome logging (chat started, date completed, rating)
-- [ ] Adaptive matching: tune weights per user from outcomes
-- [ ] Internal analytics dashboard (MAU, conversion, date rate)
-- [ ] Spotify integration for music taste signal
-- [ ] Travel behavior integration (Polarsteps / Maps)
-- [ ] Algorithm confidence score surfaced in UI for premium users
+> Goal: Android parity, first revenue, premium gating live.
 
-## Phase 7 — Multi-city + Localisation (Month 21–27)
+- Profile — Step 2.0 (social login: Apple, Google, VK) → [`profile-v1.md`](../features/profile-v1.md)
+- Signals — Step 1.0 on Android (Health Connect) → [`signals-v1.md`](../features/signals-v1.md)
+- Spark — Step 1.0 on Android (full feature parity) → [`spark-v1.md`](../features/spark-v1.md)
+- Premium subscription (iOS StoreKit + Android Play Billing + RU local provider)
+- Moments — Step 1.0 basic (proposal + accept/decline) → [`moments-v1.md`](../features/moments-v1.md)
 
-- [ ] CityConfig model (pricing, venue partners, event calendar)
-- [ ] Data residency routing (RU / EU)
-- [ ] App localisation: RU, EN, IT, TH, PT, ES
-- [ ] 5–7 active cities
+---
 
-## Phase 8 — Group Compatibility Engine (Month 27+)
+## Phase 4 — Safety + Full Moments · Month 9–12
 
-- [ ] **Group compatibility engine v1 (research + validation)**: extend pairwise compatibility
-      model to score multi-user group cohesion; validate with anonymized data from seeding
-      events in Seoul and Milan (Wave 2 cities)
-- [ ] **Group date proposals**: suggest curated activities (morning runs, sauna sessions,
-      padel games) based on lifestyle alignment across the group
-- [ ] **Group date packs**: monetization surface co-branded with venue partners
-- [ ] No re-architecture required — individual compatibility profiles and `SparkSession` IRL
-      data from earlier phases are the direct data foundation
+> Goal: full date lifecycle, liveness, image moderation, reputation signals.
+
+- Moments — Step 1.0 full (counter-proposal, complete, no-show, rating) → [`moments-v1.md`](../features/moments-v1.md)
+- Trust — Step 2.0 (liveness check + image moderation) → [`trust-v1.md`](../features/trust-v1.md)
+- Trust — Step 3.0 (TrustScore v1: behavioral reputation from Moments) → [`trust-v1.md`](../features/trust-v1.md)
+- Moments — Step 2.0 (reputation signals fed into TrustScore) → [`moments-v1.md`](../features/moments-v1.md)
+
+---
+
+## Phase 5 — Circles · Month 12–15
+
+> Goal: real-time messaging gated on physical compatibility.
+
+- Circles — Step 1.0 (Duo Circle: 1-to-1 match chat via Action Cable) → [`circles-v1.md`](../features/circles-v1.md)
+- Circles — Step 2.0 (Small Group + Event Circles, Spark Invite Link) → [`circles-v1.md`](../features/circles-v1.md)
+
+---
+
+## Phase 6 — Matching v2 + Signal Expansion · Month 15–21
+
+> Goal: richer compatibility signals, adaptive weights, premium analytics.
+
+- Signals — Step 2.0 (Spotify music taste) → [`signals-v1.md`](../features/signals-v1.md)
+- Signals — Step 3.0 (travel behavior: Polarsteps / Maps) → [`signals-v1.md`](../features/signals-v1.md)
+- Matching — Step 2.0 (music signal in compatibility score) → [`matching-v1.md`](../features/matching-v1.md)
+- Matching — Step 3.0 (travel signal in compatibility score) → [`matching-v1.md`](../features/matching-v1.md)
+- Profile — Step 3.0 (completeness score) → [`profile-v1.md`](../features/profile-v1.md)
+- Internal analytics dashboard (MAU, conversion, date rate)
+
+---
+
+## Phase 7 — Multi-city + Localisation · Month 21–27
+
+> Goal: 5–7 active cities, full localisation, data residency compliance.
+
+- CityConfig model (pricing, venue partners, event calendar, threshold tuning)
+- Data residency routing (RU / EU)
+- App localisation: RU, EN, IT, TH, PT, ES
+
+---
+
+## Phase 8 — Group Compatibility Engine · Month 27+
+
+> Goal: extend pairwise compatibility to group cohesion; enter the social wellness category.
+
+- Spark — Step 2.0 (Group Spark: multi-user scoring) → [`spark-v1.md`](../features/spark-v1.md)
+- Group compatibility engine v1 (pairwise model extended to group cohesion score)
+- Group Moments: curated activity proposals (runs, sauna, padel) based on group alignment → [`moments-v1.md`](../features/moments-v1.md)
+- Group Moment packs: venue partner monetization surface
+
+> No re-architecture required — individual compatibility profiles and Spark IRL data
+> from earlier phases are the direct data foundation.

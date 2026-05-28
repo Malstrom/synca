@@ -48,7 +48,7 @@ Synca supports two complementary paths to a match:
 | `algorithm` | Nightly `MatchingJob` on health data | Medium — behavioral inference | Premium |
 
 Both origins produce the same `Match` object. The `origin` field is visible to the client
-so the UI can label them differently (e.g. *"Synca confermata"* vs *"Synca suggerita"*).
+so the UI can label them differently (e.g. *"Synca confirmed"* vs *"Synca suggested"*).
 
 ## Target Users
 
@@ -68,11 +68,11 @@ self-reported preferences — and where every match has a real chance of becomin
 Signal expansion roadmap:
 - **v1**: Spotify music profile, travel behavior (Polarsteps / Maps)
 - **v2**: Cross-signal validation, predictive compatibility modeling, outcome-based weight tuning.
-  Introduction of **Sync Rooms** — group conversation spaces that can only be created when
-  all members have verified Spark sessions with the creator. Three room types:
+  Introduction of **Circles** — group conversation spaces that can only be created when
+  all members have verified Spark sessions with the creator. Three Circle types:
   - `duo` (2 members) — the standard 1-to-1 match chat
   - `small_group` (3–8 members) — friends, aperitivo, weekend plans; full Spark graph required
-  - `event_room` (9–22 members) — calcetto, escape room, padel; each member needs ≥1 Spark with creator
+  - `event` (9–22 members) — calcetto, escape room, padel; each member needs ≥1 Spark with creator
 - **v3+**: Predictive group compatibility engine — extend pairwise scores to model multi-user
   group cohesion. Broadens Synca's addressable market from dating into the wider social wellness
   category. No re-architecture required: individual compatibility profiles and `SparkSession`
