@@ -20,7 +20,7 @@ Matching deliberately produces **few, high-quality matches**. The system does no
 produce an infinite swipeable feed.
 
 Prerequisites:
-- `users`, `profiles` (ref: `docs/features/auth-v1.md`)
+- `users`, `profiles`, `preference_profiles` (ref: `docs/features/profile-v1.md`)
 - `signals` (ref: `docs/features/signals-v1.md`)
 
 ---
@@ -44,14 +44,21 @@ Prerequisites:
 
 ### Score Thresholds
 
-| Score range | Spark origin | Algorithm origin | Sync Room admission |
-|-------------|--------------|------------------|---------------------|
-| 75–100 | High-quality match shown | High-quality suggestion shown | ✅ Eligible for group room |
-| 50–74 | Standard match shown | Standard suggestion shown | ✅ Eligible for duo only |
-| < 50 | No match created | No match created | ❌ Not eligible |
+Thresholds are the **single source of truth** for match creation decisions.
+No other document should hardcode threshold values — always reference this table.
 
-Minimum score for algorithm-origin match creation: **65** (higher bar than Spark,
-because no physical presence confirms mutual intent).
+| Score range | Spark origin | Algorithm origin | Circle (duo) admission |
+|-------------|--------------|------------------|------------------------|
+| High | High-quality match shown | High-quality suggestion shown | ✅ Eligible |
+| Standard | Standard match shown | Standard suggestion shown | ✅ Eligible (duo only) |
+| Below minimum | No match created | No match created | ❌ Not eligible |
+
+| Threshold | Spark origin | Algorithm origin |
+|-----------|--------------|------------------|
+| Minimum score to create a match | 50 | 65 |
+
+> Algorithm origin has a higher bar than Spark because no physical presence
+> confirms mutual intent.
 
 Thresholds are configurable per city.
 
@@ -77,10 +84,12 @@ Both users confirm presence in Spark
         ↓
 CompatibilityScoreService.call(user_a, user_b)
         ↓
-score >= 50  →  Match.create!(origin: :spark, compatibility_score: score)
-             →  trust_score incremented for both users on profiles
-score <  50  →  no Match created
-             →  Spark stored for analytics
+score >= spark minimum threshold
+  →  Match.create!(origin: :spark, compatibility_score: score)
+  →  trust_score incremented for both users on profiles
+score <  spark minimum threshold
+  →  no Match created
+  →  Spark stored for analytics
 ```
 
 `CompatibilityScoreService` is called synchronously at spark completion.
@@ -95,12 +104,15 @@ MatchingJob runs nightly  (Solid Queue, `algorithm` queue)
 Iterates users with a signals record updated in the last 30 days
         ↓
 Candidate pool filtered by: city, age, gender, distance, dealbreakers
+(ref: preference_profiles → docs/features/profile-v1.md)
         ↓
 CompatibilityScoreService.call(user_a, user_b)
         ↓
-score >= 65  →  Match.create!(origin: :algorithm, compatibility_score: score,
-                               algorithm_confidence: confidence)
-score <  65  →  silently skipped
+score >= algorithm minimum threshold
+  →  Match.create!(origin: :algorithm, compatibility_score: score,
+                   algorithm_confidence: confidence)
+score < algorithm minimum threshold
+  →  silently skipped
 ```
 
 The `algorithm` queue is separate from default to avoid blocking Spark scoring
@@ -108,20 +120,9 @@ during the nightly batch run.
 
 ### DB Schema
 
-New tables introduced by this step:
-
 ```sql
-preference_profiles
-  id              bigint PK
-  user_id         bigint FK -> users NOT NULL UNIQUE
-  min_age         integer
-  max_age         integer
-  max_distance_km integer
-  gender_targets  jsonb   -- e.g. ["woman", "non_binary"]
-  dealbreakers    jsonb   -- e.g. ["smoker", "no_kids"]
-  city            string
-  created_at      datetime
-  updated_at      datetime
+-- preference_profiles: ref docs/features/profile-v1.md
+-- (canonical definition lives there; do not redefine here)
 
 matches
   id                     bigint PK
