@@ -8,21 +8,15 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 1 — iOS MVP · Month 0–3
+## Phase 1 — iOS MVP · Month 0–6
 
-> Goal: working iOS app, first real users, health data flowing.
+> Goal: working iOS app with real users, health data flowing, first compatibility scores,
+> first IRL Sparks, anti-fake baseline, and a chat channel for every match —
+> a Spark without a conversation has nowhere to go.
 
 - Profile — Step 1.0 (registration, onboarding, JWT auth, refresh token) → [`profile-v1.md`](../features/profile-v1.md)
 - Signals — Step 1.0 (HealthKit: sleep + activity aggregation) → [`signals-v1.md`](../features/signals-v1.md)
 - Matching — v0 rule-based (city + age + gender filter, no score) → [`matching-v1.md`](../features/matching-v1.md)
-
----
-
-## Phase 2 — Health Matching + Trust + Spark + Chat · Month 3–6
-
-> Goal: first compatibility scores, first IRL Sparks, anti-fake baseline, and a chat
-> channel for every match — a Spark without a conversation has nowhere to go.
-
 - Matching — Step 1.0 (compatibility score: sleep + activity + preferences) → [`matching-v1.md`](../features/matching-v1.md)
 - Trust — Step 1.0 (TrustScore v0: phone verification, completeness, behavior) → [`trust-v1.md`](../features/trust-v1.md)
 - Spark — Step 1.0 (Proximity Spark via BLE/QR, scoring, SparkReward) → [`spark-v1.md`](../features/spark-v1.md)
@@ -30,7 +24,7 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 3 — Android + Payments · Month 6–9
+## Phase 2 — Android + Payments · Month 6–9
 
 > Goal: Android parity, first revenue, premium gating live.
 
@@ -42,7 +36,7 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 4 — Safety + Full Moments · Month 9–12
+## Phase 3 — Safety + Full Moments · Month 9–12
 
 > Goal: full date lifecycle, liveness, image moderation, reputation signals.
 
@@ -53,7 +47,7 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 5 — Circles v2 · Month 12–15
+## Phase 4 — Circles v2 · Month 12–15
 
 > Goal: extend Circles beyond 1-to-1 — group and event spaces gated on the Spark graph.
 
@@ -61,7 +55,7 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 6 — Matching v2 + Signal Expansion · Month 15–21
+## Phase 5 — Matching v2 + Signal Expansion · Month 15–21
 
 > Goal: richer compatibility signals, adaptive weights, premium analytics.
 
@@ -74,7 +68,7 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 7 — Multi-city + Localisation · Month 21–27
+## Phase 6 — Multi-city + Localisation · Month 21–27
 
 > Goal: 5–7 active cities, full localisation, data residency compliance.
 
@@ -84,7 +78,7 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 8 — Group Compatibility Engine · Month 27+
+## Phase 7 — Group Compatibility Engine · Month 27+
 
 > Goal: extend pairwise compatibility to group cohesion; enter the social wellness category.
 
