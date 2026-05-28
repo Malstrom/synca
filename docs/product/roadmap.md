@@ -18,13 +18,15 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 2 — Health Matching + Trust + Spark · Month 3–6
+## Phase 2 — Health Matching + Trust + Spark + Chat · Month 3–6
 
-> Goal: first compatibility scores, first IRL Sparks, anti-fake baseline.
+> Goal: first compatibility scores, first IRL Sparks, anti-fake baseline, and a chat
+> channel for every match — a Spark without a conversation has nowhere to go.
 
 - Matching — Step 1.0 (compatibility score: sleep + activity + preferences) → [`matching-v1.md`](../features/matching-v1.md)
 - Trust — Step 1.0 (TrustScore v0: phone verification, completeness, behavior) → [`trust-v1.md`](../features/trust-v1.md)
 - Spark — Step 1.0 (Proximity Spark via BLE/QR, scoring, SparkReward) → [`spark-v1.md`](../features/spark-v1.md)
+- Circles — Step 1.0 (Duo Circle: 1-to-1 match chat via Action Cable) → [`circles-v1.md`](../features/circles-v1.md)
 
 ---
 
@@ -51,11 +53,10 @@ Each entry follows the pattern:
 
 ---
 
-## Phase 5 — Circles · Month 12–15
+## Phase 5 — Circles v2 · Month 12–15
 
-> Goal: real-time messaging gated on physical compatibility.
+> Goal: extend Circles beyond 1-to-1 — group and event spaces gated on the Spark graph.
 
-- Circles — Step 1.0 (Duo Circle: 1-to-1 match chat via Action Cable) → [`circles-v1.md`](../features/circles-v1.md)
 - Circles — Step 2.0 (Small Group + Event Circles, Spark Invite Link) → [`circles-v1.md`](../features/circles-v1.md)
 
 ---
@@ -64,8 +65,8 @@ Each entry follows the pattern:
 
 > Goal: richer compatibility signals, adaptive weights, premium analytics.
 
-- Signals — Step 2.0 (Spotify music taste) → [`signals-v1.md`](../features/signals-v1.md)
-- Signals — Step 3.0 (travel behavior: Polarsteps / Maps) → [`signals-v1.md`](../features/signals-v1.md)
+- Signals — Step 2.0 (Spotify / Yandex Music taste) → [`signals-v1.md`](../features/signals-v1.md)
+- Signals — Step 3.0 (travel behavior: Polarsteps + location history) → [`signals-v1.md`](../features/signals-v1.md)
 - Matching — Step 2.0 (music signal in compatibility score) → [`matching-v1.md`](../features/matching-v1.md)
 - Matching — Step 3.0 (travel signal in compatibility score) → [`matching-v1.md`](../features/matching-v1.md)
 - Profile — Step 3.0 (completeness score) → [`profile-v1.md`](../features/profile-v1.md)
