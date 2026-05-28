@@ -18,10 +18,10 @@ No questionnaire or manual input is required — the fact that two people choose
 initiate a Spark together is itself a meaningful intent signal.
 
 Spark is the prerequisite for creating a Match with `origin: :spark` and for joining
-or creating any Sync Room.
+or creating any Circle.
 
 Prerequisites:
-- `users`, `profiles` (ref: `docs/features/auth-v1.md`)
+- `users`, `profiles` (ref: `docs/features/profile-v1.md`)
 - `signals` (ref: `docs/features/signals-v1.md`)
 - `matches` (ref: `docs/features/matching-v1.md`)
 
@@ -45,14 +45,17 @@ Both users confirm presence on their own device
         ↓
 Spark created  (status: :pending)
         ↓
-CompatibilityScoreService computes pairwise score
+ScoringJob (Solid Queue, `spark` queue) computes pairwise score
 using both users' signals (health, music, travel)
         ↓
-score >= 50  →  Match created  (origin: :spark)
-             →  trust_score incremented for both users
-             →  Spark status: :completed
-score <  50  →  no Match created
-             →  Spark status: :completed  (stored for analytics)
+score >= spark minimum threshold (ref: docs/features/matching-v1.md)
+  →  Match created  (origin: :spark)
+  →  trust_score incremented for both users
+  →  SparkReward issued per user
+  →  Spark status: :completed
+score < spark minimum threshold
+  →  no Match created
+  →  Spark status: :completed  (stored for analytics)
 ```
 
 The compatibility score is **never shown as a raw number** to users.
@@ -64,7 +67,7 @@ is the Spark initiation itself.
 
 ### DB Schema
 
-New table introduced by this step:
+New tables introduced by this step:
 
 ```sql
 sparks
@@ -75,13 +78,24 @@ sparks
                        -- 'pending' | 'completed' | 'expired' | 'cancelled'
   discovery_method     string NOT NULL
                        -- 'bluetooth' | 'qr_code'
-  compatibility_score  float             -- nil until scoring completes
-  score_breakdown      jsonb             -- domain sub-scores (never shown raw to users)
+  session_code         string             -- 6-digit numeric code for QR flow
+  qr_token             string             -- UUID token for deep-link QR flow
+  compatibility_score  float              -- nil until scoring completes
+  score_breakdown      jsonb              -- domain sub-scores (never shown raw to users)
   match_created        boolean NOT NULL DEFAULT false
-  expires_at           datetime NOT NULL -- session expires if neither confirms within 10 min
+  expires_at           datetime NOT NULL  -- session expires if neither confirms within 10 min
   completed_at         datetime
   created_at           datetime
   updated_at           datetime
+
+spark_rewards
+  id           bigint PK
+  user_id      bigint FK -> users NOT NULL
+  spark_id     bigint FK -> sparks NOT NULL
+  reward_type  string NOT NULL   -- 'premium_week' | 'match_credit'
+  status       string NOT NULL DEFAULT 'pending'  -- 'pending' | 'redeemed' | 'expired'
+  valid_until  datetime
+  created_at   datetime
 ```
 
 For `matches` schema see `docs/features/matching-v1.md`.
@@ -90,21 +104,29 @@ For `matches` schema see `docs/features/matching-v1.md`.
 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
-| POST | `/api/v1/sparks` | Yes | Initiator creates a new Spark |
-| PATCH | `/api/v1/sparks/:id/join` | Yes | Receiver confirms presence and joins |
+| POST | `/api/v1/sparks` | Yes | Initiator creates a new Spark; returns `session_code` + `qr_token` |
+| PATCH | `/api/v1/sparks/:id/join` | Yes | Receiver confirms presence and joins via `session_code` or `qr_token` |
+| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits answers; triggers ScoringJob when both have submitted |
+| GET | `/api/v1/sparks/:id/result` | Yes | Polls scoring result; returns 202 while in progress, 200 with score + match on completion |
 | GET | `/api/v1/sparks/:id` | Yes | Returns spark status and result |
 | GET | `/api/v1/sparks` | Yes | Lists the current user's past sparks |
+| GET | `/api/v1/spark_rewards` | Yes | Lists all rewards for the current user |
 
 Ref: `docs/api/openapi.yaml`
 
 Scoring is triggered server-side automatically once both users have confirmed
-presence (`join`). The client polls `GET /api/v1/sparks/:id` or listens
-via Action Cable for the `spark:scored` event.
+presence (`join`) and submitted answers. The client polls
+`GET /api/v1/sparks/:id/result` or listens via Action Cable for the
+`spark:scored` event.
 
 ### Premium Gating
 
 None — Sparks are fully available to free users. This is by design:
 the more Sparks happen, the richer the compatibility data for everyone.
+
+**Rewards:**
+- Free users who complete a Spark receive a `premium_week` trial.
+- Premium users who complete a Spark receive a `match_credit`.
 
 ### Open Questions
 
@@ -134,14 +156,14 @@ Users B, C, D... confirm presence and join
         ↓
 Group Spark created  (status: :pending)
         ↓
-CompatibilityScoreService computes pairwise score
+ScoringJob computes pairwise score
 for EVERY pair in the group using their signals
         ↓
-For each pair with score >= 50:
+For each pair with score >= spark minimum threshold:
   →  Match created  (origin: :spark)
   →  trust_score incremented for both users
 For the group as a whole:
-  →  Sync Room eligible if every required pair has a verified Spark
+  →  Circle eligible if every required pair has a verified Spark
         ↓
 Spark status: :completed
 ```
@@ -175,6 +197,8 @@ spark_participants
 |--------|------|---------------|-------------|
 | POST | `/api/v1/sparks` | Yes | Creates a duo or group Spark (type in body) |
 | POST | `/api/v1/sparks/:id/participants` | Yes | User joins a group Spark |
+| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Participant submits answers |
+| GET | `/api/v1/sparks/:id/result` | Yes | Polls per-pair scoring results |
 | GET | `/api/v1/sparks/:id` | Yes | Returns spark status and per-pair results |
 | GET | `/api/v1/sparks` | Yes | Lists the current user's past sparks |
 
@@ -186,7 +210,7 @@ None — Group Sparks are free for all users.
 
 ### Open Questions
 
-- Maximum group size for a Group Spark? (Suggested: up to 22 for event_room
+- Maximum group size for a Group Spark? (Suggested: up to 22 for event Circle
   compatibility, but UI may cap lower for usability.)
 - Should the group initiator see a summary of all pairwise scores after completion,
   or only their own pairs?
