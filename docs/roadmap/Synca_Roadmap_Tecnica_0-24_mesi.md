@@ -1,6 +1,6 @@
 # Synca — Roadmap Tecnica 0–24 mesi
 
-**Versione:** v1.1  
+**Versione:** v1.2  
 **Orizzonte:** 0–24 mesi  
 **Focus:** iOS + Android + Rails API, matching health-based, Trust & Safety, go-to-market per città
 
@@ -17,19 +17,11 @@ Obiettivo: creare le fondamenta tecniche e organizzative.
     - `backend/api`
     - `docs`
 - CI/CD
-  - Pipeline base:
-    - build iOS,
-    - test/unit Rails,
-    - lint (Swift, Kotlin, Ruby).
-  - Ambienti:
-    - `development`, `staging`, `production`.
+  - Pipeline base: build iOS, test/unit Rails (≥90% coverage), lint (Swift, Kotlin, Ruby).
+  - Ambienti: `development`, `staging`, `production`.
 - Security & Privacy
-  - Linee guida health data:
-    - nessun raw sample condiviso tra utenti,
-    - solo aggregati (medie settimanali, cronotipo, activity score).
-  - Data residency:
-    - utenti RU → dati in Russia,
-    - utenti EU → dati in EU.
+  - Nessun raw sample condiviso tra utenti, solo aggregati.
+  - Data residency: utenti RU → dati in Russia, utenti EU → dati in EU.
 - Logging & Monitoring
   - Logging centralizzato per backend.
   - Monitoring uptime API.
@@ -38,113 +30,67 @@ Obiettivo: creare le fondamenta tecniche e organizzative.
 
 ## Fase 1: MVP Core (1–3 mesi)
 
-Obiettivo: registrazione utenti iOS, raccolta dati HealthKit aggregati, preferenze base, primi match semplici e prima versione di Synca Spark.
+Obiettivo: registrazione utenti iOS, raccolta dati HealthKit aggregati, preferenze base,
+primi match e prima versione di Synca Spark. Entrambe le origini di match attive.
 
 ### Backend API (Rails)
 
-Directory chiave:
+- Modello `User` con auth JWT (`has_secure_password`, no Devise).
+- Modello `HealthSummary` (aggregati device-side, no raw samples).
+- Modello `PreferenceProfile`.
+- Modelli `Match` + `MatchParticipant`:
+  - campo `origin` (enum: `spark`, `algorithm`, default: `spark`).
+  - campo `algorithm_confidence` (float, nil per match Spark).
+  - struttura join-table group-ready senza migrazioni future.
+- Modelli `SparkSession` e `SparkReward`.
+- Background jobs via **Solid Queue** (no Redis, no Sidekiq):
+  - queue `spark` — scoring, rewards, session expiry.
+  - queue `algorithm` — `MatchingJob` notturno.
+  - queue `mailers`.
+- Coverage: **≥90% globale**, 100% su matching, Spark, TrustScore.
 
-- `backend/api/app/models`
-- `backend/api/app/controllers/api/v1`
-- `backend/api/app/services`
+### Matching: due origini attive da MVP
 
-Feature:
+```
+FLUSSO 1 — Spark (origin: :spark)
+  Incontro fisico → SparkSession → score ≥50 → Match
 
-- Modello `User`
-  - campi: email/phone/telegram_id, nome, età, genere, città, foto.
-  - auth base (token JWT o simile).
-- Modello `HealthSummary`
-  - campi: user_id, chronotype, sleep_start/end_local, avg_sleep_duration_minutes, routine_stability_index, activity_level, peak_energy_start/end_local, recovery_score, source.
-- Modello `PreferenceProfile`
-  - campi: user_id, visual_embedding (JSONB), travel_style, music_profile (JSONB).
-- Modelli `Match` + `MatchParticipant`
-  - struttura join-table per supportare match 1-to-1 e group match senza migrazioni future.
-- Modelli `SparkSession` e `SparkReward`
-  - flusso completo: create → join → submit_answers → result + reward.
-- API v1:
-  - `POST /auth/signup`, `POST /auth/login`, `POST /auth/refresh`
-  - `GET/PUT /profile`
-  - `PUT /health_summary`
-  - `GET/PUT /preferences`
-  - `POST /spark_sessions`, `POST /spark_sessions/:id/join`
-  - `POST /spark_sessions/:id/submit_answers`
-  - `GET /spark_sessions/:id/result`
-  - `GET /spark_rewards`
+FLUSSO 2 — Algoritmo (origin: :algorithm)
+  MatchingJob notturno → health summaries → score ≥65 → Match
+```
+
+I match algorithm sono visibili solo agli utenti Premium (premium gating).
 
 ### iOS App (Synca)
 
-Directory: `apps/ios/Synca`
-
-Feature:
-
-- Onboarding:
-  - registrazione,
-  - schermo consenso privacy / health data.
-- HealthKit integration:
-  - richiesta permessi,
-  - lettura aggregata (sleep, steps, eventualmente HR),
-  - invio dati al backend come `HealthSummary`.
-- Profilo utente:
-  - editing informazioni base,
-  - upload foto (1–3).
-- Preferenze:
-  - schermata per definire preferenze base (età, distanza, cronotipo, stile).
-- **Synca Spark v0**:
-  - `SparkView` con stati: Idle → Pending (QR + codice) → Active (micro-test) → Result.
-  - modello Swift `MatchParticipant` allineato alla struttura join-table del backend.
-
-### Matching v0 (rule-based)
-
-Directory: `backend/api/app/services/matching/`
-
-- `MatchingService`:
-  - filtra per: città, età, genere.
-  - ritorna una lista limitata (max 10 profili).
-- Compatibilità:
-  - placeholder (score fisso o per distanza/età).
+- Onboarding, HealthKit integration, profilo utente, preferenze.
+- **Synca Spark v0**: SparkView con stati Idle → Pending → Active → Result.
+- Lista match con badge `origin` ("Synca confermata" vs "Synca suggerita").
 
 ---
 
 ## Fase 2: Matching Health-Based v1 + Telegram (3–6 mesi)
 
-Obiettivo: introdurre compatibilità su sleep/activity/preferenze e collegare il bot Telegram.
+Obiettivo: compatibilità completa su sleep/activity/preferenze e bot Telegram.
 
 ### Matching Engine v1
 
-Directory: `backend/api/app/services/matching/`
-
 - `CompatibilityScoreService`:
-  - input: `HealthSummary`, `PreferenceProfile`, info base (età, distanza), `irl_verification_count` da SparkSession.
-  - output: `score` 0–100, breakdown (sleep_score, activity_score, lifestyle_score).
-  - pesi di default: Sleep 35%, Activity 30%, Lifestyle/Travel 20%, Visual preferences 15%.
-- API:
-  - `GET /matches`: ritorna pochi profili (3–5) con compatibilità alta, include reason (es. "sleep rhythm aligned").
+  - pesi default: Sleep 35%, Activity 30%, Lifestyle 20%, Preferences 15%.
+  - output: `score` 0–100 + breakdown per dimensione.
+- `MatchingJob` notturno su queue `algorithm`:
+  - itera utenti con `HealthSummary` aggiornato negli ultimi 30 giorni.
+  - crea match `origin: :algorithm` con `algorithm_confidence`.
 
 ### TrustScore v0
 
-Directory:
-
-- `backend/api/app/models/trust_score.rb`
-- `backend/api/app/services/trust/trust_score_service.rb`
-
-Feature:
-
-- Input:
-  - verifica email/telefono,
-  - completezza profilo,
-  - `irl_verification_count` (numero di Spark completati con utenti distinti),
-  - `spark_verified` flag.
-- Output:
-  - `trust_score` 0–100 usato per ranking interno.
+- `trust_score` su `profiles` (float, 0–100, default 50).
+- Aggiornato da `TrustScoreService` dopo ogni SparkSession completata.
 
 ### Telegram Bot v0
 
-- Endpoint backend per bot:
-  - comandi base: `/start`, `/profile`, `/remind`.
-- Funzioni:
-  - invio link per completare profilo su app,
-  - notifiche “nuovo match”,
-  - promemoria per aggiornare preferenze.
+- Comandi: `/start`, `/profile`, `/remind`.
+- Notifiche: nuovo match, promemoria preferenze.
 
 ---
 
@@ -152,90 +98,55 @@ Feature:
 
 Obiettivo: parità funzionale iOS/Android e inizio monetizzazione.
 
-### Android App (Synca)
+### Android App
 
-Directory: `apps/android/Synca`
-
-Feature:
-
-- Onboarding:
-  - registrazione/autenticazione,
-  - consensi privacy e health data.
-- Health Connect:
-  - richiesta permessi,
-  - lettura aggregata (sleep, steps, HR se serve),
-  - invio `HealthSummary` al backend.
-- UI:
-  - profilo,
-  - preferenze,
-  - lista match (come iOS).
-- **Synca Spark su Android**: parità completa con iOS (SparkView, micro-test, result + reward).
+- Health Connect integration, parità completa con iOS incluso Spark.
 
 ### Pagamenti & Premium
 
-Backend:
-
-- Modello `Subscription` (user_id, plan, start/end, status).
-- Modello `Transaction` (user_id, amount, method, status).
-- Integrazioni:
-  - RU: provider locali (es. YooKassa / equivalenti).
-  - EU/altro: StoreKit / Play Billing / Stripe secondo strategia.
-- Reward engine Spark: free → `premium_week`, premium → `match_credit`, premium+ → `match_credit` + `boost`.
-
-Client (iOS/Android):
-
-- Schermata “Upgrade to Premium”.
-- Gating:
-  - limite match attivi,
-  - priorità nelle date proposals,
-  - opzione rematch/filtri avanzati.
+- Modello `Subscription` + `Transaction`.
+- Integrazioni: YooKassa (RU), StoreKit/Play Billing/Stripe (altri mercati).
+- **Premium gating** (vedi `docs/product/matching.md`):
+  - Match algoritmo visibili solo a utenti Premium.
+  - Sync Room group (small_group): 1 attiva free, illimitate premium.
+  - Event Room: solo premium.
+  - Spark Invite Link: solo premium.
 
 ---
 
-## Fase 4: Date Proposals + Trust & Safety v1 (9–12 mesi)
+## Fase 4: Sync Rooms + Date Proposals + Trust & Safety v1 (9–12 mesi)
 
-Obiettivo: spingere verso appuntamenti reali e alzare il livello di sicurezza.
+Obiettivo: attivare le Sync Rooms di gruppo, spingere verso appuntamenti reali,
+alzare il livello di sicurezza.
+
+### Sync Rooms (vedi `docs/product/sync-rooms.md`)
+
+Tre tipi di stanza:
+
+| Tipo | Members | Spark rule | Premium |
+|------|---------|------------|----------|
+| `duo` | 2 | 1 Spark tra i due | Free |
+| `small_group` | 3–8 | Grafo completo (ogni coppia) | 1 free, ∞ premium |
+| `event_room` | 9–22 | Spark con organizzatore | Solo premium |
+
+Schema DB:
+
+- `sync_rooms` (id, name, created_by, room_type, created_at)
+- `sync_room_memberships` (sync_room_id, user_id, spark_session_id, joined_at)
+- `sync_room_messages` (sync_room_id, sender_id, body, read_at, created_at)
+
+Action Cable: un canale per stanza, autenticazione su `sync_room_memberships`.
+Facilitazione Spark mancante: deep-link invite tra utenti che non si sono ancora incontrati.
 
 ### Date Proposal System
 
-Backend:
-
-- Modello `DateProposal`:
-  - `match_id` (FK → matches — referenzia il match tra i partecipanti, non user_a/user_b direttamente),
-  - `venue_id` (opzionale all’inizio),
-  - `suggested_time_slot`,
-  - `status` (suggested/accepted/declined/completed).
-- API:
-  - `POST /date_proposals`
-  - `POST /date_proposals/:id/accept`
-  - `POST /date_proposals/:id/decline`
-  - `GET /date_proposals` (per utente).
-- TrustScore: `irl_verification_count` contribuisce al ranking dei profili suggeriti per date proposals.
-
-Client:
-
-- UI:
-  - lista date proposals,
-  - dettaglio proposta,
-  - bottoni accetta/rifiuta.
+- Modello `DateProposal` (match_id, venue_id, suggested_time_slot, status).
+- API: `POST/GET /date_proposals`, accept/decline.
 
 ### Trust & Safety v1
 
-Liveness & Image Checks:
-
-- Integrazione API (es. Yandex Vision / alternativa):
-  - liveness selfie (foto/video),
-  - detection contenuti vietati.
-
-Reputation:
-
-- Contatori:
-  - `no_show_count`,
-  - `rude_reports`,
-  - `spam_reports`,
-  - `irl_verification_count` (incrementato da ogni SparkSession completata con utente distinto).
-- Uso:
-  - abbassare visibilità/match per TrustScore basso.
+- Liveness selfie + detection contenuti vietati.
+- Contatori reputazione: `no_show_count`, `rude_reports`, `irl_verification_count`.
 
 ---
 
@@ -245,38 +156,15 @@ Obiettivo: far “imparare” il matching dagli outcome reali e avere metriche s
 
 ### Matching v2 (learnt)
 
-Dati raccolti:
-
-- Per ogni match:
-  - chat_started (sì/no),
-  - date_proposal_sent (sì/no),
-  - date_proposal_accepted (sì/no),
-  - feedback post-date (rating o thumbs up/down),
-  - Spark compatibility score (segnale IRL diretto).
-
-Algoritmi:
-
-- Embedding:
-  - preferenze,
-  - musica (integrazione Spotify futura),
-  - cronotipo/lifestyle.
-- Modello di ranking:
-  - aggiusta pesi del compatibility score per utente,
-  - favorisce profili simili a match con esito positivo,
-  - usa `irl_verification_count` come segnale di qualità aggiuntivo.
+- Feedback loop: `chat_started`, `date_proposal_sent/accepted`, rating post-date,
+  Spark compatibility score.
+- Embedding: preferenze, musica (Spotify), cronotipo.
+- Ranking: aggiusta pesi per utente, favorisce profili simili a match con esito positivo.
 
 ### Analytics & Dashboard
 
-- Metriche:
-  - MAU per città,
-  - conversione free → paid,
-  - % utenti che ricevono/accettano date proposals,
-  - % date completate,
-  - distribuzione TrustScore,
-  - Spark sessions completate per città (segnale di engagement IRL),
-  - retention per coorte.
-- UI:
-  - semplice pannello interno (es. Rails + grafici base).
+- MAU per città, conversione free→paid, % date completate, distribuzione TrustScore,
+  Spark sessions per città, retention per coorte.
 
 ---
 
@@ -284,58 +172,34 @@ Algoritmi:
 
 Obiettivo: supportare 5–7 città con regole e pricing differenziati.
 
-### Multi-città & Configurazione
+### Multi-città
 
-Backend:
-
-- Modello `CityConfig`:
-  - città,
-  - valuta e pricing (premium, date pack),
-  - orari/zone “preferred” per date,
-  - liste venue partner (estendibile).
-- Data residency:
-  - routing utenti RU → infrastruttura RU,
-  - utenti EU → EU (compliance).
+- `CityConfig`: città, valuta, pricing, venue partner.
+- Data residency: routing RU → infrastruttura RU, EU → EU.
 
 ### Localizzazione
 
-Client:
-
-- Localizzazione app in: RU, EN, IT, TH, PT, ES.
-
-Backend:
-
-- Messaggi di sistema localizzati (email, notifiche push, bot Telegram).
+- App: RU, EN, IT, TH, PT, ES.
+- Backend: messaggi sistema localizzati (email, push, bot).
 
 ---
 
-## Fase 7: Group Compatibility (24+ mesi)
+## Fase 7: Group Compatibility & Event Rooms avanzate (24+ mesi)
 
-Obiettivo: estendere il matching a gruppi di persone (amici, run club, eventi sociali) senza re-architettura.
+Obiettivo: estendere matching a gruppi grandi (sport, eventi sociali) senza re-architettura.
 
-> **Nota architetturale**: il modello `Match` + `MatchParticipant` è già group-ready dal Giorno 1. Questa fase attiva l’engine e le UI, non richiede migrazioni di schema.
+> **Nota architetturale**: `Match` + `MatchParticipant` e `SyncRoom` sono group-ready
+> dal Giorno 1. Questa fase attiva engine e UI avanzate, nessuna migrazione di schema.
 
 ### Backend
 
-- `GroupCompatibilityService`:
-  - input: N user_id (via `match_participants`),
-  - output: score aggregato di gruppo + breakdown per dimensione (sleep overlap, activity alignment, lifestyle blend).
-  - usa `SparkSession` completate tra i membri come segnale di qualità IRL.
-- API:
-  - `POST /matches` con array di `participant_ids` (già supportato dal modello).
-  - `GET /matches/:id` restituisce tutti i partecipanti con ruolo e score.
-- `DateProposal` esteso per proposte di gruppo:
-  - `venue_id` diventa obbligatorio per group date,
-  - `suggested_time_slot` con overlap check tra i cronotipi dei partecipanti.
-
-### Client (iOS + Android)
-
-- Schermata “Group Match”: mostra i partecipanti con mini-profilo e score di gruppo.
-- Group Spark: sessione Spark con più di 2 partecipanti (scanner QR sequenziale o link condiviso).
-- Group Date Pack: proposta appuntamento collettivo con venue suggerita.
+- `GroupCompatibilityService`: score aggregato di gruppo + breakdown (sleep overlap,
+  activity alignment, lifestyle blend).
+- Event Room avanzate: `suggested_date` obbligatoria, auto-archivio post-evento.
+- Group Spark: sessione con più di 2 partecipanti (QR sequenziale o link condiviso).
 
 ### Go-to-market
 
-- Targeting: run club, palestre, saune — canali già attivi nel piano marketing offline.
+- Targeting: run club, palestre, saune, squadre di calcetto.
 - Posizionamento: “Synca non è solo dating, è social wellness”.
-- Monetizzazione: Group Date Pack come add-on premium (es. accesso a venue partner a prezzo ridotto).
+- Monetizzazione: Event Room Pack come add-on premium (accesso venue partner).
