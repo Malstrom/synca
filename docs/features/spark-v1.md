@@ -10,12 +10,11 @@
 
 Spark is the core IRL (in-real-life) interaction mechanism of Synca. It allows two users
 who are physically co-located to initiate a proximity-based session and receive a
-real-time compatibility score derived exclusively from their passive `signals`.
+real-time compatibility score derived from their passive `signals` and their
+Declared Preferences answers collected during the session.
 
 A completed `Spark` is the strongest trust and compatibility signal in the system
 because it requires two verified users in the same physical location at the same time.
-No questionnaire or manual input is required — the fact that two people choose to
-initiate a Spark together is itself a meaningful intent signal.
 
 Spark is the prerequisite for creating a Match with `origin: :spark` and for joining
 or creating any Circle.
@@ -45,8 +44,11 @@ Both users confirm presence on their own device
         ↓
 Spark created  (status: :pending)
         ↓
+Both users answer the Declared Preferences questionnaire in-app
+(5 questions, ≠2 minutes — ref: docs/features/signals-v1.md Step 0)
+        ↓
 ScoringJob (Solid Queue, `spark` queue) computes pairwise score
-using both users' signals (health, music, travel)
+using both users' signals (health, music, travel) + declared preferences answers
         ↓
 score >= spark minimum threshold (ref: docs/features/matching-v1.md)
   →  Match created  (origin: :spark)
@@ -58,12 +60,24 @@ score < spark minimum threshold
   →  Spark status: :completed  (stored for analytics)
 ```
 
+### About `submit_answers`
+
+The `POST /api/v1/sparks/:id/submit_answers` endpoint is **not** a generic
+questionnaire. It carries the Declared Preferences answers
+(ref: `docs/features/signals-v1.md — Step 0`) collected during the live Spark session.
+
+Rationale: the Declared Preferences questionnaire is answered once during
+onboarding and stored in `declared_preferences`. During a Spark session the same
+questions are presented again in context — two people physically together can
+consider their answers relative to each other in real time. The in-session answers
+are used only for this Spark's scoring and are **not** used to overwrite the
+user's stored `declared_preferences` record. This makes scoring more accurate
+without breaking the passive-signal principle: the health signals remain fully
+passive; only the preference weighting is actively confirmed IRL.
+
 The compatibility score is **never shown as a raw number** to users.
 It is translated into plain-language explanations
-(e.g. "Your sleep schedules are well aligned").
-
-Scoring is fully passive — no questions, no manual input. The intent signal
-is the Spark initiation itself.
+(e.g. “Your sleep schedules are well aligned”).
 
 ### DB Schema
 
@@ -106,7 +120,7 @@ For `matches` schema see `docs/features/matching-v1.md`.
 |--------|------|---------------|-------------|
 | POST | `/api/v1/sparks` | Yes | Initiator creates a new Spark; returns `session_code` + `qr_token` |
 | PATCH | `/api/v1/sparks/:id/join` | Yes | Receiver confirms presence and joins via `session_code` or `qr_token` |
-| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits answers; triggers ScoringJob when both have submitted |
+| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits Declared Preferences answers for this session; triggers ScoringJob when both have submitted |
 | GET | `/api/v1/sparks/:id/result` | Yes | Polls scoring result; returns 202 while in progress, 200 with score + match on completion |
 | GET | `/api/v1/sparks/:id` | Yes | Returns spark status and result |
 | GET | `/api/v1/sparks` | Yes | Lists the current user's past sparks |
@@ -137,12 +151,14 @@ the more Sparks happen, the richer the compatibility data for everyone.
 - What happens if a user has no `signals` record yet (never connected Apple Health)?
   Should scoring fall back to a partial score (Preferences domain only) or should
   the Spark be blocked until signals are available?
+- Should in-session Declared Preferences answers optionally update the stored
+  `declared_preferences` record if the user explicitly requests it?
 
 ---
 
 ## Step 2.0 — Group Spark
 
-**Phase:** 2
+**Phase:** 7
 **Status:** Planned
 
 ### User Flow
@@ -156,8 +172,10 @@ Users B, C, D... confirm presence and join
         ↓
 Group Spark created  (status: :pending)
         ↓
+All participants answer Declared Preferences questionnaire
+        ↓
 ScoringJob computes pairwise score
-for EVERY pair in the group using their signals
+for EVERY pair in the group using their signals + answers
         ↓
 For each pair with score >= spark minimum threshold:
   →  Match created  (origin: :spark)
@@ -197,7 +215,7 @@ spark_participants
 |--------|------|---------------|-------------|
 | POST | `/api/v1/sparks` | Yes | Creates a duo or group Spark (type in body) |
 | POST | `/api/v1/sparks/:id/participants` | Yes | User joins a group Spark |
-| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Participant submits answers |
+| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Participant submits Declared Preferences answers |
 | GET | `/api/v1/sparks/:id/result` | Yes | Polls per-pair scoring results |
 | GET | `/api/v1/sparks/:id` | Yes | Returns spark status and per-pair results |
 | GET | `/api/v1/sparks` | Yes | Lists the current user's past sparks |
