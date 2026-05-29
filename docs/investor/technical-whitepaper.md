@@ -1,434 +1,600 @@
 # Synca Technical Whitepaper
 
-**Version 1.2 — May 2026**  
+**Version 1.3 — May 2026**
 *Confidential — For Engineering, Security, and Technical Due Diligence Use Only*
 
-***
+---
 
 ## 1. Introduction
 
-Synca is a lifestyle-based matchmaking platform that uses passively collected behavioral signals — primarily health, music, travel, and visual preference data — to estimate compatibility between people and propose pre-organized real-world dates.
+Synca is a lifestyle-based matchmaking platform that uses passively collected behavioral signals — primarily health, music, travel, and visual preference data, enriched by a short declared preferences questionnaire — to estimate compatibility between people and propose pre-organized real-world meetings.
 
-This whitepaper describes the technical architecture, data model, matching algorithms, privacy and security design, and integration points with external systems (Apple HealthKit, Android Health Connect, Spotify, travel services, and Telegram). It is intended for technical stakeholders: investor CTOs, security reviewers, and potential integration partners.
+This whitepaper describes the technical architecture, data model, matching algorithms, privacy and security design, and integration points with external systems (Apple HealthKit, Android Health Connect, Spotify, Yandex Music, travel services, and Telegram). It is intended for technical stakeholders: investor CTOs, security reviewers, and potential integration partners.
 
-***
+Synca enters the market as a dating app. The compatibility engine, however, is not limited to romantic matching: the same data model and scoring infrastructure supports group compatibility for small-group social and sports activities (calcetto, padel, trail running, sauna sessions) via the Circles feature. The architecture is designed with this extension in mind from day one.
 
-## 2. System Architecture Overview
+---
+
+## 2. System Architecture
 
 ### 2.1 High-Level Components
 
-1. **iOS Client** — SwiftUI app using HealthKit for health data, MusicKit for Apple Music (future), and local processing of raw samples.
-2. **Android Client** — Kotlin app using Health Connect for health data, Spotify SDK for music, and on-device aggregation.
-3. **Rails API Backend** — central service implementing all business logic: user management, signal ingestion, matching engine, trust scoring, date proposal generation, Spark session orchestration, and payment integration.
-4. **Compatibility Engine** — stateless service or internal Rails module computing compatibility scores as a weighted combination of normalized features.
-5. **Trust & Safety Engine** — pipelines computing a dynamic Trust Score based on image, behavior, and cross-signal consistency.
-6. **Spark Session Manager** — real-time WebSocket orchestrator for live in-person compatibility sessions; manages session lifecycle, answer synchronization, instant score computation, reward issuance, and automatic Match creation when score meets threshold.
-7. **Telegram Bot / Mini App** — WebApp client integrated with Telegram Bot API, used for acquisition, notifications, and payment flows.
+1. **iOS Client** — SwiftUI app using HealthKit for health data, Spotify SDK for music, and local on-device aggregation of all raw signals.
+2. **Android Client** — Kotlin app using Health Connect for health data, Spotify or Yandex Music SDK for music, and on-device aggregation.
+3. **Rails API Backend** — central service implementing all business logic: user management, signal ingestion, compatibility scoring, matching engine, trust scoring, Moment proposal management, Spark session orchestration, Circle management, and payment integration.
+4. **Compatibility Engine** — internal Rails service computing pairwise compatibility scores as a weighted sum across four domains: Sleep, Activity, Lifestyle, and Preferences.
+5. **Trust & Safety Engine** — pipeline computing a dynamic Trust Score based on image authenticity, behavioral patterns, cross-signal consistency, and IRL verification count.
+6. **Spark Session Manager** — real-time WebSocket orchestrator for live in-person compatibility sessions; manages session lifecycle, proximity verification, async scoring via background job, reward issuance, and automatic Match creation when score meets threshold.
+7. **Telegram Bot / Mini App** — WebApp client integrated with Telegram Bot API for acquisition, notifications, and payment flows (primary surface for Russian market).
 
-### 2.2 Logical Architecture Diagram
+### 2.2 Architecture Diagram
 
 ```
-┌──────────────────────┐     ┌──────────────────────────┐
-│      iOS App         │     │      Android App         │
-│  (SwiftUI + HealthKit│     │   (Kotlin + HealthConnect│
-│   + MusicKit)        │     │    + Spotify SDK)        │
-└─────────┬────────────┘     └───────────┬──────────────┘
-          │  Derived health & music data │
-          ▼                              ▼
-           ┌────────────────────────────┐
-           │        Rails API            │
-           │  (Ruby on Rails, JSON API)  │
-           └───────────┬────────────────┘
-                       │
-       ┌─────────────┼───────────────────────┐
-       ▼               ▼                  ▼
-┌─────────────┐  ┌────────────┐  ┌───────────────┐
-│ Matching +   │  │ Trust &     │  │ Spark Session  │
-│ Compatibility│  │ Safety Eng. │  │ Manager (WS)   │
-└─────┬──────┘  └─────┬────┘  └──────┬────────┘
-      │                  │               │
-      ▼                  ▼               ▼
-┌─────────────┐  ┌────────────┐  ┌──────────────┐
-│ PostgreSQL  │  │ Object Store│  │ Payment Gateway│
-│ (Core DB)   │  │ (images/logs)│  │ Stripe/YooMoney│
-└─────────────┘  └────────────┘  └──────────────┘
+┌──────────────────────┐     ┌────────────────────────┐
+│   iOS App              │     │   Android App          │
+│   SwiftUI + HealthKit  │     │   Kotlin + HealthConnect│
+│   Spotify SDK          │     │   Spotify / Yandex Music│
+│   Local aggregation    │     │   Local aggregation    │
+│   Spark QR + BLE       │     │   Spark QR + BLE       │
+└───────┬────────────┘     └──────────┬───────────┘
+        │  Derived signals only      │
+        └────────────┬────────────┘
+                         ↓
+        ┌───────────────────────────┐
+        │       Rails API             │
+        │       PostgreSQL            │
+        │       Compatibility Engine  │
+        │       Trust & Safety        │
+        │       Spark Session Mgr     │
+        │       Moment Engine         │
+        │       Circle Manager        │
+        └──────┬───────────────────┘
+               │
+   ┌─────────┼─────────────┬───────┘
+   ↓               ↓           ↓
+Telegram     iOS/Android    Web Payment
+Bot/TMA      Push Notify    (Stripe /
+                            YooMoney / SBP)
 ```
 
 Design principles:
 - Raw health and music samples are never transmitted — only derived aggregates
-- All client surfaces talk to the same Rails API
-- Trust & Safety logic can evolve independently from client releases
-- Spark Session Manager is a lightweight real-time layer; it does not persist raw answers, only the computed compatibility delta
-- When a Spark session produces a score above the match threshold, the Match record is created automatically with `origin: :spark`
+- All client surfaces talk to the same Rails API via JWT-authenticated JSON endpoints
+- Trust & Safety logic evolves independently from client releases
+- Spark Session Manager does not persist raw answers — only the computed compatibility score
+- When a Spark produces a score at or above the match threshold, the Match record is created automatically with `origin: :spark`
 
-***
+---
 
-## 3. Data Model and Schemas
+## 3. Data Model
 
-### 3.1 Core Entities
+### 3.1 Users and Profiles
 
-**User**
-- `id`: UUID
-- `auth_identity_type`: enum (`apple`, `google`, `telegram`, `email`)
-- `city_id`: foreign key to City
-- `birth_date`, `gender`, `interested_in`, `has_wearable`
+```sql
+users
+  id                  bigint PK
+  auth_provider       string   -- 'apple' | 'google' | 'telegram' | 'email'
+  email               string
+  password_digest     string   -- has_secure_password
+  created_at          datetime
+  updated_at          datetime
 
-**HealthSummary** (per-user, per-period)
-- `chronotype`: enum (`morning`, `intermediate`, `evening`)
-- `avg_sleep_start_local`, `avg_sleep_end_local`: time
-- `sleep_stability_index`: float (0–1)
-- `activity_level`: enum (`low`, `medium`, `high`)
-- `peak_activity_window_start`, `peak_activity_window_end`: time
-- `personal_space_index`: float (0–1)
-- `recovery_index`: float (0–1)
-- `source`: enum (`healthkit`, `health_connect`, `manual`)
+profiles
+  id                  bigint PK
+  user_id             bigint FK -> users NOT NULL UNIQUE
+  display_name        string
+  birth_date          date
+  gender              string
+  interested_in       string
+  city_id             bigint FK -> cities
+  has_wearable        boolean  DEFAULT false
+  created_at          datetime
+  updated_at          datetime
 
-**MusicProfile**
-- `provider`: enum (`spotify`, `apple_music`, `lastfm`)
-- `energy_score`: float (0–1)
-- `valence_score`: float (0–1)
-- `genre_diversity_index`: float (0–1)
-- `listening_variance_by_hour`: jsonb (24-bin distribution)
+identity_providers
+  id           bigint PK
+  user_id      bigint FK -> users NOT NULL
+  provider     string NOT NULL  -- 'apple' | 'google' | 'telegram' | 'spotify' | 'yandex_music'
+  uid          string NOT NULL
+  access_token string
+  expires_at   datetime
+  UNIQUE (provider, uid)
+```
 
-**TravelProfile**
-- `trip_frequency_per_year`: float
-- `avg_trip_distance_km`: float
-- `novelty_preference_index`: float (0–1)
-- `home_stability_index`: float (0–1)
-- `source`: enum (`preference_game`, `maps`, `travel_api`)
+### 3.2 Declared Preferences
 
-**PreferenceEmbedding**
-- `vector`: float[] (128-dim embedding)
-- `version`: integer (model version)
+Collected during onboarding (under 2 minutes). These are multipliers applied to pairwise compatibility scoring — they do not filter candidates, they shape how signals are weighted for each specific user.
 
-**TrustScore**
-- `score`: float (0–1)
-- `image_liveness_score`: float
-- `image_forensics_score`: float
-- `behavioral_score`: float
-- `health_consistency_score`: float
-- `music_consistency_score`: float
-- `irl_verification_count`: integer (incremented by completed Spark sessions)
+```sql
+declared_preferences
+  id                              bigint PK
+  user_id                         bigint FK -> users NOT NULL UNIQUE
+  sleep_together_importance       integer  -- 1-5 scale
+  sleep_temperature_preference    string   -- 'cool' | 'warm' | 'no_preference'
+  daily_movement_level            string   -- 'very_little' | 'moderate' | 'a_lot' | 'maximum'
+  sport_kcal_range                string   -- 'under_300' | '300_to_600' | 'over_600'
+  team_sport_frequency            string   -- 'never' | 'occasionally' | 'weekly' | 'multiple_weekly'
+  rhythm_alignment_importance     integer  -- 1-5 scale
+  self_reported_chronotype        string   -- 'morning' | 'night' | 'flexible'
+  created_at                      datetime
+  updated_at                      datetime
+```
 
-**Match**
-- `user_a_id`, `user_b_id`: fk to User
-- `compatibility_score`: float (0–1)
-- `dimensions_breakdown`: jsonb (`{"sleep":0.82, "activity":0.76, ...}`)
-- `status`: enum (`proposed`, `accepted`, `declined`, `expired`)
-- `origin`: enum (`spark`, `algorithm`) — identifies how the match was created
-- `algorithm_confidence`: float (nil for `spark`-origin matches; confidence of the nightly job for `algorithm`-origin matches)
-- `spark_session_id`: fk to SparkSession (nil for `algorithm`-origin matches; set to the triggering session for `spark`-origin matches)
+### 3.3 Signals
 
-**SparkSession**
-- `initiator_id`, `partner_id`: fk to User
-- `session_code`: string (6-digit, TTL 10 min)
-- `qr_token`: string (UUID)
-- `status`: enum (`pending`, `active`, `completed`, `expired`)
-- `location_lat`, `location_lng`: float (approximate, for proximity check)
-- `initiator_answers`, `partner_answers`: jsonb (micro-test responses; discarded after score computation)
-- `compatibility_score`: float (instant delta computed at session end)
-- `reward_issued_initiator`, `reward_issued_partner`: boolean
-- `started_at`, `completed_at`: timestamp
+All raw data is aggregated on-device. Only derived metrics are transmitted and stored.
+The `signals` table grows one column group per new source — one row per user at all times.
 
-> Raw micro-test answers are retained only for the duration of the session and discarded immediately after the compatibility delta is computed. No behavioral survey data is persisted long-term.
+```sql
+signals
+  id                       bigint PK
+  user_id                  bigint FK -> users NOT NULL UNIQUE
 
-**SparkReward**
-- `user_id`: fk
-- `spark_session_id`: fk
-- `reward_type`: enum (`premium_trial_7d`, `match_credit`, `profile_boost_24h`)
-- `status`: enum (`pending`, `issued`, `redeemed`, `expired`)
-- `valid_until`: timestamp
+  -- Health (Phase 1)
+  chronotype               string   -- 'early_bird' | 'night_owl' | 'intermediate'
+  sleep_duration_avg       float    -- average nightly sleep hours (last 30 days)
+  sleep_variability        float    -- standard deviation of nightly sleep duration
+  social_jetlag            float    -- weekday vs weekend sleep timing delta (hours)
+  activity_minutes_avg     float    -- average weekly active minutes
+  step_count_avg           float    -- average daily step count
+  rest_hr_avg              float    -- resting heart rate average (bpm)
+  peak_activity_window     string   -- time-of-day window with highest activity density
+  routine_stability_index  float    -- daily schedule consistency score (0.0–1.0)
 
-**DateProposal**
-- `match_id`: fk
-- `venue_id`: fk (nullable)
-- `suggested_time_window`: tsrange
-- `activity_type`: enum (`walk`, `coffee`, `padel`, `sauna`, etc.)
-- `status`: enum (`pending`, `confirmed`, `rejected`)
+  -- Music (Phase 2)
+  music_top_genres         jsonb    -- e.g. ["hip-hop", "jazz", "electronic"]
+  music_energy_avg         float    -- audio feature average (0.0–1.0)
+  music_valence_avg        float    -- audio feature average (0.0–1.0)
+  music_peak_listening_window string -- time-of-day window with highest listening
+  music_source             string   -- 'spotify' | 'yandex_music'
 
-**SyncRoom** (v2+)
-- `id`: UUID
-- `name`: string (optional, for group rooms)
-- `created_by`: fk to User
-- `room_type`: enum (`duo`, `small_group`, `event_room`)
-- `created_at`: timestamp
+  -- Travel (Phase 3)
+  travel_trips_per_year    float
+  travel_avg_duration_days float
+  travel_style             string   -- 'city' | 'nature' | 'mixed'
+  travel_regions           jsonb    -- e.g. ["Europe", "Southeast Asia"]
 
-> A `duo` SyncRoom is semantically equivalent to a Match — it is the persistent conversational space between two matched users. `small_group` (3–8 members) requires a verified Spark between every pair of members. `event_room` (9–22 members) requires every member to have at least one verified Spark with the room creator.
+  computed_at              datetime -- when the on-device aggregation last ran
+  updated_at               datetime -- when the backend last received a sync
+```
 
-**SyncRoomMembership** (v2+)
-- `id`: UUID
-- `sync_room_id`: fk to SyncRoom
-- `user_id`: fk to User
-- `spark_session_id`: fk to SparkSession — the IRL-verified session proving the user's eligibility to join
-- `joined_at`: timestamp
+### 3.4 Sparks
 
-**SyncRoomMessage** (v2+)
-- `id`: UUID
-- `sync_room_id`: fk to SyncRoom
-- `sender_id`: fk to User
-- `body`: text
-- `read_at`: timestamp (nullable)
-- `created_at`: timestamp
+```sql
+sparks
+  id                   bigint PK
+  initiator_id         bigint FK -> users NOT NULL
+  receiver_id          bigint FK -> users          -- nullable for group sparks
+  spark_type           string NOT NULL DEFAULT 'duo'  -- 'duo' | 'group'
+  status               string NOT NULL DEFAULT 'pending'
+                       -- 'pending' | 'completed' | 'expired' | 'cancelled'
+  discovery_method     string NOT NULL  -- 'bluetooth' | 'qr_code'
+  session_code         string           -- 6-digit numeric code for QR flow
+  qr_token             string           -- UUID token for deep-link QR flow
+  compatibility_score  float            -- nil until scoring completes
+  score_breakdown      jsonb            -- domain sub-scores (never shown as raw numbers)
+  match_created        boolean NOT NULL DEFAULT false
+  expires_at           datetime NOT NULL
+  completed_at         datetime
+  created_at           datetime
+  updated_at           datetime
 
-***
+spark_participants           -- used for group sparks (spark_type: 'group')
+  id           bigint PK
+  spark_id     bigint FK -> sparks NOT NULL
+  user_id      bigint FK -> users NOT NULL
+  confirmed_at datetime
+  created_at   datetime
+  UNIQUE (spark_id, user_id)
+
+spark_rewards
+  id           bigint PK
+  user_id      bigint FK -> users NOT NULL
+  spark_id     bigint FK -> sparks NOT NULL
+  reward_type  string NOT NULL  -- 'premium_week' | 'match_credit'
+  status       string NOT NULL DEFAULT 'pending'  -- 'pending' | 'redeemed' | 'expired'
+  valid_until  datetime
+  created_at   datetime
+```
+
+> Scoring is fully passive — no questionnaire or manual input during the Spark session itself. The compatibility score is computed from existing `signals` records. The raw score is never exposed to users; the result screen shows only plain-language explanations (e.g. "Your sleep schedules are well aligned").
+
+### 3.5 Matches
+
+```sql
+matches
+  id                     bigint PK
+  user_a_id              bigint FK -> users NOT NULL
+  user_b_id              bigint FK -> users NOT NULL
+  spark_id               bigint FK -> sparks       -- nil for algorithm-origin
+  origin                 integer NOT NULL DEFAULT 0  -- 0: spark | 1: algorithm
+  algorithm_confidence   float                       -- nil for spark-origin
+  compatibility_score    float NOT NULL
+  score_breakdown        jsonb  -- domain sub-scores; never exposed raw to users
+  status                 string NOT NULL DEFAULT 'active'
+                         -- 'active' | 'drifted' | 'reconnected' | 'ended'
+  created_at             datetime
+  updated_at             datetime
+  UNIQUE (user_a_id, user_b_id)
+```
+
+`drifted` indicates a match where engagement has dropped below activity thresholds; `reconnected` indicates a match re-activated after drifting. These states feed into the Trust Score and outcome analytics.
+
+### 3.6 Moments
+
+A Moment is the real-world meeting lifecycle: proposal, counter-proposal, confirmation, completion, and post-meeting rating.
+
+```sql
+moments
+  id               bigint PK
+  proposer_id      bigint FK -> profiles NOT NULL
+  receiver_id      bigint FK -> profiles NOT NULL
+  match_id         bigint FK -> matches NOT NULL
+  parent_id        bigint FK -> moments           -- set on counter-proposals
+  location         string NOT NULL
+  scheduled_at     datetime NOT NULL
+  status           string NOT NULL DEFAULT 'pending'
+                   -- 'pending' | 'confirmed' | 'declined' | 'superseded'
+                   -- 'completed' | 'no_show'
+  proposer_rating  integer          -- 1-5, set on completion
+  receiver_rating  integer          -- 1-5, set on completion
+  completed_at     datetime
+  created_at       datetime
+  updated_at       datetime
+```
+
+No-show events reduce the offending profile's Trust Score by −15 points. Positive ratings feed into behavioral Trust Score signals. Counter-proposal chains are capped at 5 rounds server-side.
+
+### 3.7 Circles
+
+Circles are conversational and coordination spaces that exist only when a verified physical compatibility graph exists between all members. The term "Sync Rooms" is deprecated and does not appear in the codebase.
+
+```sql
+circles
+  id           bigint PK
+  circle_type  string NOT NULL   -- 'duo' | 'small_group' | 'event'
+  created_by   bigint FK -> profiles NOT NULL
+  name         string            -- required for small_group and event; null for duo
+  scheduled_at datetime          -- optional, relevant for event type
+  created_at   datetime
+  updated_at   datetime
+
+circle_memberships
+  id         bigint PK
+  circle_id  bigint FK -> circles NOT NULL
+  profile_id bigint FK -> profiles NOT NULL
+  spark_id   bigint FK -> sparks  -- proof of physical encounter; null for duo on algorithm matches
+  joined_at  datetime
+  UNIQUE (circle_id, profile_id)
+
+circle_messages
+  id         bigint PK
+  circle_id  bigint FK -> circles NOT NULL
+  sender_id  bigint FK -> profiles NOT NULL
+  body       text NOT NULL
+  read_at    datetime
+  created_at datetime
+```
+
+**Admission rules:**
+- `duo`: created automatically on match confirmation. 1 confirmed Spark required (nil for algorithm-origin matches on creation, expected to be completed).
+- `small_group` (3–8): every pair of members must have ≥1 confirmed Spark.
+- `event` (9–22): every member must have ≥1 confirmed Spark with the circle creator. The creator acts as social guarantor.
+
+### 3.8 Trust Score
+
+```sql
+trust_scores
+  id                       bigint PK
+  user_id                  bigint FK -> users NOT NULL UNIQUE
+  score                    float      -- 0.0 to 1.0
+  image_liveness_score     float
+  image_forensics_score    float
+  behavioral_score         float
+  health_consistency_score float
+  music_consistency_score  float
+  irl_verification_count   integer    -- incremented by each completed Spark
+  moment_noshow_count      integer    -- incremented by confirmed no-shows
+  updated_at               datetime
+```
+
+---
 
 ## 4. Client Applications
 
 ### 4.1 iOS App (SwiftUI)
 
 **HealthKit Integration:**
-- Permissions requested for: `HKCategoryTypeIdentifierSleepAnalysis`, `HKQuantityTypeIdentifierStepCount`, `HKQuantityTypeIdentifierActiveEnergyBurned`, optionally `HKQuantityTypeIdentifierHeartRate`, `HKQuantityTypeIdentifierHeartRateVariabilitySDNN`
-- Aggregation jobs run in background using `HKObserverQuery` and `HKAnchoredObjectQuery`
-- A local aggregator computes rolling 14–30-day metrics and uploads a new `HealthSummary` when significant change occurs or at minimum once per day
+- Permissions: `HKCategoryTypeIdentifierSleepAnalysis`, `HKQuantityTypeIdentifierStepCount`, `HKQuantityTypeIdentifierActiveEnergyBurned`, optionally `HKQuantityTypeIdentifierHeartRate`, `HKQuantityTypeIdentifierHeartRateVariabilitySDNN`
+- Aggregation runs in background using `HKObserverQuery` and `HKAnchoredObjectQuery`
+- Local aggregator computes rolling 14–30-day metrics; uploads a new `signals` record when significant change occurs or at minimum once per day
 
 **On-Device Aggregation:**
-- Chronotype computed by clustering sleep midpoint over the last 30 nights
-- Sleep stability index: `1 - normalized_std(sleep_start)`
-- Peak activity window derived from step count histogram across hours
+- Chronotype: clustering sleep midpoint over the last 30 nights
+- Sleep variability: standard deviation of nightly sleep duration
+- Peak activity window: derived from step count histogram across hours of day
+- Routine stability index: `1 - normalized_std(sleep_start)` across 30 days
 
-**Spark QR Engine:**
-- Generates a QR code from the session token returned by the backend
+**Spark Engine:**
+- Generates QR code from session token returned by backend
+- Broadcasts BLE signal for proximity detection (Step 1.0: QR primary; BLE optional)
 - Establishes WebSocket connection to Spark Session Manager on session join
-- Submits micro-test answers and renders the result screen upon WebSocket event
+- Polls `GET /api/v1/sparks/:id/result` or listens for `spark:scored` Action Cable event
 
 ### 4.2 Android App (Kotlin + Health Connect)
 
-Health Connect provides a unified interface for health data across Android OEMs, replacing Google Fit and standardizing API access from 2026 onward.
+Health Connect provides a unified interface for health data across Android OEMs, standardizing API access from 2026 onward.
 
-- Use `HealthConnectClient` to read `SleepSessionRecord`, `StepsRecord`, `HeartRateRecord`
-- Schedule periodic background jobs using WorkManager to recompute aggregates
-- Support devices where tracking is via third-party apps (Garmin, Xiaomi) that sync into Health Connect
-- Full Spark QR functionality mirroring iOS implementation
+- `HealthConnectClient` reads `SleepSessionRecord`, `StepsRecord`, `HeartRateRecord`
+- Periodic background jobs via WorkManager recompute aggregates
+- Supports third-party devices (Garmin, Xiaomi, Samsung Health) that sync into Health Connect
+- Full Spark QR + BLE functionality mirroring iOS
 
 ### 4.3 Telegram Bot and Mini App
 
-**Bot functions:**
-- Registration and basic profile creation
-- Lightweight onboarding
-- Deep-linking to app store or direct APK/RuStore download
-- Match notifications and date proposals
-- Payments via Telegram Stars, YooMoney, or external payment URLs
+**Bot functions:** registration, lightweight onboarding, deep-linking to app stores or direct APK/RuStore download, match notifications, Moment proposals, and payment flows via Telegram Stars, YooMoney, or external payment URLs.
 
-**Mini App (WebApp) functions:**
-- Richer UI embedded as web frontend
-- Communicates with Rails API using JWT tokens from Telegram authorization
+**Mini App (WebApp):** richer embedded UI communicating with Rails API using JWT tokens derived from Telegram authorization. Primary product surface for Russian market.
 
-***
+---
 
-## 5. Matching Engine
+## 5. Compatibility Engine
 
 ### 5.1 Design Principles
 
-1. **Multi-signal fusion** — combine independent behavioral signals: health, music, travel, visual preference
-2. **Explainability** — compatibility scores decomposed into human-readable dimensions
-3. **Calibratability** — weights adjustable globally and per-user as data accrues
-4. **Dual origin** — matches can originate from a live Spark session (`origin: :spark`) or from the nightly `MatchingJob` algorithm run (`origin: :algorithm`); both paths produce the same `Match` record structure with distinct metadata
+1. **Multi-signal fusion** — combine independent behavioral domains: health, music, travel, declared preferences
+2. **Explainability** — compatibility scores decomposed into plain-language dimensions, never exposed as raw numbers to users
+3. **Calibratability** — domain weights adjustable globally and per user as outcome data accumulates
+4. **Dual origin** — matches from live Spark sessions (`origin: :spark`) and nightly `MatchingJob` algorithm runs (`origin: :algorithm`) produce the same `Match` record structure with distinct metadata
+5. **Group-ready** — the pairwise scoring model extends naturally to multi-user group cohesion scoring (Circles)
 
-### 5.2 Feature Vectors
+### 5.2 Four Compatibility Domains
 
-**Health features (H):**
-- `H_chronotype`, `H_sleep_midpoint`, `H_sleep_stability`
-- `H_peak_activity_start`, `H_peak_activity_end`
-- `H_activity_level`, `H_personal_space_index`, `H_recovery_index`
+| Domain | Weight (MVP) | Signals used |
+|--------|-------------|---|
+| Sleep | 35% | `chronotype`, `sleep_duration_avg`, `sleep_variability`, `social_jetlag` |
+| Activity | 30% | `activity_minutes_avg`, `step_count_avg`, `peak_activity_window`, `rest_hr_avg` |
+| Lifestyle | 20% | `routine_stability_index`; music and travel sub-signals added in phases 2–3 |
+| Preferences | 15% | Age range, distance, stated dealbreakers, `declared_preferences` multipliers |
 
-**Music features (M):**
-- `M_energy`, `M_valence`, `M_genre_diversity`
-- `M_evening_listening_intensity` (correlates with chronotype)
+Weights are indicative for MVP and recalibrated per city as outcome data (Moment completion, ratings) accumulates.
 
-**Travel features (T):**
-- `T_trip_frequency`, `T_avg_trip_distance`
-- `T_novelty_index`, `T_home_stability`
+### 5.3 Declared Preferences as Multipliers
 
-**Preference features (P):**
-- `P_vector` (128-dim embedding; cosine similarity)
+The `declared_preferences` record modifies effective domain weights for each user pair. Example: if both users mark `sleep_together_importance = 5`, the Sleep domain weight is amplified for that pair. If both mark it `1`, the weight is reduced in favor of Activity and Lifestyle.
 
-### 5.3 Compatibility Calculation
+This ensures the engine produces matches that are not just objectively compatible, but compatible along the dimensions each user actually values.
+
+### 5.4 Compatibility Score Formula
 
 For any pair of users (A, B), the final compatibility score is:
 
-$$C(A,B) = \sum_i w_i \cdot s_i(A,B)$$
+$$C(A,B) = \sum_{d} w_d^{eff}(A,B) \cdot s_d(A,B)$$
 
-where $w_i$ are configurable weights per dimension and $s_i$ are normalized similarity scores (0–1) for each dimension.
+where:
+- $w_d^{eff}$ is the effective weight for domain $d$, derived from global weights modified by both users' declared preferences
+- $s_d(A,B)$ is the normalized similarity score (0–1) for domain $d$
 
-**Default MVP weight distribution:**
+For Spark-origin scoring, the same formula is applied synchronously at session completion using both users' existing `signals` records.
 
-| Dimension | Weight |
-|---|---|
-| Sleep alignment | 22% |
-| Peak activity overlap | 18% |
-| Routine stability match | 13% |
-| Activity level similarity | 12% |
-| Personal space respect | 10% |
-| Travel style compatibility | 10% |
-| Recovery pattern match | 8% |
-| Music profile compatibility | 7% |
+### 5.5 Score Thresholds
 
-### 5.4 Per-User Weight Customization
+| Threshold | Spark origin | Algorithm origin |
+|-----------|-------------|------------------|
+| Minimum score to create a Match | 50 / 100 | 65 / 100 |
 
-Users can indicate which dimensions matter more. The effective weights for a pair:
+Algorithm origin has a higher bar because no physical presence confirms mutual intent. Thresholds are configurable per city.
 
-$$w_i^{eff}(A,B) = f(w_i^{global}, w_i^{userA}, w_i^{userB})$$
+### 5.6 Lifestyle Domain Composition by Phase
 
-where $f$ can be a simple average or a function giving extra weight to dimensions both users prioritize.
+| Phase | Sub-signal | Weight within Lifestyle |
+|-------|------------|------------------------|
+| 1 (health only) | `routine_stability_index` | 100% |
+| 2 (+ music) | `routine_stability_index` | 40%; Music taste 60% |
+| 3 (+ travel) | `routine_stability_index` | 20%; Music taste 40%; Travel 40% |
 
-### 5.5 Learning from Outcomes
+### 5.7 Match Origins
 
-As users interact, the engine collects outcome data (match acceptance, date confirmation, self-reported outcomes) to:
-- Recalibrate global weights via gradient-free optimization
-- Train learning-to-rank models on top of hand-crafted scores
+| Origin | Trigger | UX label |
+|--------|---------|----------|
+| `:spark` | Two users complete a Spark in person | "Synca Confermata" ✅ |
+| `:algorithm` | Nightly `MatchingJob` on signals | "Synca Suggerita" 💡 |
 
-In early stages, deterministic weighted sum is preferred for transparency.
+Algorithm-originated matches also carry `algorithm_confidence` (0.0–1.0), normalizing the pairwise score relative to the candidate pool for that user.
 
-***
+---
 
-## 6. Trust & Safety Infrastructure
+## 6. Spark Session Technical Flow
 
-### 6.1 Multi-Layer Trust Score
+```
+User A taps Spark
+  → Backend creates sparks record (session_code, qr_token, expires_at: +10min, status: pending)
+  → App displays QR + 6-digit session_code
 
-The Trust Score combines four independent layers:
+User B scans QR or enters code
+  → PATCH /api/v1/sparks/:id/join
+  → Both devices linked via Action Cable (spark:joined event)
+  → Spark status: active
 
-1. **Image liveness and authenticity** — liveness detection models prevent static-photo spoofing
-2. **Image forensics and metadata** — AI-generated image detection, EXIF analysis, compression pattern analysis
-3. **Behavioral patterns** — repetitive messages, external link sharing, scam-associated patterns
-4. **Cross-signal consistency** — listening patterns vs. claimed chronotype; health data variance analysis; photo context vs. lifestyle claims
-5. **IRL verification** — completed Spark sessions between users at the same physical location provide the strongest available liveness signal; each session increments `irl_verification_count` on the `TrustScore` record
+Both users confirm physical presence
+  → POST /api/v1/sparks/:id/submit_answers (no questionnaire — presence confirmation only)
+  → ScoringJob enqueued (spark queue, Solid Queue)
 
-### 6.2 Enforcement
+ScoringJob runs
+  → Reads signals for both users
+  → Computes CompatibilityScoreService.call(user_a, user_b)
+  → Writes compatibility_score + score_breakdown to sparks record
+  → spark:scored Action Cable event dispatched to both clients
+  → TrustScore.irl_verification_count incremented for both users
+  → SparkReward records created per user tier
+  → Spark status: completed
 
-Trust Score influences visibility but does not result in hard bans by default:
+If compatibility_score >= spark threshold:
+  → Match.create!(origin: :spark, spark_id: spark.id, ...)
+  → Circle.create!(circle_type: :duo, ...) for match chat
+  → Both users notified of confirmed match
+```
+
+---
+
+## 7. Trust & Safety
+
+### 7.1 Multi-Layer Trust Score
+
+Five independent layers contribute to the composite Trust Score:
+
+1. **Image liveness and authenticity** — liveness detection models prevent static-photo spoofing at upload
+2. **Image forensics and metadata** — AI-generated image detection, EXIF analysis, compression pattern analysis, reverse image lookup across platforms
+3. **Behavioral patterns** — repetitive messages, external link sharing, patterns associated with transactional or escort accounts
+4. **Cross-signal consistency** — music listening patterns vs. claimed chronotype; health data variance analysis (impossibly uniform data signals fabrication); photo context vs. lifestyle claims
+5. **IRL verification and Moment history** — completed Sparks at the same physical location are the strongest liveness signal; each increments `irl_verification_count`. Confirmed no-shows decrement Trust Score by −15 points.
+
+### 7.2 Enforcement Model
+
 - **High score** → full visibility in matching pool
 - **Medium score** → slightly reduced visibility
-- **Low score** → significantly reduced visibility; user prompted to complete additional verification steps
+- **Low score** → significantly reduced visibility; user prompted to complete additional verification
 
-This "selective ghosting" approach minimizes confrontational moderation while pushing the ecosystem toward authenticity.
+This selective ghosting approach minimizes confrontational moderation while pushing the ecosystem toward authenticity. Profiles are not banned and not notified of their score.
 
-***
+---
 
-## 7. Privacy and Security by Design
+## 8. Privacy and Security
 
-### 7.1 Data Minimization
+### 8.1 Data Minimization
 
-- Only derived, aggregate metrics from health, music, and travel data are transmitted
-- No raw health samples, per-second sensor readings, or precise travel trajectories are stored
-- Music data reduced to aggregated audio features, not detailed listening history
-- Spark session micro-test answers discarded immediately after score computation; only the resulting compatibility delta is persisted
+- Raw health samples, per-second sensor readings, and precise travel trajectories are never transmitted or stored
+- Only derived aggregate metrics are sent: chronotype, sleep variability, activity averages, music profile vectors
+- Music data reduced to aggregated audio features, not listening history
+- Spark session produces a compatibility score from existing signals; no new raw data is collected or persisted during the session
 
-### 7.2 Consent and Control
+### 8.2 Consent and Control
 
-- Fine-grained consent: users choose which domains to share (health, music, travel) and can revoke at any time
-- On-demand deletion: single action triggers full backend data erasure (GDPR "right to be forgotten")
+- Fine-grained consent: users independently choose which domains to share (health, music, travel) and can revoke at any time
+- On-demand deletion: single action triggers full backend data erasure (GDPR “right to be forgotten”)
+- `declared_preferences` are updatable at any time from the profile screen
 
-### 7.3 GDPR and Special Category Data
+### 8.3 GDPR and Special Category Data
 
 Health data is treated as special category personal data under GDPR Article 9:
-- Limit processing to derived statistics; no medical inference
+- Processing limited to derived statistics; no medical inference
 - Explicit, informed opt-in consent as lawful basis
 - Data Protection Officer (DPO) appointed prior to European launch
 
-### 7.4 Data Residency
+### 8.4 Data Residency
 
 - EU user data stored in EU-based infrastructure
 - Russian user data stored in Russian-located infrastructure (Yandex Cloud or VK Cloud) per 242-FZ
-- Segregated logical partitions to avoid cross-jurisdiction data movement
+- Segregated logical partitions prevent cross-jurisdiction data movement
 
-### 7.5 Transport and Storage Security
+### 8.5 Transport and Storage Security
 
 - All API communication over TLS 1.2+
-- OAuth2 / OpenID Connect for external integrations
-- AES-256 encryption at rest for health and music profile tables
-- Role-based access control
+- JWT tokens for API authentication; OAuth2 / OpenID Connect for external integrations
+- AES-256 encryption at rest for health, music, and signals tables
+- Role-based access control; no internal tooling accesses raw user signals without audit log
 
-***
+---
 
-## 8. External Integrations
+## 9. External Integrations
 
-### 8.1 Apple HealthKit
+### 9.1 Apple HealthKit
 
-- Used only from native iOS app
-- Health data not sent to any third party besides Synca's own backend
-- Respects Apple's guidelines prohibiting use of health data for advertising
+- Native iOS only; data not sent to any third party besides Synca's own backend
+- Respects Apple guidelines prohibiting use of health data for advertising
+- Background delivery via `HKObserverQuery`; silent daily sync
 
-### 8.2 Android Health Connect
+### 9.2 Android Health Connect
 
-- Standardized schema for sleep, activity, and biometrics
-- Supports OEM fitness apps (Garmin, Xiaomi, Samsung Health) via Health Connect bridge
+- Standardized schema for sleep, activity, and biometrics across Android OEMs
+- Supports Garmin, Xiaomi, Samsung Health via Health Connect bridge
+- Replaces Google Fit as platform standard from 2026
 
-### 8.3 Spotify API
+### 9.3 Spotify API
 
 - OAuth2 with `user-top-read` and `user-read-recently-played` scopes
-- Fetch and aggregate top tracks and audio features periodically
-- Store only pre-computed aggregated features in `MusicProfile`
+- Top tracks and audio features fetched and aggregated on-device
+- Only pre-computed aggregates stored in `signals` (music columns)
 
-### 8.4 Travel Services
+### 9.4 Yandex Music
 
-- Initial focus on onboarding travel preference game
-- Optional: Polarsteps API, Google Maps Timeline (opt-in, where API access permits)
+- Russian-market alternative to Spotify
+- OAuth integration for listening history and genre data
+- Energy/valence computation via internal genre taxonomy (no public audio features API equivalent to Spotify)
 
-### 8.5 Telegram
+### 9.5 Travel Services
+
+- Phase 1: onboarding travel preference questionnaire (declared)
+- Phase 2: optional Polarsteps import (GPX/JSON), Google Maps Timeline (opt-in where API permits)
+- All travel computation on-device; only aggregated `travel_*` columns transmitted
+
+### 9.6 Telegram
 
 - Standard Bot API for message handling
 - Mini App (WebApp) framework for embedded web-based UI
 - Payments via Telegram Payments API and/or external payment links
 - Core data flows through Rails API; Telegram is a client and payment facilitator, not a data processor
 
-***
+---
 
-## 9. Scaling and Reliability
+## 10. Scaling and Reliability
 
-### 9.1 Architecture Choices for Scale
+### 10.1 Architecture Choices
 
 - **Stateless backend**: horizontal scaling behind a load balancer; session state via JWT
 - **PostgreSQL**: primary data store with read replicas for analytical workloads; city/region partitioning as user base grows
-- **Async processing**: Solid Queue (Rails built-in async processor) for background jobs — recomputing compatibility and trust scores, generating date proposals, running the nightly `MatchingJob`; no Redis or external queue broker required
-- **WebSocket layer**: Action Cable (Rails) handles Spark session real-time synchronization; horizontally scalable via Solid Cable adapter when concurrent connection count warrants it
+- **Solid Queue**: background jobs for ScoringJob (spark queue), nightly MatchingJob (algorithm queue), Trust Score recomputation, Moment reminders. No Redis or external queue broker required.
+- **Action Cable**: WebSocket layer for real-time Spark session synchronization and Circle messaging; horizontally scalable via Solid Cable adapter
 
-### 9.2 Resilience
+### 10.2 Resilience
 
-- Graceful degradation: if travel or music signals unavailable, engine falls back to health + preference embedding
-- Circuit breakers for external integrations (Spotify, Yandex AI) to prevent cascading failures
-- Spark sessions self-expire after TTL; no orphaned sessions accumulate in the database
+- Graceful degradation: if music or travel signals unavailable, engine falls back to health + preferences domains with proportionally adjusted weights
+- Circuit breakers for external integrations (Spotify, Yandex Music, Yandex AI) to prevent cascading failures
+- Spark sessions self-expire after TTL; no orphaned records accumulate
+- MatchingJob operates on a separate queue to avoid blocking Spark scoring during nightly runs
 
-***
+---
 
-## 10. Roadmap
+## 11. Roadmap
 
-### 10.1 Short-Term (0–12 Months)
+### 11.1 Phase 1 — MVP (0–6 Months)
 
-- Finalize iOS MVP with HealthKit integration, preference game, basic matching engine
-- Implement Spark Session Manager with WebSocket sync, QR engine, reward issuance, and automatic Match creation on threshold pass
-- Implement nightly `MatchingJob` (Solid Queue) for algorithm-originated matches (Premium users only)
-- Implement Telegram Bot and Mini App for Moscow launch
-- Integrate Yandex AI for photo context analysis in the Russian market
-- Roll out basic Spotify integration for music profile enrichment
+- iOS app: HealthKit, declared preferences, visual preference game, Spark (QR primary), algorithm matching (Premium), Moments, Circles Duo
+- Telegram Bot + Mini App for Russian market
+- Nightly MatchingJob (Solid Queue) for algorithm-origin matches
+- Basic Trust Score pipeline (image liveness + forensics)
+- Yandex AI for photo context analysis (Russian market)
 
-### 10.2 Medium-Term (12–24 Months)
+### 11.2 Phase 2 — Signal Expansion (6–18 Months)
 
-- Launch Android app with Health Connect integration and full Spark support
-- Add travel preference game and optional travel service integrations
-- Introduce basic learning-to-rank layer over hand-crafted compatibility scores
-- Harden Trust Score with additional image forensics and behavioral heuristics
-- **Sync Room research phase (v2)**: design and validate group cohesion scoring across `small_group` (3–8) and `event_room` (9–22) types using anonymized Spark session data from seeding events
+- Android app with Health Connect + full Spark support
+- Spotify + Yandex Music signal integration (music columns in `signals`)
+- Travel behavior: onboarding questionnaire + optional Polarsteps import
+- Group Spark (BLE multi-participant, `spark_participants` table)
+- Circle Small Group (3–8) with full-graph Spark admission
+- Learning-to-rank layer over hand-crafted compatibility scores using Moment outcome feedback
 
-### 10.3 Long-Term (24+ Months)
+### 11.3 Phase 3 — Group Scale (18–30 Months)
 
-- **Sync Rooms — production (v2+)**: surface curated group activity proposals based on multi-user lifestyle alignment; introduce group date packs as a monetization surface co-branded with venue partners. The underlying data infrastructure (individual compatibility profiles, SparkSession IRL data, venue integrations) is fully in place from earlier phases — Sync Rooms are an additive feature, not a re-architecture.
+- Circle Event (9–22): hub-and-spoke admission, Group Activity Packs
+- B2B venue co-branding for group experiences (calcetto, padel, sauna, trail running)
 - Cross-signal predictive modeling
-- Publish anonymized aggregate findings on lifestyle compatibility and relationship success
-- API for third-party apps (gyms, wellness platforms) to integrate Synca compatibility signals
+- Third-party API for gyms and wellness platforms to integrate Synca compatibility signals
+- Publish anonymized aggregate findings on lifestyle compatibility and social group cohesion
 
-***
+---
 
-## 11. Conclusion
+## 12. Conclusion
 
-Synca's technical design centers on a single idea: compatibility is best inferred from how people actually live, not how they describe themselves. The combination of HealthKit/Health Connect data, music listening behavior, travel patterns, visual preference embeddings, and live IRL sessions (Spark) creates a rich, multi-dimensional profile for each user — while respecting strict privacy constraints through on-device processing and data minimization.
+Synca's technical architecture is built around a single organizing principle: **compatibility is best inferred from how people actually live, not from how they describe themselves**.
+
+The combination of HealthKit/Health Connect passive data, declared preferences as interpretation multipliers, music listening behavior, travel patterns, and live IRL Spark sessions creates a rich, multi-dimensional profile for each user — while respecting strict privacy constraints through on-device processing and data minimization.
 
 The architecture enables Synca to:
-- Launch in complex regulatory and distribution environments (Russia via Telegram Mini Apps)
-- Maintain a strong privacy and security posture suitable for GDPR and other modern data protection regimes
+- Launch in complex regulatory and distribution environments (Russia via Telegram Mini Apps, EU via GDPR-compliant infrastructure)
+- Maintain a strong privacy posture as a structural property, not a compliance checkbox
 - Scale to multiple cities and countries without re-architecting the core
-- Produce matches from two distinct origins (IRL Spark and nightly algorithm), each traceable in the data model via the `Match.origin` field
-- Extend naturally from one-to-one matching into Sync Room group experiences, leveraging the same data model built from day one
+- Produce matches from two distinct origins (Spark and algorithm), each traceable in the data model
+- Extend naturally from one-to-one romantic matching into group activity coordination via Circles — using the same data model, scoring engine, and Spark verification mechanism built from day one
 
-Synca's differentiation is not a marketing veneer; it is embedded in the data model, the matching engine, and the privacy-first architecture.
-
-*For implementation details at code level (schemas, API contracts, client pseudocode), see the internal developer documentation repository.*
+Synca's differentiation is embedded in the data model, the compatibility engine, and the privacy-first architecture. It is not a feature that can be bolted on — it is the foundation.

@@ -1,6 +1,6 @@
 # Synca Litepaper
 
-**Version 1.4 — May 2026**
+**Version 1.5 — May 2026**
 *Confidential — For Investor and Partner Use Only*
 
 ---
@@ -9,13 +9,11 @@
 
 The way people meet has not fundamentally changed in ten years. The swipe interface, introduced by Tinder in 2012, became the default interaction model for an entire generation. It optimized for one thing: volume. More swipes, more matches, more engagement time. What it did not optimize for — and structurally cannot — is compatibility.
 
-Synca is built on a different premise: **the data to determine compatibility between two people already exists on their phones, recorded passively every single day**. Sleep times, activity rhythms, energy peaks, music taste, travel patterns — these are not opinions or self-presentations. They are behavioral fingerprints. Synca reads them, compares them, and surfaces one person at a time when a genuine lifestyle match is identified. It then proposes the date itself.
-
-The goal is not to help people swipe more. The goal is to help people meet fewer, better people — and actually show up.
+Synca starts as a dating app. But read to the end: the compatibility engine Synca is building is not limited to romantic connections. The same passive behavioral data that reveals whether two people are romantically aligned also reveals whether eight people are the right fit for a weekly padel group, a calcetto team, or a Saturday morning trail run. Dating is the point of entry. **Lifestyle compatibility is the category.**
 
 ---
 
-## 2. The Problem in Depth
+## 2. The Problem
 
 ### 2.1 Swipe Fatigue Is Structural, Not Cyclical
 
@@ -28,8 +26,8 @@ The apps know this. Hinge's entire brand proposition — "designed to be deleted
 Every current matching system is ultimately trained on what users say about themselves, not on how they behave. This creates three compounding problems:
 
 - **Presentation bias**: people optimize their profiles for attractiveness, not accuracy.
-- **Static snapshots**: a profile captures one moment. It does not update as the person's life changes.
-- **Absence of behavioral data**: nobody describes their actual sleep schedule, energy patterns, or how often they actually leave the house.
+- **Static snapshots**: a profile captures one moment and does not update as the person's life changes.
+- **Absence of behavioral data**: nobody accurately describes their actual sleep schedule, energy patterns, or weekly calorie burn during sport.
 
 ### 2.3 The Fake and Escort Problem
 
@@ -45,34 +43,53 @@ Even when a genuine match occurs, the majority fail to convert into a real meeti
 
 Synca replaces the swipe model with a **lifestyle compatibility engine** that works passively in the background, proposes a match only when conditions are genuinely aligned, and immediately bridges that match to a real-world meeting.
 
-### 3.1 The Core Shift: From Profiles to Behavioral Signals
+### 3.1 From Profiles to Behavioral Signals
 
-Synca does not ask users to describe themselves. It reads what they actually do:
+Synca does not ask users to describe themselves. It reads what they actually do — collected passively every day from their phone and wearable:
 
-- When they sleep and wake up (sleep onset, offset, duration)
-- How stable their daily routine is (variance across days)
-- When their energy peaks during the day (peak activity window)
-- How active they are overall (steps, active energy, workout sessions)
-- How they recover (resting heart rate trends, HRV if available)
-- What music they listen to, when, and what it reveals about their emotional profile
-- How they travel — how often, how far, and whether they seek novelty or familiarity
+- When they fall asleep and wake up, and how consistent that schedule is across days
+- How active they are: average daily step count, weekly active minutes, calorie burn during workouts
+- When their energy peaks: morning, midday, or evening
+- How they recover: resting heart rate trends, heart rate variability
+- What music they listen to, when, and what energy and emotional tone it carries
+- How often they travel, how far, and whether they seek novelty or familiarity
 
-### 3.2 The Five Signal Layers
+This data cannot be gamed without sustaining behavioral change over weeks. It is not a snapshot — it is a fingerprint.
+
+### 3.2 Declared Preferences: The Interpretation Key
+
+Objective signals tell Synca what a person *does*. A short onboarding questionnaire — under 2 minutes — tells Synca what a person *values*. The combination is more predictive than either alone.
+
+Two people with different wake-up times may be perfectly compatible if neither considers sleeping at the same hour important. Two people with identical chronotypes may clash if one needs complete silence in the morning. The declared preference is what unlocks that distinction.
+
+Examples from the onboarding questionnaire:
+
+- *Is it important to you to fall asleep at roughly the same time as your partner?* (1–5 scale)
+- *Do you prefer sleeping in a cool or warm environment?* (Cool / Warm / No preference)
+- *How much daily movement feels right for you?* (Under 3,000 steps / 3,000–8,000 / Over 10,000)
+- *How many calories do you typically burn during a sport session?* (Under 300 kcal / 300–600 kcal / Over 600 kcal)
+- *Do you play team sports like calcetto, padel, or basketball? How often?* (Never / Occasionally / Weekly / Several times a week)
+- *How important is it that the people close to you share your daily rhythm?* (1–5 scale)
+- *Do you consider yourself a morning or evening person?* (cross-validated against HealthKit data)
+
+These preferences become multipliers in the compatibility score — they do not filter candidates, they shape how signals are weighted for each specific user.
+
+### 3.3 The Five Signal Layers
 
 **Layer 1 — Health Biometrics (HealthKit / Health Connect)**
-The foundation. Sleep alignment, peak activity window overlap, routine stability matching, activity level similarity, personal space index, and recovery pattern compatibility combine into a lifestyle rhythm score. Raw health data never leaves the user's device.
+The foundation. Sleep alignment, activity level similarity, peak activity window overlap, routine stability matching, personal space index, and recovery pattern compatibility combine into a lifestyle rhythm score. Raw health data never leaves the user's device — only derived, aggregated metrics are transmitted.
 
 **Layer 2 — Visual Preference Inference**
-During onboarding, users play a short game. Synca shows pairs of AI-generated person archetypes. The user taps intuitively — no categories, no filters, no declarations. Over 10–15 rounds, these choices build a personal preference embedding.
+During onboarding, users make a series of intuitive visual choices — not categories or filters, but immediate reactions to AI-generated person archetypes. Over 10–15 rounds, these build a personal preference embedding that captures aesthetic alignment without requiring self-description.
 
 **Layer 3 — Photo Context Analysis**
 When users upload profile photos, Synca's AI analyzes contextual signals: setting, objects and props, activity type, style consistency across photos.
 
-**Layer 4 — Travel Behavior (Post-MVP v1)**
-Integration with travel services reveals how often someone travels, how far from home, and whether they seek new experiences or prefer familiar places.
+**Layer 4 — Music Listening Profile**
+Spotify or Yandex Music OAuth integration exposes audio features across each user's listening history: energy level, emotional valence, genre diversity, and listening time patterns. Added post-MVP v1.
 
-**Layer 5 — Music Listening Profile (Post-MVP v1)**
-Spotify OAuth integration exposes audio features across each user's listening history: energy level, emotional valence, tempo, diversity of genres, and listening time patterns.
+**Layer 5 — Travel Behavior**
+Integration with travel services reveals how often someone travels, how far from home, and whether they seek new experiences or prefer familiar places. Added post-MVP v1.
 
 ---
 
@@ -82,230 +99,151 @@ Spotify OAuth integration exposes audio features across each user's listening hi
 
 1. **Sign in with Apple / Google** — identity and basic profile
 2. **Health data authorization** — HealthKit (iOS) or Health Connect (Android), with granular consent controls
-3. **Preference game** — 10–15 rounds of visual archetype choices
-4. **Optional enrichments** — connect Spotify, enable location zones, indicate travel style via mini-game
-5. **Dashboard unlock** — the user immediately sees their own lifestyle profile: chronotype, peak energy window, routine stability, activity level, music personality
+3. **Declared preferences questionnaire** — under 2 minutes; the interpretation key for all passive signals
+4. **Visual preference game** — 10–15 rounds of intuitive archetype choices
+5. **Optional enrichments** — connect Spotify or Yandex Music, enable location zones, indicate travel style
+6. **Dashboard unlock** — the user immediately sees their own lifestyle profile: chronotype, peak energy window, routine stability, activity level, music personality
+
+The dashboard provides standalone value on day one, before any match exists. Users see a reflection of how they actually live — not how they think they live.
 
 ### 4.2 The Match Experience
 
 Synca produces matches through two distinct origins, each with its own UX label so users always understand the source of the connection.
 
-#### 4.2.1 Match from Spark (Origin: IRL — available to all tiers)
+**Match from Spark (IRL — available to all tiers)**
+When two users complete a Spark session and their compatibility score meets the match threshold, a Match is created automatically. The match card displays a **"Synca Confermata"** badge — signalling a verified in-person origin. This is the primary match flow for MVP.
 
-When two users complete a Spark session and their compatibility score meets or exceeds the match threshold, a Match is created automatically. Both users are notified immediately. The match card displays:
-- A **"Synca Confirmed"** badge — signalling a verified in-person origin
-- The compatibility snapshot computed during the live session
-- 1–3 concrete date proposals anchored to the activity context of their meeting location
+**Match from Algorithm (Curated — Premium only)**
+When the nightly algorithm identifies a sufficiently strong bilateral compatibility between two users who have not yet met, a match proposal is surfaced. The match card displays a **"Synca Suggerita"** badge. Both users see the proposal independently. If both accept, a chat opens — already anchored to a suggested date context. Algorithm-originated matches require an active Premium subscription.
 
-This is the primary match flow for MVP. It rewards genuine IRL interaction and produces the highest-quality matches in the system, because both users have already met and chosen to Spark.
-
-#### 4.2.2 Match from Algorithm (Origin: Curated — Premium feature)
-
-When the nightly `MatchingJob` identifies a sufficiently strong bilateral compatibility between two users who have not yet met, a match proposal is surfaced. The match card displays:
-- A **"Synca Suggests"** badge — distinguishing it clearly from IRL-verified matches
-- A plain-language explanation of the compatibility across key dimensions
-- A compatibility score broken into readable dimensions
-- 1–3 concrete date proposals: type of activity, suggested time window, approximate area of the city
-
-Both users see the proposal independently. If both accept, a chat opens — already anchored to the selected date context.
-
-Algorithm-originated matches are a **Premium-only feature**. Free-tier users can receive and complete Spark sessions and view their resulting IRL matches, but curated algorithmic suggestions require an active Premium subscription.
-
-### 4.3 Synca Spark — Live In-Person Compatibility Game
+### 4.3 Synca Spark — Live In-Person Compatibility
 
 Synca Spark is the bridge between the physical and digital world. When two people meet in real life — at a gym, a sauna, a run club event, a coworking space, or any social gathering — either person can initiate a Spark session directly from the app.
 
 **How it works:**
 
 1. User A opens Synca and taps **"Spark"**. A session QR code and 6-digit code appear on screen.
-2. User B scans the QR code or enters the code. Both phones are now linked in a live session.
-3. Over approximately **3 minutes**, both users independently answer a short synchronized compatibility micro-test on their own device — quick visual and behavioral questions that enrich the matching profile in real time.
-4. The result screen appears simultaneously on both phones:
-   - **Instant compatibility snapshot** across the core dimensions (sleep rhythm alignment, energy profile, lifestyle score)
-   - A **suggested first date proposal** based on their combined signals and current location context
-   - A **reward for both**: one free week of Premium (for free-tier users) or one free curated match credit (for Premium users)
-5. If the compatibility score meets or exceeds the match threshold, a **Match record is created automatically** (`origin: :spark`) and both users are notified that they have a confirmed Synca connection.
+2. User B scans the QR code or enters the code. Both phones are now linked.
+3. Both users confirm their physical presence. No questionnaire, no manual input — the fact that two people choose to Spark together is itself a meaningful intent signal.
+4. The backend computes a compatibility score from both users' existing passive signals.
+5. The result screen appears simultaneously on both phones:
+   - **Instant compatibility snapshot** across the core dimensions, expressed in plain language (never as a raw number)
+   - A **suggested first meeting proposal** based on their combined signals and current location context
+   - A **reward for both**: one free week of Premium (free-tier users) or one free curated match credit (Premium users)
+6. If the compatibility score meets the match threshold, a **Match is created automatically** and both users are notified.
 
-**Why Synca Spark matters strategically:**
+**Why Spark matters strategically:**
 
 - **Acquisition**: every Spark session onboards two fully profiled users simultaneously at zero marginal cost
-- **Viral loop**: it turns every gym, sauna, or run club event into a natural Synca distribution point
-- **Trust Score boost**: both participants receive a verified IRL interaction badge, raising their Trust Score — making them more visible in the matching queue
-- **Retention hook**: the reward incentivizes existing users to keep attending community events and to re-engage with the app each time they meet someone interesting in person
-- **Anti-fake signal**: a Spark session between two real people in the same physical location is nearly impossible to fake — it functions as the strongest liveness verification in the system
-- **Group compatibility foundation**: each completed Spark session enriches the individual compatibility profile and contributes IRL-verified data points that will power the Sync Room group layer in v2+
+- **Viral loop**: every gym, sauna, or run club event becomes a natural Synca distribution point
+- **Trust boost**: both participants receive a verified IRL interaction badge, raising their Trust Score and making them more visible in the matching pool
+- **Anti-fake signal**: a Spark session between two real people in the same physical location is nearly impossible to fake — it is the strongest liveness verification in the system
+- **Group foundation**: Spark is also the admission credential for Circles (see Section 5)
 
 **Reward mechanics by user type:**
 
-| User type at time of Spark | Reward received |
+| User type | Reward received |
 |---|---|
 | Free tier | 7 days of Premium, unlocked immediately |
-| Premium (active subscription) | 1 free curated match credit, valid 30 days |
-| Premium+ (active subscription) | 1 free curated match credit + profile boost for 24h |
-| Lapsed Premium (churned) | 7 days of Premium re-activation — re-engagement hook |
+| Premium (active) | 1 free curated match credit, valid 30 days |
+| Lapsed Premium | 7 days of Premium re-activation |
 
-> The Spark reward system is designed to be self-funding: each 7-day trial converts at an estimated 20–35% to paid Premium (consistent with RevenueCat 2025 data on re-engagement trial conversion). The cost of one free week is approximately €3.50 at blended ARPU — justified by the dual acquisition value of the session.
+The Spark reward system is designed to be self-funding: each 7-day trial converts at an estimated 20–35% to paid Premium. The cost of one free week is approximately €3.50 at blended ARPU — justified by the dual acquisition value of the session.
 
-### 4.4 Selective Ghosting and Trust Architecture
+### 4.4 Moments — From Match to Real Meeting
 
-Every profile carries a dynamic Trust Score composed of:
+Once a Match exists, either user can propose a **Moment**: a specific meeting with location, date, and time. The other person can accept, decline, or counter-propose. A counter-proposal chain is capped at 5 rounds.
 
-- **Liveness check**: photo anti-spoofing at upload
-- **Image forensics**: detection of AI-generated images, heavy editing, metadata inconsistencies
-- **Reverse image lookup**: near-duplicate search to identify photos used across multiple platforms
-- **Behavioral signals**: message patterns, external link sharing, emoji patterns correlated with transactional accounts
-- **Health data quality**: variance analysis — impossibly uniform data signals fabrication
-- **Cross-signal consistency**: music listening patterns that contradict stated chronotype lower the score
-- **Synca Spark IRL verification**: confirmed in-person sessions raise the Trust Score significantly; `irl_verification_count` is tracked per user and factored directly into the score
+After the meeting, both users rate the experience. No-show events reduce the offending profile's Trust Score. Completed Moments with positive ratings reinforce it. The Moment lifecycle transforms a match from a digital event into a real-world outcome — which is the only metric Synca ultimately optimizes for.
 
-Profiles below Trust Score thresholds receive progressively reduced visibility. They are not banned, not notified, and can raise their score by completing genuine onboarding steps including a Spark session.
+### 4.5 Trust Architecture
 
----
+Every profile carries a dynamic Trust Score that determines visibility in the matching pool:
 
-## 5. Technical Architecture
+- **Photo liveness check**: anti-spoofing at upload
+- **Image forensics**: AI-generated image detection, EXIF analysis, metadata inconsistencies
+- **Reverse image lookup**: near-duplicate search across platforms
+- **Behavioral signals**: message patterns, external link sharing, patterns correlated with transactional accounts
+- **Health data consistency**: impossibly uniform data signals fabrication; cross-signal contradiction lowers the score
+- **IRL verification**: completed Spark sessions are the strongest available liveness signal; each session increments the IRL verification count
+- **Moment history**: no-show events reduce score; completed Moments raise it
 
-### 5.1 System Overview
-
-```
-┌─────────────────────┐    ┌──────────────────────┐
-│   iOS App           │    │   Android App        │
-│   SwiftUI + MVVM    │    │   Kotlin             │
-│   HealthKit         │    │   Health Connect     │
-│   Local aggregation │    │   Local aggregation  │
-│   Spark QR engine   │    │   Spark QR engine    │
-└────────┬────────────┘    └──────────┬───────────┘
-         │  Anonymized health summary │
-         └──────────────┬─────────────┘
-                        ▼
-         ┌──────────────────────────────┐
-         │     Rails API Backend       │
-         │     PostgreSQL              │
-         │     Matching Engine         │
-         │     Trust Scoring           │
-         │     Spark Session Manager   │
-         │     Date Proposal Generator │
-         │     Signal Integration      │
-         │     Reward Engine           │
-         └──────┬──────────────────────┘
-                │
-     ┌──────────┼──────────────┐
-     ▼          ▼              ▼
-Telegram   iOS/Android    Web Payment
-Bot/TMA    Push Notify    Page (Stripe /
-                         YooMoney / SBP)
-```
-
-### 5.2 Health Data Privacy Model
-
-- Raw health samples are processed exclusively on the user's device and are never transmitted
-- Only derived, aggregated metrics are sent to the backend: chronotype label, peak activity window, routine stability index, average activity level, recovery quality tier
-- Spark session micro-test answers are discarded immediately after the compatibility delta is computed — no behavioral survey responses are persisted long-term
-- Full GDPR Article 9 compliance for European markets
-- Russia data residency compliance (242-FZ): Russian user data stored on Yandex Cloud or VK Cloud
-
-### 5.3 Spark Session Technical Flow
-
-```
-User A taps Spark
-    → Backend creates SparkSession record (UUID token, TTL 10 min, status: pending)
-    → App displays QR + 6-digit session_code
-
-User B scans QR
-    → Backend links both device tokens to SparkSession (status: active)
-    → Both apps enter synchronized micro-test flow (WebSocket)
-
-Micro-test completes
-    → Both devices submit answers simultaneously
-    → Backend computes instant compatibility delta from existing profiles
-    → Answers discarded; compatibility_score written to SparkSession record
-    → Reward engine checks user tier → SparkReward records created
-    → Both apps display result screen with score + date proposal
-    → TrustScore.irl_verification_count incremented for both users
-    → SparkSession status → completed
-    → If compatibility_score ≥ threshold → Match record created (origin: :spark, status: :proposed)
-    → Both users receive match notification
-```
-
-### 5.4 Matching Engine Weights
-
-| Dimension | Signal Source | MVP Weight |
-|---|---|---|
-| Sleep alignment | HealthKit / Health Connect | 22% |
-| Peak activity overlap | HealthKit / Health Connect | 18% |
-| Routine stability match | HealthKit / Health Connect | 13% |
-| Activity level similarity | HealthKit / Health Connect | 12% |
-| Personal space respect | HealthKit (weekend variance) | 10% |
-| Recovery pattern match | HealthKit (HRV / RHR) | 8% |
-| Travel style compatibility | Polarsteps / game / Maps | 10% |
-| Music profile compatibility | Spotify API | 7% |
+Profiles below Trust Score thresholds receive progressively reduced visibility — selective ghosting. They are not banned and not notified. They can raise their score by completing genuine onboarding steps and Spark sessions.
 
 ---
 
-## 6. Go-To-Market
+## 5. Beyond Dating: The Bigger Picture
 
-### 6.1 The Community-First Principle
+The compatibility engine Synca builds for romantic matching is identical to what is needed to form high-quality groups for any social or physical activity.
 
-Synca does not launch to a city. It launches to a community within a city. The minimum viable density is approximately 300–500 active users per city.
+Consider what the system already knows about each user by the time they have a full signal profile:
 
-The playbook for every city:
+- Their weekly calorie burn during sport sessions
+- The time of day they prefer to be physically active
+- Whether they train at high intensity or moderate pace
+- Whether they play team sports and how frequently
+- Their travel style and openness to novel experiences
+- Their social rhythm: do they prefer quiet evenings or active social schedules?
 
-1. Identify 2–3 anchor communities: run clubs, boutique gyms, saunas, coworking spaces, expat networks
-2. Recruit local ambassadors: 1–3 community organizers
-3. Host seeding events: invite-only gatherings where entry requires completing Synca onboarding
-4. Physical manifests: posters and cards in gyms, saunas, and fitness spaces linking to the Telegram Bot via QR code
-5. **Synca Spark activation at every event**: organizers demo the feature live on stage or at check-in, generating 20–50 Spark sessions per event and onboarding user pairs simultaneously
-6. Activate matching once density threshold is reached
-7. Launch B2B partnerships within 8 weeks of city activation
+This is exactly the data needed to know whether seven people are the right fit for a weekly calcetto group, a Saturday padel ladder, a morning trail run club, or a recurring sauna session. Synca does not need to build a new product to enter this space — the data infrastructure, the Spark mechanism, and the compatibility engine are the same.
 
-### 6.2 Seven-City Roadmap
+### 5.1 Circles — Verified Group Spaces
 
-**Wave 1 — Months 1–6:** Moscow (primary), Bangkok, Dubai
-**Wave 2 — Months 6–18:** Seoul, Milan
-**Wave 3 — Months 18–30:** São Paulo, Mexico City
+Circles are conversational and coordination spaces that exist only when a verified physical compatibility graph exists between all members. They are not generic group chats — they are spaces where every participant has physically met and been Spark-verified with the relevant other members.
+
+| Type | Members | Admission rule | Use case |
+|---|---|---|---|
+| **Duo** | 2 | 1 confirmed Spark between the two members | Match chat — default post-match |
+| **Small Group** | 3–8 | Every pair has ≥1 confirmed Spark | Aperitivo group, activity circle, calcetto |
+| **Event** | 9–22 | Every member has ≥1 Spark with the creator | Tournament, group outing, sauna event |
+
+The Event Circle relaxes the full-graph requirement: not all 10 players in a calcetto match need to have met each other. The creator acts as social guarantor — each member has a verified Spark with them.
+
+This is what Synca becomes at scale: **the trust layer for small-group real-world experiences**. Not just "who should I date" but "who should be in my padel group this season".
+
+### 5.2 Group Spark
+
+Paralleling the duo Spark, a Group Spark allows multiple users physically co-located — at a gym event, a sauna, a run club — to initiate a multi-person session simultaneously. The system computes pairwise compatibility scores for every combination in the group. Pairs above the match threshold receive individual matches; the group as a whole becomes eligible for a Circle when the required Spark graph is complete.
+
+Every Group Spark is simultaneously a user acquisition event, a trust verification event, and a group formation event.
 
 ---
 
-## 7. Business Model
+## 6. Business Model
 
-### 7.1 Revenue Streams
+### 6.1 Revenue Streams
 
 **Premium Subscription**
 Market-adjusted pricing (€7.99 Moscow, $8.99 Bangkok, €14.99 Milan, €16.99 Berlin/Dubai). All subscription payments processed outside App Store and Google Play — eliminating the standard 30% platform commission.
 
-Premium unlocks:
-- Algorithm-originated match suggestions ("Synca Suggests") — curated matches proposed proactively by the nightly matching engine, without requiring an in-person Spark
-- Unlimited active Sync Rooms (free tier: 1 active Duo room)
-- Event Room creation (groups of 9–22, e.g. football, padel tournaments)
-- Spark invite relay — share a Spark invite link with a third party to facilitate their in-person meeting
-- Detailed compatibility analytics per match
+**Pay-per-Match / Moment Pack**
+Users purchase a single curated match or a ready-made meeting experience.
 
-**Pay-per-Match / Date Pack**
-Users purchase a single curated match or a ready-made date experience.
-
-**Synca Spark Reward Loop**
-Each Spark session awards both participants one free Premium week (free users) or one free match credit (Premium users). The 7-day trial re-engagement conversion (est. 20–35%) makes this self-funding. Cost per Spark reward: ~€3.50. Expected LTV uplift per converted re-activation: ~€54 (3 months average retention at €18 ARPU).
+**Spark Reward Loop**
+The 7-day trial re-engagement conversion (est. 20–35%) makes the reward system self-funding. Cost per Spark reward: ~€3.50. Expected LTV uplift per converted re-activation: ~€54 (3 months average retention at €18 ARPU).
 
 **B2B Venue Partnerships**
-Gyms, saunas, padel courts, and cafés become active partners. Revenue share: 15–20% of each booked date experience. Spark sessions at partner venues carry a co-branded experience, reinforcing venue loyalty programs.
+Gyms, saunas, padel courts, and cafés become active partners. Revenue share: 15–20% of each booked Moment. Spark sessions at partner venues carry a co-branded experience, reinforcing venue loyalty programs.
 
-**Group Date Packs (v2+)**
-Curated small-group activity experiences (morning runs, sauna sessions, padel) sold as premium packs, co-branded with venue partners. This monetization surface becomes available once the Sync Room group layer is released and requires no additional data infrastructure beyond what is built in MVP and v1.
+**Group Activity Packs**
+Curated small-group experiences (morning runs, sauna sessions, calcetto, padel tournaments) sold as premium packs, co-branded with venue partners. This surface opens naturally as Circles and Group Spark reach critical density — no additional data infrastructure required.
 
-### 7.2 Feature Access by Tier
+### 6.2 Feature Access by Tier
 
 | Feature | Free | Premium |
 |---|---|---|
-| Spark sessions | ✅ unlimited | ✅ unlimited |
+| Spark sessions (duo) | ✅ unlimited | ✅ unlimited |
+| Group Spark | ✅ unlimited | ✅ unlimited |
 | Match from Spark (IRL origin) | ✅ | ✅ |
 | Match from Algorithm (curated) | ❌ | ✅ |
-| Sync Room Duo (1:1 chat) | ✅ 1 active | ✅ unlimited |
-| Sync Room Small Group (3–8) | ❌ | ✅ unlimited |
-| Event Room (9–22, e.g. football) | ❌ | ✅ |
+| Moment proposals | ✅ | ✅ |
+| Circle Duo (1:1 chat) | ✅ 1 active | ✅ unlimited |
+| Circle Small Group (3–8) | 1 active | ✅ unlimited |
+| Circle Event (9–22) | ❌ | ✅ |
 | Spark invite relay | ❌ | ✅ |
 | Detailed compatibility analytics | ❌ | ✅ |
-| Profile boost | ❌ | ✅ (via Spark reward) |
 
-### 7.3 Unit Economics (Indicative)
+### 6.3 Unit Economics (Indicative)
 
 | Metric | Estimate | Basis |
 |---|---|---|
@@ -318,26 +256,60 @@ Curated small-group activity experiences (morning runs, sauna sessions, padel) s
 
 ---
 
-## 8. Competitive Positioning
+## 7. Go-To-Market
 
-| | Tinder/Bumble | Hinge | Keeper/Known/Sitch | **Synca** |
-|---|---|---|---|---|
-| Matching signal | Self-reported | Self-reported + behavior | AI on profiles | **Passive multi-signal (health + music + travel)** |
-| Volume | Infinite swipe | Curated browse | Curated | **1 match at a time** |
-| Post-match | Up to users | Some prompts | Some guidance | **Pre-organized date proposal** |
-| Fake filter | Weak | Moderate | Moderate | **Multi-layer Trust Score + ghosting** |
-| Live IRL feature | None | None | None | **Synca Spark — synchronized live game + reward** |
-| Group / social layer | None | None | None | **Sync Rooms — IRL-verified group spaces (v2+)** |
-| Distribution Russia | Blocked | Blocked | Not present | **Telegram Mini App + RuStore** |
-| Health data | None | None | None | **Core signal** |
-| Music data | None | None | None | **Spotify integration (v1)** |
-| Travel data | None | None | None | **Travel behavior integration (v1)** |
+### 7.1 The Community-First Principle
+
+Synca does not launch to a city. It launches to a community within a city. The minimum viable density is approximately 300–500 active users per city.
+
+The playbook for every city:
+
+1. Identify 2–3 anchor communities: run clubs, boutique gyms, saunas, coworking spaces, expat networks
+2. Recruit local ambassadors: 1–3 community organizers per city
+3. Host seeding events: invite-only gatherings where entry requires completing Synca onboarding
+4. Physical presence: posters and cards in gyms, saunas, and fitness spaces with QR codes linking to onboarding
+5. **Spark activation at every event**: organizers demo the feature live, generating 20–50 Spark sessions per event and onboarding user pairs simultaneously
+6. Activate algorithm matching once density threshold is reached
+7. Launch B2B venue partnerships within 8 weeks of city activation
+
+### 7.2 Seven-City Roadmap
+
+**Wave 1 — Months 1–6:** Moscow (primary), Bangkok, Dubai
+**Wave 2 — Months 6–18:** Seoul, Milan
+**Wave 3 — Months 18–30:** São Paulo, Mexico City
+
+Russia distribution: Telegram Mini App as primary product surface + RuStore for Android, bypassing App Store and Play Store friction. Russian user data stored on Yandex Cloud or VK Cloud per 242-FZ data residency requirements.
 
 ---
 
-## 9. Why This Team, Why Now
+## 8. Competitive Positioning
 
-**Why now**: Three infrastructure conditions converge today. Apple HealthKit has reached 89 million active users. Android Health Connect is replacing Google Fit as the platform-level health data standard in 2026. Spotify's developer API gives programmatic access to music behavioral data for 675 million users. IRL social events and fitness communities are resurging post-pandemic, creating the perfect distribution channel for Synca Spark.
+| | Tinder/Bumble | Hinge | Keeper/Sitch | **Synca** |
+|---|---|---|---|---|
+| Matching signal | Self-reported | Self-reported + light behavior | AI on profiles | **Passive multi-signal: health + music + travel + declared preferences** |
+| Volume | Infinite swipe | Curated browse | Curated | **Few, high-quality matches** |
+| Post-match | Up to users | Some prompts | Some guidance | **Pre-organized Moment proposal** |
+| Fake filter | Weak | Moderate | Moderate | **Multi-layer Trust Score + selective ghosting** |
+| Live IRL feature | None | None | None | **Spark: passive IRL compatibility verification + reward** |
+| Group / social layer | None | None | None | **Circles: IRL-verified group spaces for any activity** |
+| Distribution Russia | Blocked | Blocked | Not present | **Telegram Mini App + RuStore** |
+| Health data | None | None | None | **Core signal — on-device, privacy-first** |
+| Music data | None | None | None | **Spotify / Yandex Music integration** |
+| Travel data | None | None | None | **Travel behavior integration** |
+
+The competitive moat is not a feature. It is the **data flywheel**: every Spark session generates verified behavioral data that improves matching for all users. Competitors cannot replicate this without rebuilding from the data layer up.
+
+---
+
+## 9. Why Now
+
+Three infrastructure conditions converge today:
+
+- **Apple HealthKit** has reached 89 million active users. The data is already being collected — Synca is the first product to use it for social compatibility.
+- **Android Health Connect** is replacing Google Fit as the platform-level health data standard in 2026, opening the same data access to the full Android ecosystem.
+- **Spotify's API** gives programmatic access to music behavioral data for 675 million users.
+- **IRL fitness communities** — run clubs, boutique gyms, sauna culture, padel — are resurging globally, creating the perfect distribution channel for Spark.
+- **Gen Z and Millennial exhaustion** with swipe-based apps is at a measurable peak, creating an open door for a fundamentally different approach.
 
 *[Team section to be completed with founding team profiles, relevant experience, and advisors.]*
 
@@ -347,48 +319,24 @@ Curated small-group activity experiences (morning runs, sauna sessions, padel) s
 
 | Risk | Mitigation |
 |---|---|
-| Cold start / low density | Dual-value dashboard; community seeding events; Synca Spark onboards two users per session |
-| HealthKit onboarding friction | Standalone health dashboard as immediate value; granular consent |
-| Privacy concerns (health data) | On-device aggregation; only derived metrics transmitted; Spark answers discarded post-computation; GDPR-compliant architecture |
+| Cold start / low density | Dual-value dashboard (standalone health insights); community seeding events; Spark onboards two users per session |
+| HealthKit onboarding friction | Standalone health dashboard as immediate value before any match exists; granular consent |
+| Privacy concerns (health data) | On-device aggregation; only derived metrics transmitted; GDPR Article 9 compliant architecture |
 | Russia distribution friction | Telegram Mini App as primary product; RuStore for Android; Russian cloud data residency |
-| Spark abuse (fake IRL claims) | Session requires simultaneous active devices in same location; WebSocket sync; GPS proximity check |
-| Algorithm validation | Rapid feedback loop with first users; explicit outcome tracking; iterative weight calibration |
+| Spark abuse (fake IRL claims) | Session requires simultaneous active devices in same location; GPS proximity check; WebSocket sync |
+| Algorithm validation | Rapid feedback loop with first users; explicit Moment outcome tracking; iterative weight recalibration |
+| Group feature complexity | Circles are additive — built on the same Spark and compatibility infrastructure from MVP; no re-architecture |
 
 ---
 
-## 11. Signal Expansion and Product Roadmap
+## 11. Roadmap
 
-### 11.1 Signal Expansion
-
-| Phase | New Signals |
-|---|---|
-| MVP | Sleep, activity, routine stability, visual preference game, photo context AI |
-| Post-MVP v1 | Spotify music profile, travel behavior (Polarsteps / Maps), deep audio features |
-| Post-MVP v2 | Cross-signal health–music validation, predictive compatibility modeling, geolocation upgrade |
-
-### 11.2 Sync Rooms — Group Compatibility Layer (v2+)
-
-Beyond one-to-one matching, the compatibility engine has a natural extension into **group social contexts** through Sync Rooms — conversational spaces that exist only when a verified IRL compatibility graph exists between all members.
-
-**Sync Room taxonomy:**
-
-| Type | Members | Spark rule | Use case |
-|---|---|---|---|
-| **Duo** | 2 | 1 verified Spark between the two members | 1:1 match chat (default post-match) |
-| **Small Group** | 3–8 | Every pair must have at least 1 verified Spark | Friend groups, recurring activity circles |
-| **Event Room** | 9–22 | Every member must have at least 1 verified Spark with the room creator | Football, padel tournaments, group outings |
-
-The Event Room relaxes the full-graph requirement intentionally: it is not realistic that all 10 players in a football game have met each other pairwise. The room creator acts as a social guarantor — each member has verified compatibility with them, establishing a trusted hub.
-
-The Sync Room layer is not part of the MVP or v1 roadmap. It is identified as a medium-term product direction (v2+) for the following reasons:
-
-- The data infrastructure required — individual compatibility profiles and IRL-verified `SparkSession` records — is fully built during MVP and v1 phases; the Sync Room extension is additive, not a re-architecture
-- Community events are already the primary acquisition channel; Sync Rooms formalize this into a product feature rather than a pure marketing activity
-- It creates a new monetization surface: Event Rooms and unlimited Small Groups are Premium-only features
-- It differentiates Synca from all one-to-one focused competitors and opens adjacency to the social wellness category
-- Spark session data (IRL interaction counts, location-proximate pairings, compatibility deltas across multiple users) provides the training signal needed to validate group cohesion scoring before full rollout
-
-The Sync Room feature will be scoped and validated with community feedback during Wave 2 city launches (Seoul, Milan), where dense, event-oriented user bases make small-group testing most viable.
+| Phase | Milestone | New capabilities |
+|---|---|---|
+| MVP (0–6 months) | Moscow, Bangkok, Dubai | HealthKit/Health Connect, declared preferences, visual preference game, Spark (duo), algorithm matching (Premium), Moments, Circles Duo, Telegram Mini App |
+| v1 (6–18 months) | Seoul, Milan | Spotify + Yandex Music signals, travel behavior, Group Spark, Circle Small Group |
+| v2 (18–30 months) | São Paulo, Mexico City | Circle Event (9–22), Group Activity Packs, B2B group venue co-branding, learning-to-rank on compatibility engine |
+| v3 (30+ months) | Global | Third-party API for gyms and wellness platforms; anonymized lifestyle research publication |
 
 ---
 
