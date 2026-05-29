@@ -12,15 +12,10 @@ ways that matter most for sustained connection — when they sleep, how active t
 are, whether they need silence in the morning or noise at night. These frictions do not show
 up on a profile. They show up after weeks or months of spending time together.
 
-Real examples from user research:
-- A couple where one person goes to bed at 23:00 and the other at 02:00 — the shared
-  evening slowly disappears, and with it the time they actually connect.
-- Two friends sharing a holiday room where one needs cold air to sleep and the other warmth
-  — after three nights, one of them is chronically exhausted.
-- Two people who both say they love walking: one means 3,000 steps, the other means 20,000.
-  The difference is not a preference — it is a lifestyle gap.
-
-None of these mismatches can be detected from a photo or a self-written bio.
+Representative examples include sleep schedule mismatch in relationships, sleeping temperature
+conflicts during travel, large gaps between perceived and actual activity level, and early-bird
+vs night-owl energy mismatch. None of these can be detected from a photo or a self-written bio.
+See [`user-research.md`](./user-research.md) for the full case studies.
 
 ## The Hypothesis
 
@@ -173,7 +168,7 @@ Examples:
 - *"How important is it that your energy rhythms match the people around you?"*
   → global weight on chronotype alignment
 
-See [`signals-v1.md — Step 0`](../features/signals-v1.md).
+See [`signals-v1.md — Step 0`](../features/signals-v1.md) and [`user-research.md`](./user-research.md).
 
 ## Long-Term Vision
 

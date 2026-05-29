@@ -1,7 +1,7 @@
 # User Research
 
-**Version:** 1.0
-**Last updated:** May 2026
+**Version:** 1.0  
+**Last updated:** May 2026  
 **Status:** Draft
 
 ---
@@ -16,8 +16,8 @@ to capture the real human frictions that existing dating and social apps fail to
 see — especially the behavioral mismatches that emerge only after people start
 spending real time together.
 
-All product, feature, and investor documents should reference this file instead of
-duplicating case studies inline.
+All product, feature, and investor documents should reference this file instead
+of duplicating case studies inline.
 
 ---
 
@@ -28,10 +28,10 @@ and concrete cases collected before Phase 0 development.
 
 This is an early research base, not a finished research program. The next iteration
 should add:
-- direct user quotes
-- interview count and date range
-- source context for each case (relationship, friendship, travel, fitness, etc.)
-- validation results from Phase 0 users after real Spark sessions
+- Direct user quotes
+- Interview count and date range
+- Source context for each case (relationship, friendship, travel, fitness, etc.)
+- Validation results from Phase 0 users after real Spark sessions
 
 ---
 
@@ -44,11 +44,11 @@ on a first date. What they cannot detect reliably is whether daily life will fee
 easier or harder with the other person over time.
 
 The mismatches that matter most are often small, repetitive, and behavioral:
-- sleep timing
-- energy windows
-- temperature preferences
-- activity intensity
-- routine rigidity vs flexibility
+- Sleep timing
+- Energy windows
+- Temperature preferences
+- Activity intensity
+- Routine rigidity vs flexibility
 
 These are rarely visible on a profile and are almost never measured by existing apps.
 
@@ -71,7 +71,7 @@ another.
 
 A chronotype mismatch is not automatically bad. It becomes important when the user
 cares deeply about shared evenings, shared bedtime, or aligned energy windows.
-This is the reason the product cannot rely only on passive data. It also needs a
+This is why the product cannot rely only on passive data — it also needs a
 personalization layer that captures what each user values.
 
 ---
@@ -85,8 +85,8 @@ evening — the period where both are awake, relaxed, and emotionally available 
 shrinks to less than an hour.
 
 The early sleeper has only two options:
-- wait up and damage their sleep quality
-- go to bed alone every night
+- Wait up and damage their sleep quality
+- Go to bed alone every night
 
 Neither option is dramatic on day one. Both become corrosive over time.
 
@@ -98,9 +98,9 @@ relationship-quality predictor when the user values shared evenings or shared sl
 Two close friends share a hotel room during a trip. One cannot sleep without air
 conditioning. The other gets cold easily and cannot sleep with strong cold airflow.
 
-This conflict is invisible before the trip and difficult to resolve once the trip
-has started. After two or three nights, one of them is sleep-deprived and the
-shared experience degrades.
+This conflict is invisible before the trip and difficult to resolve once it has
+started. After two or three nights, one of them is sleep-deprived and the shared
+experience degrades.
 
 **Product implication:** compatibility should not be reduced to attraction or hobby
 similarity. Physical comfort preferences matter in close-contact contexts.
@@ -116,7 +116,7 @@ differently.
 
 **Product implication:** self-description is insufficient. Objective activity signals
 should capture actual lifestyle intensity, while a short preference question should
-help calibrate what "active enough" means to the user.
+help calibrate what "active enough" means to each user.
 
 ### Case 4 — Early bird vs night owl energy mismatch
 
@@ -125,7 +125,7 @@ shutting down mentally by 21:30.
 
 This affects more than bedtime. It changes when dinner happens, whether a late walk
 feels enjoyable, how much emotional energy remains for conversation, and whether the
-couple or pair actually experiences leisure time together.
+pair actually experiences leisure time together.
 
 **Product implication:** energy-window compatibility should be modeled as a meaningful
 part of real-world alignment, not as a cosmetic personality trait.
@@ -143,7 +143,7 @@ self-descriptions for modeling lived compatibility.
 
 ### 2. Declared preferences are a required interpretation layer
 
-Behavioral data answers: "What does this person actually do?"
+Behavioral data answers: "What does this person actually do?"  
 Declared preferences answer: "Which differences matter to this person?"
 
 Without the second layer, the scoring model risks over-penalizing harmless differences
@@ -172,24 +172,19 @@ than a narrow swipe-based dating app.
 
 ## Phase 0 Validation Questions
 
-Phase 0 should validate the following research questions before the product expands
-its scope or complexity.
-
 | Question | Why it matters |
 |---|---|
 | Do users recognize themselves in the Lifestyle Profile? | Validates that the signal model feels legible and credible |
 | Do users agree that the declared preference questions are meaningful? | Validates the personalization layer |
 | After a Spark session, do users say the result "felt right"? | Tests intuitive trust in the compatibility snapshot |
-| Which mismatches do users say matter most in real life? | Helps prioritize future questions and weights |
+| Which mismatches do users say matter most in real life? | Helps prioritize future questions and score weights |
 | Are users willing to connect health data before receiving a match? | Tests onboarding friction vs perceived value |
 
 ---
 
-## References in Product Docs
+## Referenced By
 
-This file should be referenced by:
 - [`docs/product/vision.md`](./vision.md)
-- [`docs/product/roadmap.md`](./roadmap.md)
 - [`docs/features/signals-v1.md`](../features/signals-v1.md)
-- [`docs/investor/litepaper.md`](../investor/litepaper.md)
-- [`docs/investor/technical-whitepaper.md`](../investor/technical-whitepaper.md)
+- `docs/investor/litepaper.md` (planned)
+- `docs/investor/technical-whitepaper.md` (planned)

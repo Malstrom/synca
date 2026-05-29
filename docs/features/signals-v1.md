@@ -49,6 +49,9 @@ This questionnaire is completed once during onboarding. It takes under 2 minutes
 Answers are stored as `declared_preferences` on the user record and used as
 multipliers when computing pairwise compatibility scores.
 
+The qualitative research and real-world cases that motivated this questionnaire are
+documented in [`../product/user-research.md`](../product/user-research.md).
+
 ### Questionnaire (Phase 0)
 
 All questions use a 1–5 scale or a categorical choice. Plain language, no jargon.
@@ -62,41 +65,6 @@ All questions use a 1–5 scale or a categorical choice. Plain language, no jarg
 | 5 | Do you consider yourself more of a morning person or a night person? | Morning / Night / Depends | Cross-validated with `chronotype` from HealthKit |
 
 Additional questions may be added in Phase 1 based on feedback from Phase 0 users.
-
-### User Research — Real Cases That Motivated This Feature
-
-The following cases were collected from user interviews before Phase 0 development.
-They illustrate why declared preferences are necessary alongside objective signals.
-
-**Case 1 — Sleep schedule in a relationship**
-One partner goes to bed at 23:00, the other at 02:00. Over time, the shared evening
-— the window where both are awake, present, and available — shrinks to less than an
-hour. The person who goes to bed early either waits up and sleeps badly, or goes to
-bed alone every night. Both outcomes create friction that accumulates silently.
-*Relevant preference:* "Is it important to you to fall asleep at the same time as
-your partner?"
-
-**Case 2 — Sleeping temperature between friends on holiday**
-Two close friends share a hotel room. One cannot sleep without air conditioning;
-the other gets cold and cannot sleep with it on. After two nights, one of them is
-chronically tired for the rest of the trip. This friction is invisible before the
-holiday and impossible to resolve during it without someone compromising every night.
-*Relevant preference:* "Do you prefer sleeping in a cool or warm environment?"
-
-**Case 3 — Activity level: perceived vs real**
-Both people say they love walking. One means a 30-minute stroll (approx. 3,000 steps).
-The other means a 2-hour hike (approx. 20,000 steps). The difference is not a hobby
-gap — it is a fundamental lifestyle gap that affects what a shared day looks like.
-Objective step count data from HealthKit captures this without asking. Declared
-preference calibrates the threshold for what counts as "similar enough".
-*Relevant preference:* "How much daily movement feels right for you?"
-
-**Case 4 — Night owl vs early riser in a long-term relationship**
-One person is naturally alert until midnight; the other is exhausted by 21:30. Beyond
-sleep timing, this affects every shared evening: dinner timing, social plans, energy
-available for conversation, spontaneous intimacy. The mismatch is often visible early
-but dismissed as a minor detail — until it is not.
-*Relevant preference:* "Is it important that the people close to you share your daily rhythm?"
 
 ### DB Schema
 
