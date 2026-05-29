@@ -10,8 +10,7 @@
 
 Profile covers the full user identity lifecycle: registration, authentication,
 onboarding, and ongoing profile management. It is the prerequisite for every
-other feature — no feature is accessible without a verified account and a
-completed profile.
+other feature — no feature is accessible without at least a guest account.
 
 Authentication uses `has_secure_password` (bcrypt) + JWT. No dependency on
 Devise or Warden. The JWT is stored in the iOS Keychain and Android
@@ -21,21 +20,116 @@ This file owns the `users`, `profiles`, `preference_profiles`, and
 `identity_providers` tables. Every other feature that depends on users or
 profiles references this file.
 
+Two tiers of account exist:
+- **Guest account** (Phase 0): created from email only, no password. Enables
+  Spark sessions immediately. Activated to a full account via magic link.
+- **Full account** (Phase 1+): email + password or social login. Full onboarding
+  wizard completed.
+
 ---
 
-## Step 1.0 — Registration + Onboarding
+## Step 0 — Guest Onboarding (Validation MVP)
+
+**Phase:** 0
+**Status:** Draft
+
+### Rationale
+
+The highest-curiosity moment in Synca is when two people are physically together
+and want to try a Spark session immediately. Any authentication wall at this moment
+causes drop-off. Guest onboarding removes that wall entirely.
+
+### User Flow
+
+1. User opens the app for the first time.
+2. Enters email only — no password, no name, no photo.
+3. Backend creates a `User` record with `account_type: :guest` and issues a
+   short-lived guest JWT (24-hour expiry).
+4. User proceeds directly to the Declared Preferences questionnaire
+   (ref: `signals-v1.md — Step 0`) and then to the Spark screen.
+5. After completing their first Spark session, a magic link is sent to their email:
+   *"Activate your Synca account to save your compatibility results."*
+6. User clicks the magic link → sets a display name → account upgraded to
+   `account_type: :active`. A permanent JWT is issued.
+7. If the user never clicks the magic link: guest record and all associated data
+   are purged after 30 days.
+
+### Guest account constraints
+
+- Can complete Spark sessions
+- Can answer the Declared Preferences questionnaire
+- Can connect Apple Health / Health Connect
+- Cannot send messages in a Circle (requires active account)
+- Cannot receive algorithm-origin matches (requires active account + Premium)
+- Cannot upload photos (requires active account)
+
+### Magic link technical flow
+
+```
+Guest completes first Spark session
+  → Backend sends email: "Activate your account" with signed token
+     (token = JWT signed with app secret, payload: { user_id, purpose: 'activation', exp: 72h })
+  → User clicks link → client sends token to POST /api/v1/auth/activate
+  → Backend verifies token, upgrades user.account_type to :active
+  → Returns permanent access token + refresh token
+  → User sets display name (only required field at activation)
+```
+
+### DB Schema
+
+Modification to `users` table (new column added in Phase 0):
+
+```sql
+users
+  id              bigint PK
+  email           string UNIQUE NOT NULL   -- required even for guests
+  password_digest string                   -- null for guest accounts
+  account_type    string NOT NULL DEFAULT 'guest'  -- 'guest' | 'active'
+  created_at      datetime
+  updated_at      datetime
+```
+
+### API Endpoints
+
+| Method | Path | Auth required | Description |
+|--------|------|---------------|-------------|
+| POST | `/api/v1/auth/guest` | No | Creates guest user from email, returns short-lived JWT |
+| POST | `/api/v1/auth/activate` | No | Validates magic link token, upgrades account to active, returns permanent tokens |
+
+### Premium Gating
+
+None — guest onboarding is available to all users by definition.
+
+### Open Questions
+
+- Should the magic link be sent immediately after guest account creation, or only
+  after the first Spark session completes?
+- 30-day purge for inactive guests: is this compliant with GDPR right-to-erasure
+  requirements if no explicit consent was collected at account creation?
+- Should guests be able to view their own Lifestyle Profile before activating?
+
+---
+
+## Step 1.0 — Full Registration + Onboarding
 
 **Phase:** 1
 **Status:** Draft
 
 ### User Flow
 
-**Registration:**
-1. User opens the app for the first time and selects "Sign up".
+**Registration (new user, no prior guest account):**
+1. User opens the app and selects "Create account".
 2. Enters email + password (minimum 8 characters).
-3. Backend creates `User` + `Profile`, returns a JWT access token and a refresh token.
+3. Backend creates `User` (`account_type: :active`) + `Profile`, returns a JWT
+   access token and a refresh token.
 4. Tokens saved to Keychain (iOS) / EncryptedSharedPreferences (Android).
 5. User is redirected to the onboarding wizard.
+
+**Upgrade from guest account:**
+1. User arrives via magic link (Step 0 flow).
+2. Account is already `account_type: :active` after activation.
+3. User is prompted to complete the remaining onboarding steps (photos, bio,
+   extended preferences) at their own pace — these are not gated.
 
 **Subsequent login:**
 1. User enters email + password.
@@ -45,10 +139,11 @@ profiles references this file.
 **Token refresh:**
 - Access token expiry: 30 days.
 - Refresh token expiry: 90 days.
-- Client sends `POST /api/v1/auth/refresh` with the refresh token to obtain a new access token.
+- Client sends `POST /api/v1/auth/refresh` with the refresh token to obtain a
+  new access token.
 - Refresh tokens are single-use and rotated on each use.
 
-**Onboarding wizard (4 steps, none skippable):**
+**Onboarding wizard (4 steps, none skippable for new registrations):**
 The app stores progress locally and resumes from the last completed step
 if the user quits mid-flow.
 
@@ -66,13 +161,6 @@ On completion `profiles.onboarding_completed` is set to `true`.
 ### DB Schema
 
 ```sql
-users
-  id              bigint PK
-  email           string UNIQUE         -- nullable for social-only accounts (Step 2.0)
-  password_digest string                -- nullable for social-only accounts (Step 2.0)
-  created_at      datetime
-  updated_at      datetime
-
 profiles
   id                     bigint PK
   user_id                bigint FK -> users NOT NULL UNIQUE
@@ -99,16 +187,16 @@ preference_profiles
   age_min         integer NOT NULL DEFAULT 18
   age_max         integer NOT NULL DEFAULT 99
   max_distance_km integer NOT NULL DEFAULT 25
-  gender_targets  jsonb   NOT NULL DEFAULT '[]'  -- mirrors looking_for as array e.g. ["woman","non_binary"]
-  dealbreakers    jsonb   NOT NULL DEFAULT '[]'  -- e.g. ["smoker","no_kids"]
-  city            string  NOT NULL               -- used by MatchingJob as candidate filter
+  gender_targets  jsonb   NOT NULL DEFAULT '[]'
+  dealbreakers    jsonb   NOT NULL DEFAULT '[]'
+  city            string  NOT NULL
   created_at      datetime
   updated_at      datetime
 
 refresh_tokens
   id         bigint PK
   user_id    bigint FK -> users NOT NULL
-  token      string NOT NULL UNIQUE   -- securely random, stored hashed
+  token      string NOT NULL UNIQUE
   expires_at datetime NOT NULL
   revoked_at datetime
   created_at datetime
@@ -142,7 +230,8 @@ None — registration, login, and profile management are available on all tiers.
 ### Open Questions
 
 - Is email verification mandatory before accessing the app, or optional in MVP?
-- Should `city` in `preference_profiles` be a FK to a future `city_configs` table or a free string in MVP?
+- Should `city` in `preference_profiles` be a FK to a future `city_configs` table
+  or a free string in MVP?
 - Photo ordering: drag-and-drop on client only, or persisted server-side?
 - Is the minimum of 1 photo enforced at the API level or client-side only?
 
@@ -159,7 +248,8 @@ None — registration, login, and profile management are available on all tiers.
 2. Provider returns an OAuth token to the client.
 3. Client sends the token to `POST /api/v1/auth/social`.
 4. Backend verifies the token, finds or creates `User` + `Profile`.
-5. Returns a Synca access token + refresh token. Flow is identical to Step 1.0 from this point on.
+5. Returns a Synca access token + refresh token. Flow is identical to Step 1.0
+   from this point on.
 
 If the provider email matches an existing account, the two are linked
 automatically via `identity_providers`.
@@ -167,14 +257,11 @@ automatically via `identity_providers`.
 ### DB Schema
 
 ```sql
--- users: email and password_digest become nullable for social-only accounts
--- (already reflected in the Step 1.0 schema above)
-
 identity_providers
   id          bigint PK
   user_id     bigint FK -> users NOT NULL
   provider    string NOT NULL   -- 'apple' | 'google' | 'vk'
-  uid         string NOT NULL   -- unique ID issued by the provider
+  uid         string NOT NULL
   created_at  datetime
   UNIQUE (provider, uid)
 ```
@@ -192,8 +279,10 @@ None — social login is available on all tiers.
 ### Open Questions
 
 - Is VK a priority for the Russian market in Step 2.0, or deferred to Step 2.1?
-- Orphan account: user registers with Apple and later wants to add a password — what is the flow?
-- Token revocation: if a user revokes access from Apple/Google, how is the active Synca session handled?
+- Orphan account: user registers with Apple and later wants to add a password —
+  what is the flow?
+- Token revocation: if a user revokes access from Apple/Google, how is the active
+  Synca session handled?
 
 ---
 
