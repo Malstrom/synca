@@ -18,7 +18,125 @@ Signal sources are added incrementally across phases. Each new source enriches t
 compatibility model without requiring re-architecture. The `signals` table grows
 one column group per new source — one row per user at all times.
 
+The signals layer has two complementary components:
+- **Objective signals** (Steps 1.0–3.0): passively collected behavioral data from
+  health, music, and travel sources. Cannot be gamed without sustained behavioral
+  change over weeks.
+- **Declared preferences** (Step 0): a short questionnaire that captures what each
+  user considers important. These are not filters — they are personalisation weights
+  that shape how objective signals are interpreted for that specific user.
+
 Prerequisite: `users` and `profiles` tables (ref: `docs/features/profile-v1.md`).
+
+---
+
+## Step 0 — Declared Preferences
+
+**Phase:** 0 (Validation MVP)
+**Status:** Draft
+
+### Purpose
+
+Objective behavioral signals tell us what a person *does*. Declared preferences tell
+us what a person *values*. The combination is more predictive than either alone.
+
+Example: two people with different chronotypes may still be highly compatible if
+neither of them considers sleeping at the same time important. Two people with
+identical chronotypes may be incompatible if one requires complete silence in the
+morning and the other does not. The declared preference is the interpretation key.
+
+This questionnaire is completed once during onboarding. It takes under 2 minutes.
+Answers are stored as `declared_preferences` on the user record and used as
+multipliers when computing pairwise compatibility scores.
+
+### Questionnaire (Phase 0)
+
+All questions use a 1–5 scale or a categorical choice. Plain language, no jargon.
+
+| # | Question | Type | Signal it weights |
+|---|----------|------|-------------------|
+| 1 | Is it important to you to fall asleep at the same time as your partner? | 1–5 scale | `sleep_onset` alignment weight |
+| 2 | Do you prefer sleeping in a cool or warm environment? | Cool / Warm / No preference | Shared as compatibility dimension |
+| 3 | How much daily movement feels right for you? | Very little / Moderate / A lot / As much as possible | `step_count_avg` similarity threshold |
+| 4 | How important is it that the people close to you share your daily rhythm? | 1–5 scale | Global chronotype alignment weight |
+| 5 | Do you consider yourself more of a morning person or a night person? | Morning / Night / Depends | Cross-validated with `chronotype` from HealthKit |
+
+Additional questions may be added in Phase 1 based on feedback from Phase 0 users.
+
+### User Research — Real Cases That Motivated This Feature
+
+The following cases were collected from user interviews before Phase 0 development.
+They illustrate why declared preferences are necessary alongside objective signals.
+
+**Case 1 — Sleep schedule in a relationship**
+One partner goes to bed at 23:00, the other at 02:00. Over time, the shared evening
+— the window where both are awake, present, and available — shrinks to less than an
+hour. The person who goes to bed early either waits up and sleeps badly, or goes to
+bed alone every night. Both outcomes create friction that accumulates silently.
+*Relevant preference:* "Is it important to you to fall asleep at the same time as
+your partner?"
+
+**Case 2 — Sleeping temperature between friends on holiday**
+Two close friends share a hotel room. One cannot sleep without air conditioning;
+the other gets cold and cannot sleep with it on. After two nights, one of them is
+chronically tired for the rest of the trip. This friction is invisible before the
+holiday and impossible to resolve during it without someone compromising every night.
+*Relevant preference:* "Do you prefer sleeping in a cool or warm environment?"
+
+**Case 3 — Activity level: perceived vs real**
+Both people say they love walking. One means a 30-minute stroll (approx. 3,000 steps).
+The other means a 2-hour hike (approx. 20,000 steps). The difference is not a hobby
+gap — it is a fundamental lifestyle gap that affects what a shared day looks like.
+Objective step count data from HealthKit captures this without asking. Declared
+preference calibrates the threshold for what counts as "similar enough".
+*Relevant preference:* "How much daily movement feels right for you?"
+
+**Case 4 — Night owl vs early riser in a long-term relationship**
+One person is naturally alert until midnight; the other is exhausted by 21:30. Beyond
+sleep timing, this affects every shared evening: dinner timing, social plans, energy
+available for conversation, spontaneous intimacy. The mismatch is often visible early
+but dismissed as a minor detail — until it is not.
+*Relevant preference:* "Is it important that the people close to you share your daily rhythm?"
+
+### DB Schema
+
+New table introduced by this step:
+
+```sql
+-- Canonical table name: declared_preferences
+declared_preferences
+  id                              bigint PK
+  user_id                         bigint FK -> users NOT NULL UNIQUE
+  sleep_together_importance       integer   -- 1-5 scale
+  sleep_temperature_preference    string    -- 'cool' | 'warm' | 'no_preference'
+  daily_movement_level            string    -- 'very_little' | 'moderate' | 'a_lot' | 'maximum'
+  rhythm_alignment_importance     integer   -- 1-5 scale
+  self_reported_chronotype        string    -- 'morning' | 'night' | 'flexible'
+  created_at                      datetime
+  updated_at                      datetime
+```
+
+### API Endpoints
+
+| Method | Path | Auth required | Description |
+|--------|------|---------------|-------------|
+| POST | `/api/v1/signals/preferences` | Yes (guest token ok) | Creates declared preferences record |
+| GET | `/api/v1/signals/preferences` | Yes | Returns own declared preferences |
+| PATCH | `/api/v1/signals/preferences` | Yes | Updates one or more preference fields |
+
+Ref: `docs/api/openapi.yaml`
+
+### Premium Gating
+
+None — declared preferences are available on all tiers including guest accounts.
+
+### Open Questions
+
+- Should declared preferences be re-asked after 6 months, or remain static until
+  manually updated by the user?
+- Should the app surface a "your preferences vs your data" comparison — e.g. user
+  says they are a morning person but HealthKit shows average sleep offset at 09:30?
+- How many questions can be added before completion rate drops below acceptable threshold?
 
 ---
 
