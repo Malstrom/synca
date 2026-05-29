@@ -2,7 +2,7 @@
 **Version:** 1.0
 **Last updated:** May 2026
 **Status:** Draft
-**Phase:** 5
+**Phase:** 1 (Step 1.0 active from Phase 0; Step 2.0 from Phase 4)
 
 > **Canonical name:** `Circles`.
 > All code, API paths, DB tables, and documentation must use `circles` / `Circles`.
@@ -40,16 +40,20 @@ type `duo` under the hood.
 
 ## Step 1.0 — Duo Circle (Match Chat)
 
-**Phase:** 5
+**Phase:** 0 (included in Validation MVP)
 **Status:** Draft
 
 ### User Flow
 
-1. A match is confirmed (algorithm or Spark origin).
+1. A match is confirmed (Spark origin).
 2. The backend automatically creates a Circle of type `duo` for the two profiles.
 3. Both users can open the Circle and exchange messages in real time via
    Action Cable.
 4. The Circle persists as long as the match is active.
+
+> Duo Circles are available from Phase 0 — a Spark without a conversation
+> channel has nowhere to go. Algorithm-origin matches also create a duo Circle
+> once algorithm matching is enabled in Phase 1.
 
 ### DB Schema
 
@@ -98,7 +102,8 @@ Ref: `docs/api/openapi.yaml`
 
 ### Premium Gating
 
-`duo` circles are available on all tiers.
+`duo` circles are available on all tiers including guest accounts (read-only).
+Sending messages requires an active account.
 
 ### Open Questions
 
@@ -110,7 +115,7 @@ Ref: `docs/api/openapi.yaml`
 
 ## Step 2.0 — Small Group + Event Circles
 
-**Phase:** 5
+**Phase:** 4
 **Status:** Planned
 
 ### Admission Rules
