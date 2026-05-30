@@ -1,6 +1,6 @@
 # Synca — iOS Technical Spec
 
-**Version 1.0 — May 2026**
+**Version 1.1 — May 2026**
 
 ---
 
@@ -27,17 +27,17 @@
 - **SwiftUI only.** No UIKit unless a third-party SDK forces it (wrap in `UIViewRepresentable`).
 - **`async/await` throughout.** No Combine, no callback pyramids.
 - **No raw HealthKit samples leave the device.** Only aggregated metrics
-  (computed by `HealthAggregatorService`) are sent to the API.
+  (computed by `SignalAggregatorService`) are sent to the API.
 - **JWT in Keychain.** Never store tokens in `UserDefaults` or any plain-text storage.
 - **Variable names must be descriptive.** Full domain names:
-  `healthSummary`, `sparkSession`, `currentUser`, `compatibilityScore`.
+  `signal`, `spark`, `currentUser`, `compatibilityScore`.
   Never single-letter or abbreviated.
 
 ---
 
 ## HealthKit Integration
 
-`HealthAggregatorService` requests read-only permissions for:
+`SignalAggregatorService` requests read-only permissions for:
 
 ```swift
 let readTypes: Set<HKObjectType> = [
@@ -63,6 +63,8 @@ Aggregated metrics computed on-device and uploaded:
 
 All aggregation runs locally. The `HKSample` objects are **never serialized or sent** to the API.
 
+Ref: `docs/architecture/ios-structure.md`
+
 ---
 
 ## Spark Session Flow (iOS)
@@ -71,14 +73,16 @@ All aggregation runs locally. The `HKSample` objects are **never serialized or s
 1. User opens "Start Spark" in the app
 2. CoreBluetooth scans for nearby Synca peers
 3. CoreLocation records coarse location (city-level hash sent to API)
-4. POST /api/v1/spark_sessions → server creates pending SparkSession
+4. POST /api/v1/sparks → server creates pending Spark record
 5. Both users see a countdown timer (5 minutes)
-6. Micro-test questions displayed (answers discarded after scoring)
-7. POST /api/v1/spark_sessions/:id/complete
-8. Server computes compatibility score, creates Match if score ≥ 50
-9. App receives result via Action Cable (SyncRoomChannel)
+6. Compatibility computed from existing signals (no questionnaire during session)
+7. POST /api/v1/sparks/:id/submit_answers (presence confirmation + declared preference refinement)
+8. Server computes compatibility score via ScoringJob, creates Match if score ≥ 50
+9. App receives result via Action Cable (CircleChannel)
 10. Match result shown with plain-language explanation
 ```
+
+Ref: `docs/features/spark-v1.md`
 
 ---
 
@@ -94,21 +98,24 @@ Synca/
       AuthViewModel.swift
       LoginView.swift
       RegisterView.swift
-    Health/
-      HealthAggregatorService.swift
-      HealthPermissionView.swift
+    Signals/
+      SignalAggregatorService.swift
+      SignalPermissionView.swift
     Spark/
-      SparkSessionViewModel.swift
-      SparkSessionView.swift
+      SparkViewModel.swift
+      SparkView.swift
       SparkProximityService.swift  -- CoreBluetooth scanning
     Matches/
       MatchListViewModel.swift
       MatchListView.swift
       MatchDetailView.swift
-    SyncRoom/
-      SyncRoomViewModel.swift
-      SyncRoomView.swift
-      SyncRoomMessageView.swift
+    Circles/
+      CircleViewModel.swift
+      CircleView.swift
+      CircleMessageView.swift
+    Moments/
+      MomentViewModel.swift
+      MomentView.swift
     Profile/
       ProfileViewModel.swift
       ProfileView.swift
@@ -119,11 +126,12 @@ Synca/
   Models/
     User.swift
     Profile.swift
-    HealthSummary.swift
-    SparkSession.swift
+    Signal.swift
+    Spark.swift
     Match.swift
-    SyncRoom.swift
-    SyncRoomMessage.swift
+    Circle.swift
+    CircleMessage.swift
+    Moment.swift
 ```
 
 ---
@@ -143,33 +151,10 @@ Synca/
 
 ## Action Cable (WebSocket)
 
-`WebSocketService` implements the Action Cable handshake over `URLSessionWebSocketTask`:
+`WebSocketService` implements the Action Cable handshake over `URLSessionWebSocketTask`.
 
-```
-1. Connect to wss://api.synca.app/cable?token=<jwt>
-2. Send { command: "subscribe", identifier: { channel: "SyncRoomChannel", room_id: <id> } }
-3. Receive messages, decode JSON, update ViewModel via @Published
-4. Disconnect on app background / view dismiss
-```
+Channels used:
+- `CircleChannel` — real-time messages for Circles (replaces deprecated `SyncRoomChannel`)
+- Spark scoring events are received via Action Cable on session completion
 
-One connection per active Sync Room. Connections are closed when the view disappears.
-
----
-
-## Privacy
-
-- `NSHealthShareUsageDescription` — required in `Info.plist`. Explains aggregation only.
-- `NSLocationWhenInUseUsageDescription` — for Spark proximity (city-level only).
-- `NSBluetoothAlwaysUsageDescription` — for peer discovery during Spark session.
-- Health data never appears in logs or crash reports. HealthKit samples are read,
-  aggregated in memory, and released immediately.
-
----
-
-## Testing
-
-- Unit tests for all Services and ViewModels using `XCTest`.
-- HealthKit is mocked via a `HealthStoreProtocol` protocol — never hit the real
-  `HKHealthStore` in tests.
-- Network calls are mocked via a `URLProtocol` subclass (`MockURLProtocol`).
-- No UI tests for MVP — add `XCUITest` in Phase 2 for critical flows.
+Ref: `docs/features/circles-v1.md`, `docs/features/spark-v1.md`
