@@ -15,11 +15,15 @@ apps/android/Synca/
 │       │   │   ├── models/        # Kotlin data classes (plain, Serializable/Parcelable)
 │       │   │   └── repository/    # Single source of truth for each domain
 │       │   ├── ui/
+│       │   │   ├── auth/          # Login, signup
 │       │   │   ├── onboarding/    # Registration, consent, health permissions
+│       │   │   ├── profile/       # User profile editing, preferences
+│       │   │   ├── signals/       # Health Connect connection, metrics display
+│       │   │   ├── spark/         # Start/join Spark, questionnaire, result
 │       │   │   ├── matching/      # Match list and compatibility detail
-│       │   │   ├── dateproposals/ # Proposals list, detail, accept/decline
-│       │   │   ├── profile/       # User profile editing
-│       │   │   └── auth/          # Login, signup
+│       │   │   ├── circles/       # Circle list and messaging
+│       │   │   ├── moments/       # Proposal, accept/decline, complete/no-show
+│       │   │   └── trust/         # Phone verification, liveness
 │       │   ├── di/                # Hilt dependency injection modules
 │       │   └── SyncaApp.kt        # Application entry point
 │       └── res/
@@ -48,6 +52,21 @@ apps/android/Synca/
 - Health data is aggregated in `data/health/` before reaching any UI layer.
 - Never send raw Health Connect records to the backend.
 
+## Model Naming — Canonical Map
+
+Always use canonical names from feature docs. Deprecated names are banned.
+
+| Android data class | Canonical | Deprecated (do not use) | Feature doc |
+|---|---|---|---|
+| `Signal` | `Signal` | `HealthSummary` | signals-v1.md |
+| `Moment` | `Moment` | `DateProposal` | moments-v1.md |
+| `Circle` | `Circle` | `SyncRoom` | circles-v1.md |
+| `CircleMessage` | `CircleMessage` | `SyncRoomMessage` | circles-v1.md |
+| `Match` | `Match` | — | matching-v1.md |
+| `Spark` | `Spark` | `SparkSession` | spark-v1.md |
+| `PreferenceProfile` | `PreferenceProfile` | — | profile-v1.md |
+| `DeclaredPreference` | `DeclaredPreference` | — | signals-v1.md |
+
 ## Minimum SDK
 
 - `minSdk`: 26 (API 26)
@@ -58,3 +77,5 @@ apps/android/Synca/
 
 - Unit tests: `test/` directory, JUnit 4/5 + MockK.
 - Focus on Repository logic, ViewModel state transitions, and health aggregation.
+- Mock Health Connect via a `HealthConnectClientWrapper` interface — never hit the real SDK in tests.
+- Network calls mocked via MockWebServer (OkHttp).

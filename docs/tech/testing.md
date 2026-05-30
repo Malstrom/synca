@@ -1,6 +1,6 @@
 # Synca — Test Strategy & Conventions
 
-**Version 1.0 — May 2026**
+**Version 1.1 — May 2026**
 
 ---
 
@@ -61,7 +61,7 @@ test/
 - Test class: mirrors the class under test — `class CompatibilityScoreServiceTest < ActiveSupport::TestCase`
 - Test method names: descriptive English — `test_returns_high_score_for_aligned_sleep_schedules`
 - No single-letter or abbreviated variable names inside tests.
-  Use full domain names: `health_summary`, `spark_session`, `user`, `profile`.
+  Use full domain names: `signal`, `spark`, `user`, `profile`, `match`, `circle`, `moment`.
 
 ### Fixtures
 
@@ -131,7 +131,6 @@ Every test file must cover at minimum:
 - HTTP status codes (200, 201, 401, 422, 404)
 - Response JSON structure
 - Auth enforcement (`401` when token missing or invalid)
-- Permission enforcement (premium features return `403` for free users)
 
 ### Jobs
 
@@ -167,7 +166,7 @@ Branch protection: CI must pass before merge is allowed.
 ## iOS Testing (XCTest)
 
 - Unit tests for all Services and ViewModels.
-- `HealthAggregatorService` is tested via a `HealthStoreProtocol` mock —
+- `SignalAggregatorService` is tested via a `HealthKitProtocol` mock —
   never hits the real `HKHealthStore`.
 - Network layer tested via `MockURLProtocol` injected into `URLSession`.
 - No UI tests (XCUITest) for MVP — add in Phase 2 for critical flows

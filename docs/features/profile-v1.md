@@ -300,9 +300,14 @@ A `completeness_score` (0–100) is computed server-side and returned by
 |-------|--------|
 | At least 1 photo | 20 |
 | Bio present | 15 |
-| Signals connected (≥1) | 25 |
+| Signals connected (≥1) | 20 |
+| Declared preferences completed | 5 |
 | Phone verified | 20 |
 | Age + gender + city set | 20 |
+
+Declared preferences are stored in the `declared_preferences` table
+(ref: `docs/features/signals-v1.md — Step 0`). Completing the questionnaire
+adds 5 points to the profile completeness score.
 
 No new tables introduced in this step. `GET /api/v1/profile` returns the
 existing response extended with `{ "completeness_score": 85 }`.
