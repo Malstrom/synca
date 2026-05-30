@@ -10,12 +10,11 @@
 
 Spark is the core IRL (in-real-life) interaction mechanism of Synca. It allows two users
 who are physically co-located to initiate a proximity-based session and receive a
-real-time compatibility score derived exclusively from their passive `signals`.
+real-time compatibility score derived from their passive `signals` and their declared
+preferences answered during the session.
 
 A completed `Spark` is the strongest trust and compatibility signal in the system
 because it requires two verified users in the same physical location at the same time.
-No questionnaire or manual input is required — the fact that two people choose to
-initiate a Spark together is itself a meaningful intent signal.
 
 Spark is the prerequisite for creating a Match with `origin: :spark` and for joining
 or creating any Circle.
@@ -23,6 +22,7 @@ or creating any Circle.
 Prerequisites:
 - `users`, `profiles` (ref: `docs/features/profile-v1.md`)
 - `signals` (ref: `docs/features/signals-v1.md`)
+- `declared_preferences` (ref: `docs/features/signals-v1.md — Step 0`)
 - `matches` (ref: `docs/features/matching-v1.md`)
 
 ---
@@ -45,8 +45,12 @@ Both users confirm presence on their own device
         ↓
 Spark created  (status: :pending)
         ↓
-ScoringJob (Solid Queue, `spark` queue) computes pairwise score
-using both users' signals (health, music, travel)
+Both users answer the Spark questionnaire on their own device
+(ref: Spark Questionnaire section below)
+        ↓
+ScoringJob (Solid Queue, `spark` queue) triggers once both have submitted answers.
+Computes pairwise score using both users' signals (health, music, travel)
+and declared preference weights.
         ↓
 score >= spark minimum threshold (ref: docs/features/matching-v1.md)
   →  Match created  (origin: :spark)
@@ -62,8 +66,23 @@ The compatibility score is **never shown as a raw number** to users.
 It is translated into plain-language explanations
 (e.g. "Your sleep schedules are well aligned").
 
-Scoring is fully passive — no questions, no manual input. The intent signal
-is the Spark initiation itself.
+### Spark Questionnaire
+
+The Spark flow includes a short on-the-spot questionnaire to refine and update
+the user's declared preferences in real time. This is not a manual input gate —
+it is a lightweight calibration of the passive signals already on file.
+
+- Questions are a subset of the Declared Preferences questionnaire
+  (ref: `docs/features/signals-v1.md — Step 0`).
+- Each participant answers independently on their own device during the session.
+- Answers are submitted via `POST /api/v1/sparks/:id/submit_answers`.
+- The backend uses the answers as updated preference weights for this scoring round
+  and persists any updated values to `declared_preferences`.
+- Raw answers are not exposed to the other participant.
+- ScoringJob is triggered automatically once **both** participants have submitted.
+
+Scoring is primarily passive (signals drive the score); the questionnaire provides
+the personalisation layer that makes the score meaningful for each specific user.
 
 ### DB Schema
 
@@ -99,14 +118,15 @@ spark_rewards
 ```
 
 For `matches` schema see `docs/features/matching-v1.md`.
+For `declared_preferences` schema see `docs/features/signals-v1.md`.
 
 ### API Endpoints
 
 | Method | Path | Auth required | Description |
-|--------|------|---------------|-------------|
+|--------|------|---------------|--------------|
 | POST | `/api/v1/sparks` | Yes | Initiator creates a new Spark; returns `session_code` + `qr_token` |
 | PATCH | `/api/v1/sparks/:id/join` | Yes | Receiver confirms presence and joins via `session_code` or `qr_token` |
-| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits answers; triggers ScoringJob when both have submitted |
+| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits the Spark questionnaire (declared preference refinement); triggers ScoringJob when both have submitted |
 | GET | `/api/v1/sparks/:id/result` | Yes | Polls scoring result; returns 202 while in progress, 200 with score + match on completion |
 | GET | `/api/v1/sparks/:id` | Yes | Returns spark status and result |
 | GET | `/api/v1/sparks` | Yes | Lists the current user's past sparks |
@@ -118,6 +138,23 @@ Scoring is triggered server-side automatically once both users have confirmed
 presence (`join`) and submitted answers. The client polls
 `GET /api/v1/sparks/:id/result` or listens via Action Cable for the
 `spark:scored` event.
+
+#### Request body — `POST /api/v1/sparks/:id/submit_answers`
+
+```json
+{
+  "answers": [
+    { "question_key": "sleep_same_time_importance", "value": 4 },
+    { "question_key": "sleep_temperature",           "value": "cool" },
+    { "question_key": "daily_movement_preference",   "value": "3000_8000" },
+    { "question_key": "rhythm_importance",           "value": 3 }
+  ]
+}
+```
+
+`question_key` values are the canonical keys defined in
+`docs/features/signals-v1.md — Step 0 Questionnaire`.
+The backend validates the keys and upserts `declared_preferences` for the submitting user.
 
 ### Premium Gating
 
@@ -135,8 +172,8 @@ the more Sparks happen, the richer the compatibility data for everyone.
 - Session expiry window: 10 minutes is the suggested default — is this too short
   for noisy environments (concerts, gyms)?
 - What happens if a user has no `signals` record yet (never connected Apple Health)?
-  Should scoring fall back to a partial score (Preferences domain only) or should
-  the Spark be blocked until signals are available?
+  Should scoring fall back to a partial score (declared preferences domain only) or
+  should the Spark be blocked until signals are available?
 
 ---
 
@@ -155,6 +192,8 @@ App broadcasts BLE signal to multiple nearby users
 Users B, C, D... confirm presence and join
         ↓
 Group Spark created  (status: :pending)
+        ↓
+All participants answer the Spark questionnaire on their own device
         ↓
 ScoringJob computes pairwise score
 for EVERY pair in the group using their signals
@@ -194,10 +233,10 @@ spark_participants
 ### API Endpoints
 
 | Method | Path | Auth required | Description |
-|--------|------|---------------|-------------|
+|--------|------|---------------|--------------|
 | POST | `/api/v1/sparks` | Yes | Creates a duo or group Spark (type in body) |
 | POST | `/api/v1/sparks/:id/participants` | Yes | User joins a group Spark |
-| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Participant submits answers |
+| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Participant submits questionnaire answers |
 | GET | `/api/v1/sparks/:id/result` | Yes | Polls per-pair scoring results |
 | GET | `/api/v1/sparks/:id` | Yes | Returns spark status and per-pair results |
 | GET | `/api/v1/sparks` | Yes | Lists the current user's past sparks |
