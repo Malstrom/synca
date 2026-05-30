@@ -9,7 +9,7 @@
 ## Purpose
 
 This document is the canonical source of truth for the qualitative user research
-that informs Synca's product direction.
+that informs Synca’s product direction.
 
 Its goal is not to describe implementation details, schemas, or APIs. Its goal is
 to capture the real human frictions that existing dating and social apps fail to
@@ -18,6 +18,10 @@ spending real time together.
 
 All product, feature, and investor documents should reference this file instead
 of duplicating case studies inline.
+
+**Field research materials** (interview guides, bot scripts, transcription forms)
+are in [`../research/`](../research/). That folder contains operational tools
+for running research sessions; this document contains the synthesized findings.
 
 ---
 
@@ -58,9 +62,9 @@ When people describe themselves, they usually describe identity, aspiration, or
 self-image — not repeated daily behavior.
 
 Examples:
-- "I love walking" can mean 3,000 steps or 20,000 steps.
-- "I'm flexible" can hide a very rigid morning routine.
-- "I'm a night owl" may matter a lot to one person and very little to another.
+- “I love walking” can mean 3,000 steps or 20,000 steps.
+- “I’m flexible” can hide a very rigid morning routine.
+- “I’m a night owl” may matter a lot to one person and very little to another.
 
 This is why Synca needs both objective signals and declared preferences.
 
@@ -116,7 +120,7 @@ differently.
 
 **Product implication:** self-description is insufficient. Objective activity signals
 should capture actual lifestyle intensity, while a short preference question should
-help calibrate what "active enough" means to each user.
+help calibrate what “active enough” means to each user.
 
 ### Case 4 — Early bird vs night owl energy mismatch
 
@@ -143,8 +147,8 @@ self-descriptions for modeling lived compatibility.
 
 ### 2. Declared preferences are a required interpretation layer
 
-Behavioral data answers: "What does this person actually do?"  
-Declared preferences answer: "Which differences matter to this person?"
+Behavioral data answers: “What does this person actually do?”  
+Declared preferences answer: “Which differences matter to this person?”
 
 Without the second layer, the scoring model risks over-penalizing harmless differences
 or underestimating important ones.
@@ -158,7 +162,7 @@ spending time together will feel natural, easy, and repeatable.
 
 Spark is not only an acquisition tool. It is a research tool that creates real-world
 moments where compatibility can be observed, discussed, and later compared with the
-model's prediction.
+model’s prediction.
 
 ### 5. The product should remain broader than classic dating
 
@@ -176,7 +180,7 @@ than a narrow swipe-based dating app.
 |---|---|
 | Do users recognize themselves in the Lifestyle Profile? | Validates that the signal model feels legible and credible |
 | Do users agree that the declared preference questions are meaningful? | Validates the personalization layer |
-| After a Spark session, do users say the result "felt right"? | Tests intuitive trust in the compatibility snapshot |
+| After a Spark session, do users say the result “felt right”? | Tests intuitive trust in the compatibility snapshot |
 | Which mismatches do users say matter most in real life? | Helps prioritize future questions and score weights |
 | Are users willing to connect health data before receiving a match? | Tests onboarding friction vs perceived value |
 
@@ -186,5 +190,6 @@ than a narrow swipe-based dating app.
 
 - [`docs/product/vision.md`](./vision.md)
 - [`docs/features/signals-v1.md`](../features/signals-v1.md)
-- `docs/investor/litepaper.md` (planned)
-- `docs/investor/technical-whitepaper.md` (planned)
+- [`docs/research/`](../research/) — field guide, research bot script, transcription form
+- `docs/investor/litepaper.md`
+- `docs/investor/technical-whitepaper.md`

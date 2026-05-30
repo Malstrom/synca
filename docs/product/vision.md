@@ -15,7 +15,7 @@ up on a profile. They show up after weeks or months of spending time together.
 Representative examples include sleep schedule mismatch in relationships, sleeping temperature
 conflicts during travel, large gaps between perceived and actual activity level, and early-bird
 vs night-owl energy mismatch. None of these can be detected from a photo or a self-written bio.
-See [`user-research.md`](./user-research.md) for the full case studies.
+See [`user-research.md`](./user-research.md) and [`../research/`](../research/) for the full case studies and field research materials.
 
 ## The Hypothesis
 
@@ -24,7 +24,7 @@ habits — are significantly more likely to enjoy spending time together than tw
 who only share superficial interests.
 
 This compatibility is not immediately visible. It reveals itself over time, through the
-accumulation of small moments of friction or ease. Synca's hypothesis is that **behavioural
+accumulation of small moments of friction or ease. Synca’s hypothesis is that **behavioural
 data, collected passively, is a better early signal of this alignment than anything a person
 chooses to write about themselves**.
 
@@ -56,7 +56,7 @@ Tinder optimises for volume. Synca optimises for alignment.
 
 Core principles:
 
-- **Fewer connections, better quality.** Users receive 1–5 curated matches per day.
+- **Fewer connections, better quality.** Users receive at most 1–3 curated matches per nightly algorithm run. Scarcity is a product value, not a constraint.
 - **Objective data over self-presentation.** Behavioural signals are collected passively
   from Apple Health, Health Connect, music streaming services, and location history.
   Raw data never leaves the device.
@@ -77,21 +77,20 @@ Core principles:
   community events. Spark-origin matches carry the highest trust weight.
   See [`spark-v1.md`](../features/spark-v1.md).
 - **Algorithm as discovery.** A nightly `MatchingJob` (origin: `algorithm`) analyses
-  signals across the user base and surfaces suggested matches. Algorithm matches are
-  premium — they increase match volume while preserving the quality bar.
+  signals across the user base and surfaces suggested matches.
   See [`matching-v1.md`](../features/matching-v1.md).
 
 ## Two Match Origins
 
 Synca supports two complementary paths to a match:
 
-| Origin | Trigger | Trust level | Tier |
-|---|---|---|---|
-| `spark` | Verified in-person Spark session | Highest — IRL proof | Free |
-| `algorithm` | Nightly `MatchingJob` on behavioral signals | Medium — behavioral inference | Premium |
+| Origin | Trigger | Trust level |
+|---|---|---|
+| `spark` | Verified in-person Spark session | Highest — IRL proof |
+| `algorithm` | Nightly `MatchingJob` on behavioral signals | Medium — behavioral inference |
 
 Both origins produce the same `Match` object. The `origin` field is visible to the client
-so the UI can label them differently (*"Synca confirmed"* vs *"Synca suggested"*).
+so the UI can label them differently (*“Synca confirmed”* vs *“Synca suggested”*).
 
 ## Target Users
 
@@ -120,7 +119,7 @@ Apple Health (iOS) and Health Connect (Android) provide:
 
 - Sleep onset and offset times, duration, variability, chronotype, social jetlag
 - Activity minutes, resting heart rate, step count, peak activity window
-- Routine stability index — how consistent a person's daily schedule is
+- Routine stability index — how consistent a person’s daily schedule is
 - Recovery quality (HRV when available)
 
 Two people whose sleep schedules, activity windows, and routine stability align are
@@ -159,13 +158,13 @@ A short questionnaire completed during onboarding. These are not dealbreaker fil
 they are personalisation weights that shape how objective signals are interpreted.
 
 Examples:
-- *"Is it important to you to fall asleep at the same time as your partner?"*
+- *“Is it important to you to fall asleep at the same time as your partner?”*
   → weights sleep onset alignment more heavily for this user
-- *"Do you prefer sleeping in a cool or warm environment?"*
+- *“Do you prefer sleeping in a cool or warm environment?”*
   → used as a compatibility dimension for close-contact scenarios
-- *"How much daily movement feels right for you?"*
+- *“How much daily movement feels right for you?”*
   → calibrates step count similarity threshold
-- *"How important is it that your energy rhythms match the people around you?"*
+- *“How important is it that your energy rhythms match the people around you?”*
   → global weight on chronotype alignment
 
 See [`signals-v1.md — Step 0`](../features/signals-v1.md) and [`user-research.md`](./user-research.md).
@@ -187,9 +186,9 @@ Three Circle types, gated by Spark history:
 
 | Type | Members | Admission rule |
 |------|---------|----------------|
-| `duo` | 2 | 1 confirmed Spark between the two (every match) |
-| `small_group` | 3–8 | Full Spark graph: every pair ≥1 Spark |
-| `event` | 9–22 | Every member ≥1 Spark with the creator |
+| `duo` | 2 | 1 confirmed Spark between the two (every match, from Phase 1) |
+| `small_group` | 3–8 | Full Spark graph: every pair ≥1 Spark (Phase 4+) |
+| `event` | 9–22 | Every member ≥1 Spark with the creator (Phase 4+) |
 
 Different Circle types require different depths of alignment. A duo Circle between
 two potential romantic partners benefits from tight sleep and routine alignment.
