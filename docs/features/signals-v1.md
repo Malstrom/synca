@@ -8,8 +8,10 @@
 
 ## Overview
 
-Signals is the data ingestion layer of Synca. It collects, aggregates, and syncs
-behavioral data from external sources to build each user's compatibility profile.
+Signals is the data ingestion and computation layer of Synca. It collects, aggregates,
+and syncs behavioral data from external sources to build each user's compatibility profile.
+It also exposes a user-facing summary of the computed values so that users can understand
+their own profile before receiving any match.
 
 Raw data from external sources is **never stored on the backend**. All aggregation
 happens on-device. Only derived metrics are sent to and stored in `signals`.
@@ -18,13 +20,15 @@ Signal sources are added incrementally across phases. Each new source enriches t
 compatibility model without requiring re-architecture. The `signals` table grows
 one column group per new source — one row per user at all times.
 
-The signals layer has two complementary components:
+The signals layer has three complementary components:
 - **Objective signals** (Steps 1.0–3.0): passively collected behavioral data from
   health, music, and travel sources. Cannot be gamed without sustained behavioral
   change over weeks.
 - **Declared preferences** (Step 0): a short questionnaire that captures what each
   user considers important. These are not filters — they are personalisation weights
   that shape how objective signals are interpreted for that specific user.
+- **User-facing layer**: a computed, human-readable summary derived from the signals
+  record. Served separately from the raw metrics. No additional data store required.
 
 Prerequisite: `users` and `profiles` tables (ref: `docs/features/profile-v1.md`).
 
@@ -152,7 +156,7 @@ signals
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
 | POST | `/api/v1/signals` | Yes | Creates the user's signal record |
-| GET | `/api/v1/signals/me` | Yes | Returns the current user's signals |
+| GET | `/api/v1/signals/me` | Yes | Returns the current user's raw signals |
 
 Ref: `docs/api/openapi.yaml`
 
@@ -169,6 +173,66 @@ Without a `signals` record, the user cannot receive algorithm-origin matches
 - What happens if the user revokes HealthKit permissions after onboarding?
   Does their `signals` record get stale-flagged or deleted?
 - Should `computed_at` be validated server-side to reject signals older than 48 hours?
+
+---
+
+## User-facing layer
+
+**Phase:** 0 (Validation MVP)
+**Status:** Draft
+
+### Purpose
+
+After health data is connected and the `signals` record is populated, the user is
+shown a computed summary of their own profile. This is the immediate value hook of
+Synca: the user must recognise themselves in what the data says about them before
+any match is presented.
+
+This layer introduces no additional data store. All values are derived at request
+time from the existing `signals` and `declared_preferences` records.
+
+### Computed fields
+
+| Raw signal | Derived label | Example output |
+|---|---|---|
+| `chronotype` | Chronotype label | "Night owl" / "Early bird" / "Intermediate" |
+| `peak_activity_window` | Peak energy window | "Your energy peaks between 21:00 and 23:00" |
+| `routine_stability_index` | Routine stability tier | "Very stable" / "Moderate" / "Flexible" |
+| `activity_minutes_avg` | Activity tier | "Highly active" / "Moderately active" / "Low activity" |
+| `sleep_duration_avg` | Sleep pattern label | "You average 7.2 hours of sleep" |
+| `social_jetlag` | Weekend shift note | "Your sleep shifts 1.5 hours on weekends" |
+| `self_reported_chronotype` vs `chronotype` | Alignment note | "You said morning person — your data agrees" or "Your data tells a different story" |
+
+### API Endpoint
+
+| Method | Path | Auth required | Description |
+|--------|------|---------------|-------------|
+| GET | `/api/v1/signals/me/summary` | Yes | Returns computed human-readable summary derived from the user's signals record |
+
+Response shape (JSON):
+
+```json
+{
+  "chronotype_label": "Night owl",
+  "peak_energy_window": "21:00–23:00",
+  "routine_stability_tier": "very_stable",
+  "activity_tier": "highly_active",
+  "sleep_avg_hours": 7.2,
+  "social_jetlag_hours": 1.5,
+  "self_report_alignment": "confirmed"
+}
+```
+
+### Premium Gating
+
+None — the user-facing summary is available to all users who have a `signals` record.
+
+### Open Questions
+
+- Should the summary be recomputed on every request or cached with a TTL matching
+  the signals refresh cadence (daily)?
+- Should mismatches between declared preferences and objective signals be surfaced
+  as a prompt to update preferences, or only shown as informational?
 
 ---
 
