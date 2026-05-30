@@ -2,7 +2,7 @@
 
 **Version:** 1.1  
 **Last updated:** May 2026  
-**Status:** Planned — Phase 0
+**Status:** Active — Phase 0 pre-validation prerequisite
 
 ---
 
@@ -17,8 +17,11 @@ The bot then:
 2. Sends a structured JSON summary to the founder's private Telegram chat
 3. Optionally sends a plain-text recap to the researcher so they can forward it manually
 
-This removes friction from field data collection, supports multilingual researchers,
-and ensures consistent formatting across all sessions.
+This tool must be operational **before any Spark session is run**. It is the primary
+mechanism for collecting qualitative and quantitative field data during the pre-app
+validation period, when no product instrumentation exists yet.
+
+Without this tool, field research data is inconsistent and cannot be aggregated.
 
 ---
 
@@ -26,7 +29,10 @@ and ensures consistent formatting across all sessions.
 
 This is a **research tool only** — not part of the Synca app.
 It runs as a standalone Python script (`python-telegram-bot`).
-It is operated by researchers, not by end users directly.
+It is operated by researchers (trusted friends, field collaborators), not by end users directly.
+
+**Sequencing:** this bot must be built and tested before any field research session begins.
+It is the first concrete deliverable of Phase 0.
 
 ---
 
@@ -34,7 +40,7 @@ It is operated by researchers, not by end users directly.
 
 ```
 /start
-  → Language choice (buttons: Italiano / English / Русский)
+  → Language choice (buttons: 🇮🇹 Italiano / 🇬🇧 English / 🇷🇺 Русский)
   → Welcome message in selected language
   → Begin guided questionnaire
 
@@ -108,7 +114,7 @@ Supported languages in Phase 0:
 - English
 - Russian
 
-All stored values in Google Sheet should use canonical English values to keep analysis
+All stored values in Google Sheet use canonical English values to keep analysis
 consistent across researchers. The translated UI is only a presentation layer.
 
 Example:
@@ -122,7 +128,8 @@ Example:
 ### Google Sheet
 
 Each completed interview appends one row to a shared spreadsheet.
-The first sheet tab should be named `responses`.
+The first sheet tab must be named `responses`.
+The Google Sheet is the **source of truth** for all collected field data.
 
 Recommended columns:
 
@@ -166,19 +173,12 @@ free_notes
 
 ### Founder chat (JSON)
 
-The founder still receives a structured JSON payload via Telegram for fast review.
+The founder receives a structured JSON payload via Telegram for fast review.
 This is a notification and audit trail, not the source of truth.
 
 ### Researcher recap (plain text)
 
-The bot also returns a readable recap to the researcher for confirmation.
-
----
-
-## Source of truth
-
-The Google Sheet is the canonical storage for collected field interviews.
-Telegram messages are notifications only and must not be treated as the primary archive.
+The bot returns a readable recap to the researcher for confirmation after each completed session.
 
 ---
 
@@ -189,9 +189,9 @@ Telegram messages are notifications only and must not be treated as the primary 
 | Language | Python 3.11 | Fast to build, best Telegram bot library |
 | Library | python-telegram-bot 20.x | Async, well maintained, ConversationHandler built-in |
 | Storage | Google Sheets via `gspread` | Shared, persistent, easy to review and export |
-| Hosting | Railway / Fly.io / local machine | Bot only needs lightweight hosting |
+| Hosting | Railway / Fly.io / local machine | Lightweight hosting, free tier sufficient |
 | State | In-memory (ConversationHandler) | Interview sessions are short |
-| Credentials | Google Service Account + env vars | Smallest reliable setup |
+| Credentials | Google Service Account + env vars | Minimal reliable setup |
 
 ---
 
@@ -206,7 +206,7 @@ Telegram messages are notifications only and must not be treated as the primary 
 7. Store the JSON credentials as an environment variable
 8. Store the spreadsheet ID as an environment variable
 
-The bot opens the spreadsheet by ID and appends a single row per completed interview.
+The bot opens the spreadsheet by ID and appends one row per completed interview.
 
 ---
 
@@ -254,16 +254,16 @@ GOOGLE_CREDENTIALS_JSON=<single-line JSON string for the service account>
 Notes:
 - `GOOGLE_CREDENTIALS_JSON` should contain the raw service account JSON encoded as one line
 - Do not commit credentials to the repository
-- `.env.example` should show placeholders only
+- `.env.example` must show placeholders only
 
 ---
 
 ## Failure handling
 
-- If Telegram delivery to founder chat fails, the sheet write should still complete
-- If Google Sheet write fails, the bot should warn the researcher and not claim success
-- Duplicate submission protection should be handled by appending only after `/done`
-- A partial abandoned conversation should not write any row
+- If Telegram delivery to founder chat fails, the sheet write must still complete
+- If Google Sheet write fails, the bot must warn the researcher and not claim success
+- A partial or abandoned conversation must not write any row to the sheet
+- Duplicate submission protection: row is appended only after `/done` is confirmed
 
 ---
 
@@ -289,7 +289,7 @@ Realistic timeline: **1–2 days** working part-time.
 2. Create the Google Sheet and service account
 3. Run the bot locally with one test interview
 4. Deploy to Railway
-5. Share the bot with trusted friends who conduct interviews
+5. Share the bot link with trusted friends who conduct interviews
 
 When you are ready to build, say **"build the field research bot"** and the full
 implementation (TDD, test file first) will be generated.
