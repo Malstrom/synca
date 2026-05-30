@@ -1,29 +1,38 @@
 # Synca — Field Research Telegram Bot
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Last updated:** May 2026  
-**Status:** Planned — Phase 0
+**Status:** Active — Phase 0 pre-validation prerequisite
 
 ---
 
 ## Purpose
 
-A lightweight Telegram bot that replaces the paper transcription form.
-Instead of filling in a Markdown table after a date, the researcher answers
-a short guided conversation with the bot. The bot then:
+A lightweight Telegram bot used by trusted friends and field researchers who interview
+people in real life on behalf of Synca. Instead of filling in a Markdown table after
+a date or conversation, the researcher answers a short guided conversation with the bot.
+The bot then:
 
-1. Sends a structured JSON summary to the founder's private Telegram chat
-2. Optionally sends a plain-text recap to the researcher so they can forward it manually
+1. Appends a structured row to a shared Google Sheet
+2. Sends a structured JSON summary to the founder's private Telegram chat
+3. Optionally sends a plain-text recap to the researcher so they can forward it manually
 
-This removes friction from the data collection flow and ensures consistent field formatting.
+This tool must be operational **before any Spark session is run**. It is the primary
+mechanism for collecting qualitative and quantitative field data during the pre-app
+validation period, when no product instrumentation exists yet.
+
+Without this tool, field research data is inconsistent and cannot be aggregated.
 
 ---
 
 ## Scope
 
 This is a **research tool only** — not part of the Synca app.
-It runs as a standalone Python script (python-telegram-bot library).
-No database, no server — data arrives as Telegram messages.
+It runs as a standalone Python script (`python-telegram-bot`).
+It is operated by researchers (trusted friends, field collaborators), not by end users directly.
+
+**Sequencing:** this bot must be built and tested before any field research session begins.
+It is the first concrete deliverable of Phase 0.
 
 ---
 
@@ -31,7 +40,8 @@ No database, no server — data arrives as Telegram messages.
 
 ```
 /start
-  → Welcome message (EN/IT/RU choice)
+  → Language choice (buttons: 🇮🇹 Italiano / 🇬🇧 English / 🇷🇺 Русский)
+  → Welcome message in selected language
   → Begin guided questionnaire
 
 Section 1: Session info
@@ -84,92 +94,91 @@ Section 8: Overall impression
   → Any free notes? (free text, optional — can skip)
 
 /done
+  → Bot appends one row to Google Sheet
   → Bot sends structured JSON recap to founder's chat
   → Bot sends plain-text recap to researcher
 ```
 
 ---
 
+## Language support
+
+The first interaction is always language selection. The selected language applies to:
+- welcome and help messages
+- button labels
+- question prompts
+- completion message
+
+Supported languages in Phase 0:
+- Italian
+- English
+- Russian
+
+All stored values in Google Sheet use canonical English values to keep analysis
+consistent across researchers. The translated UI is only a presentation layer.
+
+Example:
+- UI button shown to Italian user: `Mattina`
+- Stored value in sheet: `morning`
+
+---
+
 ## Output format
 
-### To founder's chat (JSON)
+### Google Sheet
 
-```json
-{
-  "session": {
-    "date": "29/05/2026",
-    "city": "Moscow",
-    "context": "dinner",
-    "duration": "2h+",
-    "researcher": "alpha"
-  },
-  "person": {
-    "age_range": "25-30",
-    "gender": "woman",
-    "occupation": "office"
-  },
-  "sleep": {
-    "bedtime": "00:30",
-    "wake_time": "08:00",
-    "weekend_shift": "later",
-    "quality": "average",
-    "chronotype": "night",
-    "issues": false,
-    "confidence": 1
-  },
-  "activity": {
-    "regular_exercise": "sometimes",
-    "type": "yoga",
-    "frequency": "1-2x/week",
-    "preferred_time": "morning",
-    "walking_level": "medium 3-8k",
-    "confidence": 2
-  },
-  "energy": {
-    "peak_time": "evening",
-    "post_lunch_drop": "no",
-    "evening_preference": "go out"
-  },
-  "temperature": {
-    "sleep_preference": "warm",
-    "general": "always cold"
-  },
-  "compatibility": {
-    "bedtime_diff_bothers": "depends",
-    "shared_schedule_importance": 3,
-    "shared_activity_importance": 2,
-    "past_friction_mentioned": false
-  },
-  "impression": {
-    "lifestyle": "moderately active",
-    "chronotype_observed": "night owl",
-    "notes": "Said she can't function before 9am. Very clear about it."
-  }
-}
+Each completed interview appends one row to a shared spreadsheet.
+The first sheet tab must be named `responses`.
+The Google Sheet is the **source of truth** for all collected field data.
+
+Recommended columns:
+
+```text
+timestamp_submitted
+researcher_codename
+language
+session_date
+city
+context
+duration
+age_range
+gender
+occupation_type
+usual_bedtime
+usual_wake_time
+weekend_shift
+sleep_quality
+self_reported_chronotype
+sleep_issues_mentioned
+sleep_confidence
+regular_exercise
+exercise_type
+exercise_frequency
+exercise_time_preference
+walking_level
+activity_confidence
+peak_energy_time
+post_lunch_drop
+evening_preference
+sleep_temperature_preference
+general_temperature_tendency
+bedtime_difference_bothers
+shared_schedule_importance
+shared_activity_importance
+past_friction_mentioned
+lifestyle_estimate
+observed_chronotype
+free_notes
 ```
 
-### To researcher (plain text recap)
+### Founder chat (JSON)
 
-```
-✅ Synca Research — Session saved
+The founder receives a structured JSON payload via Telegram for fast review.
+This is a notification and audit trail, not the source of truth.
 
-📅 29/05/2026 · Moscow · dinner · 2h+
-👤 Woman, ~25–30, office worker
+### Researcher recap (plain text)
 
-😴 Sleep: goes to bed ~00:30, wakes ~08:00 (later on weekends)
-   Quality: average · Chronotype: night · Confidence: clear
-
-🏃 Activity: yoga 1–2x/week, mornings · Walking: medium
-   Confidence: inferred
-
-⚡ Energy: peaks in the evening · No post-lunch drop · Prefers going out
-
-🌡️ Temperature: warm sleeper · Always cold
-
-❤️ Compatibility: bedtime diff — depends · Schedule importance: 3/5 · Activity together: 2/5
-
-📝 Notes: Said she can't function before 9am. Very clear about it.
-```
+The bot returns a readable recap to the researcher for confirmation after each completed session.
 
 ---
 
@@ -179,30 +188,54 @@ Section 8: Overall impression
 |---|---|---|
 | Language | Python 3.11 | Fast to build, best Telegram bot library |
 | Library | python-telegram-bot 20.x | Async, well maintained, ConversationHandler built-in |
-| Storage | None (Telegram messages only) | Zero infra, no server, data arrives as messages |
-| Hosting | Local machine or free tier (Railway / Fly.io) | Bot only needs to be running, not always on |
-| State | In-memory (ConversationHandler) | Sessions are short, no persistence needed |
+| Storage | Google Sheets via `gspread` | Shared, persistent, easy to review and export |
+| Hosting | Railway / Fly.io / local machine | Lightweight hosting, free tier sufficient |
+| State | In-memory (ConversationHandler) | Interview sessions are short |
+| Credentials | Google Service Account + env vars | Minimal reliable setup |
+
+---
+
+## Google Sheets setup
+
+1. Create a Google Sheet and name the first tab `responses`
+2. Create a Google Cloud project
+3. Enable **Google Sheets API** and **Google Drive API**
+4. Create a **Service Account**
+5. Generate a JSON key for that service account
+6. Share the Google Sheet with the service account email as **Editor**
+7. Store the JSON credentials as an environment variable
+8. Store the spreadsheet ID as an environment variable
+
+The bot opens the spreadsheet by ID and appends one row per completed interview.
 
 ---
 
 ## File structure
 
-```
+```text
 research-bot/
-  bot.py               # main entry point, ConversationHandler setup
+  bot.py
   handlers/
-    session.py         # Section 1: session info
-    person.py          # Section 2: person profile
-    sleep.py           # Section 3: sleep
-    activity.py        # Section 4: physical activity
-    energy.py          # Section 5: energy rhythms
-    temperature.py     # Section 6: temperature
-    compatibility.py   # Section 7: compatibility attitudes
-    impression.py      # Section 8: overall impression
+    language.py
+    session.py
+    person.py
+    sleep.py
+    activity.py
+    energy.py
+    temperature.py
+    compatibility.py
+    impression.py
   formatters/
-    json_output.py     # builds JSON payload for founder chat
-    text_recap.py      # builds plain-text recap for researcher
-  config.py            # BOT_TOKEN, FOUNDER_CHAT_ID from env vars
+    json_output.py
+    text_recap.py
+    sheet_row.py
+  services/
+    google_sheets.py
+  i18n/
+    it.py
+    en.py
+    ru.py
+  config.py
   requirements.txt
   .env.example
 ```
@@ -211,10 +244,26 @@ research-bot/
 
 ## Environment variables
 
-```
+```text
 BOT_TOKEN=<your Telegram bot token from @BotFather>
 FOUNDER_CHAT_ID=<your personal Telegram chat ID>
+GOOGLE_SHEET_ID=<spreadsheet id from Google Sheets URL>
+GOOGLE_CREDENTIALS_JSON=<single-line JSON string for the service account>
 ```
+
+Notes:
+- `GOOGLE_CREDENTIALS_JSON` should contain the raw service account JSON encoded as one line
+- Do not commit credentials to the repository
+- `.env.example` must show placeholders only
+
+---
+
+## Failure handling
+
+- If Telegram delivery to founder chat fails, the sheet write must still complete
+- If Google Sheet write fails, the bot must warn the researcher and not claim success
+- A partial or abandoned conversation must not write any row to the sheet
+- Duplicate submission protection: row is appended only after `/done` is confirmed
 
 ---
 
@@ -223,11 +272,12 @@ FOUNDER_CHAT_ID=<your personal Telegram chat ID>
 | Task | Time |
 |---|---|
 | Bot scaffold + ConversationHandler | 2h |
+| Multilingual prompt layer | 2h |
 | All 8 question sections | 3h |
-| JSON formatter | 1h |
-| Plain-text recap formatter | 1h |
+| Google Sheets integration | 2h |
+| JSON + plain-text formatters | 1h |
 | Test with 2–3 real sessions | 1h |
-| **Total** | **~8h** |
+| **Total** | **~11h** |
 
 Realistic timeline: **1–2 days** working part-time.
 
@@ -235,11 +285,11 @@ Realistic timeline: **1–2 days** working part-time.
 
 ## Next steps
 
-1. Create a new bot with @BotFather → get `BOT_TOKEN`
-2. Get your `FOUNDER_CHAT_ID` (send `/start` to @userinfobot)
-3. Run `bot.py` locally to test
-4. Deploy to Railway (free tier, always-on)
-5. Share bot link with field researchers
+1. Create the bot with @BotFather
+2. Create the Google Sheet and service account
+3. Run the bot locally with one test interview
+4. Deploy to Railway
+5. Share the bot link with trusted friends who conduct interviews
 
-When you are ready to build, say **"build the research bot"** and the full
+When you are ready to build, say **"build the field research bot"** and the full
 implementation (TDD, test file first) will be generated.

@@ -15,6 +15,15 @@ Each entry follows the pattern:
 > Success metric: 50 active users, 20 completed Spark sessions, 5+ spontaneous re-encounters
 > tracked within 30 days of a Spark session.
 
+### Research — Field Research Bot
+
+- Telegram bot used by trusted friends and field researchers to conduct structured
+  in-person interviews in Italian, English, or Russian
+- Responses are appended to a shared Google Sheet as the canonical dataset
+- Founder receives a structured Telegram recap for each completed interview
+- Enables rapid pre-app research before product instrumentation exists
+- Ref: [`field-research-bot.md`](../research/field-research-bot.md)
+
 ### Onboarding — Guest Account (no password)
 
 - User enters email only → backend creates a guest `User` record silently
