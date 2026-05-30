@@ -1,5 +1,5 @@
 # Feature: Matching
-**Version:** 1.0
+**Version:** 1.1
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
@@ -21,7 +21,7 @@ produce an infinite swipeable feed.
 
 Prerequisites:
 - `users`, `profiles`, `preference_profiles` (ref: `docs/features/profile-v1.md`)
-- `signals` (ref: `docs/features/signals-v1.md`)
+- `signals`, `declared_preferences` (ref: `docs/features/signals-v1.md`)
 
 ---
 
@@ -37,7 +37,12 @@ Prerequisites:
 | Sleep | 35% | `chronotype`, `sleep_duration_avg`, `sleep_variability`, `social_jetlag` |
 | Activity | 30% | `activity_minutes_avg`, `step_count_avg`, `peak_activity_window`, `rest_hr_avg` |
 | Lifestyle | 20% | `routine_stability_index` (Step 1.0); music and travel added in Steps 2–3 |
-| Preferences | 15% | Age range, distance, stated dealbreakers |
+| Preferences | 15% | Age range, distance, stated dealbreakers, `declared_preferences` multipliers |
+
+The `declared_preferences` record for each user is loaded via
+`user.declared_preference` and used as multipliers within the Preferences domain
+and as weight modifiers across Sleep/Activity domains.
+Ref: `docs/features/signals-v1.md — Step 0`.
 
 > Weights are indicative for MVP. They will be recalibrated per city as outcome
 > data accumulates (see Evolution Plan below).
@@ -47,20 +52,18 @@ Prerequisites:
 Thresholds are the **single source of truth** for match creation decisions.
 No other document should hardcode threshold values — always reference this table.
 
-| Score range | Spark origin | Algorithm origin | Circle (duo) admission |
-|-------------|--------------|------------------|------------------------|
-| High | High-quality match shown | High-quality suggestion shown | ✅ Eligible |
-| Standard | Standard match shown | Standard suggestion shown | ✅ Eligible (duo only) |
-| Below minimum | No match created | No match created | ❌ Not eligible |
-
 | Threshold | Spark origin | Algorithm origin |
 |-----------|--------------|------------------|
 | Minimum score to create a match | 50 | 65 |
 
 > Algorithm origin has a higher bar than Spark because no physical presence
-> confirms mutual intent.
+> confirms mutual intent. Thresholds are configurable per city.
 
-Thresholds are configurable per city.
+| Score range | Spark origin | Algorithm origin | Circle (duo) admission |
+|-------------|--------------|------------------|------------------------|
+| High | High-quality match shown | High-quality suggestion shown | ✅ Eligible |
+| Standard | Standard match shown | Standard suggestion shown | ✅ Eligible (duo only) |
+| Below minimum | No match created | No match created | ❌ Not eligible |
 
 ### Match Origins
 
@@ -122,7 +125,8 @@ during the nightly batch run.
 
 ```sql
 -- preference_profiles: ref docs/features/profile-v1.md
--- (canonical definition lives there; do not redefine here)
+-- declared_preferences: ref docs/features/signals-v1.md
+-- (canonical definitions live there; do not redefine here)
 
 matches
   id                     bigint PK
@@ -153,20 +157,9 @@ For `sparks` schema see `docs/features/spark-v1.md`.
 
 Ref: `docs/api/openapi.yaml`
 
-### Premium Gating
-
-| Feature | Free | Premium |
-|---------|------|---------|
-| Spark-origin matches | ✅ | ✅ |
-| Algorithm-origin matches | ❌ | ✅ |
-| Compatibility breakdown detail | ❌ | ✅ |
-
-Free users can receive and view Spark-origin matches. Algorithm-origin matches
-require a premium subscription. The compatibility plain-language explanation is
-available to all users; the domain-level breakdown (Sleep 87%, Activity 72%, ...)
-is premium only.
-
 ### Open Questions
+
+See `docs/decisions.md` for tracked decisions on this feature.
 
 - Minimum signals data threshold before a user enters the algorithm pool:
   how many days of health data are required? (Suggested: 7 days.)
@@ -176,6 +169,51 @@ is premium only.
   per nightly run? (Suggested: 1–3 to reinforce scarcity positioning.)
 - How is `algorithm_confidence` computed? Suggested: normalized pairwise score
   relative to the candidate pool for that user.
+
+---
+
+## Match Lifecycle
+
+Matches have a `status` field with the following values:
+
+| Status | Meaning |
+|--------|---------|
+| `active` | Default on creation. Match is visible and both users can interact. |
+| `drifted` | Health signals for one or both users have not been updated in the last 30 days. Match is deprioritized in list but still visible in history. |
+| `reconnected` | A drifted match where both users have refreshed their signals and/or completed a new Spark session. |
+| `ended` | Match explicitly ended by one of the users via `PATCH /api/v1/matches/:id`. |
+
+### MatchDecayJob
+
+`MatchDecayJob` runs daily via Solid Queue and marks matches as `drifted` when
+health signals for one or both users have not been updated in the last 30 days.
+
+```
+MatchDecayJob runs daily
+        ↓
+Iterates matches with status: 'active'
+        ↓
+For each match: checks signals.updated_at for user_a and user_b
+        ↓
+If either user's signals.updated_at < 30 days ago:
+  →  match.update!(status: 'drifted')
+
+For each match with status: 'drifted':
+  →  If both users have signals.updated_at >= (now - 7 days)
+     OR a new Spark was completed between the same users:
+  →  match.update!(status: 'reconnected')
+```
+
+Drifted matches:
+- Remain visible in match history.
+- Are excluded from the top of the active matches list.
+- Do not trigger new Moment proposals.
+
+Reconnected matches:
+- Return to the top of the active match list.
+- May generate a new Moment proposal if none is pending.
+
+Ref: `docs/tech/backend.md` for Rails domain model.
 
 ---
 
