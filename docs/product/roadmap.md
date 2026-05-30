@@ -48,18 +48,15 @@ Ref: [`profile-v1.md — Step 0`](../features/profile-v1.md)
 - Derived metrics sent to backend
 - Ref: [`signals-v1.md — Step 1.0`](../features/signals-v1.md)
 
-### Lifestyle Profile — visible to the user
+### Signals — User-facing layer
 
-- After connecting health data, user sees their own profile:
-  chronotype label, peak energy window, routine stability, activity tier
-- This is the immediate value hook — before any match is received
-- "This is you, according to your data" must be recognisable and surprising
-
-### Circles — Step 1.0 (Duo Circle: match chat)
-
-- Created automatically when a Spark session produces a match
-- 1:1 Action Cable chat channel
-- Ref: [`circles-v1.md`](../features/circles-v1.md)
+- After connecting health data, the user sees their own computed profile:
+  chronotype label, peak energy window, routine stability tier, activity tier
+- Derived entirely from the `signals` record — no separate data store
+- Served by `GET /api/v1/signals/me/summary`
+- This is the immediate value hook before any match is received:
+  the user must recognise themselves in what the data says about them
+- Ref: [`signals-v1.md — User-facing layer`](../features/signals-v1.md)
 
 ### What is explicitly out of scope in Phase 0
 
@@ -68,6 +65,7 @@ Ref: [`profile-v1.md — Step 0`](../features/profile-v1.md)
 - Premium gating — deferred to Phase 2
 - Android — iOS only in Phase 0
 - Photos and bio — optional, not required
+- Circles (match chat) — deferred to Phase 1
 
 ---
 
