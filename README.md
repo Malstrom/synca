@@ -25,7 +25,7 @@ Instead of endless swiping, Synca shows fewer people — but the right ones.
 | Testing strategy | [docs/conventions/testing.md](docs/conventions/testing.md) |
 | Development workflow (Git · PR · TDD · CI) | [docs/conventions/workflow.md](docs/conventions/workflow.md) |
 | Infrastructure & deploy | [docs/infra/deployment.md](docs/infra/deployment.md) |
-| ADR / decisions | [docs/decisions.md](docs/decisions.md) |
+| Open decisions log | [docs/product/decisions.md](docs/product/decisions.md) |
 | Investor materials | [docs/investor/](docs/investor/) |
 
 ---
