@@ -24,6 +24,7 @@ Instead of endless swiping, Synca shows fewer people — but the right ones.
 | iOS conventions | [docs/conventions/ios.md](docs/conventions/ios.md) |
 | Testing strategy | [docs/conventions/testing.md](docs/conventions/testing.md) |
 | Development workflow (Git · PR · TDD · CI) | [docs/conventions/workflow.md](docs/conventions/workflow.md) |
+| Gems reference (per-phase) | [docs/conventions/gems.md](docs/conventions/gems.md) |
 | Infrastructure & deploy | [docs/infra/deployment.md](docs/infra/deployment.md) |
 | Open decisions log | [docs/product/decisions.md](docs/product/decisions.md) |
 | Investor materials | [docs/investor/](docs/investor/) |
