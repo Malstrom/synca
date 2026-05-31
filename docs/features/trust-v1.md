@@ -21,6 +21,11 @@ Trust has three components:
 
 `trust_score` is stored on `profiles` (introduced in `docs/features/profile-v1.md`).
 
+`TrustScoreService` always clamps `trust_score` between **0 and 100 inclusive**.
+Any operation that would push the score below 0 or above 100 is truncated to the
+nearest bound. All thresholds operate within this hard range; no negative or >100
+scores are possible.
+
 -- ref: docs/features/profile-v1.md
 -- ref: docs/features/spark-v1.md
 
