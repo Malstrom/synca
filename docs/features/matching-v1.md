@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
+**User flows:** `docs/product/phases/` — no flows in Phase 0; flows will be added in phase-1.md
 
 ---
 
