@@ -1,5 +1,5 @@
 # Feature: Profile
-**Version:** 1.1
+**Version:** 1.2
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
@@ -101,6 +101,7 @@ users
 |--------|------|---------------|-------------|
 | POST | `/api/v1/auth/guest` | No | Creates guest user from email, returns short-lived JWT |
 | POST | `/api/v1/auth/activate` | No | Validates magic link token, upgrades account to active, returns permanent tokens |
+| POST | `/api/v1/auth/resend_magic_link` | No | Resends activation magic link for a guest account; rate-limited to 1 request per 5 minutes |
 
 ### Premium Gating
 
@@ -240,6 +241,119 @@ None — registration, login, and profile management are available on all tiers.
   or a free string in MVP?
 - Photo ordering: drag-and-drop on client only, or persisted server-side?
 - Is the minimum of 1 photo enforced at the API level or client-side only?
+
+---
+
+## Step 1.1 — Password Recovery and Credential Management
+
+**Phase:** 1
+**Status:** Draft
+
+### Overview
+
+Covers all credential recovery flows for active accounts: forgot password,
+reset password via email link, and change password while authenticated.
+Also covers the resend flow for guest magic links (documented under Step 0 endpoints
+but technically part of the same token infrastructure).
+
+All recovery tokens use the same JWT structure already in use for magic links:
+```
+payload: { user_id: integer, purpose: string, exp: unix_timestamp }
+```
+No new tables are introduced — the existing `refresh_tokens` table and
+`password_digest` column on `users` are sufficient.
+
+### Forgot Password Flow
+
+```
+User enters email on "Forgot password" screen
+        ↓
+POST /api/v1/auth/forgot_password  { email }
+        ↓
+Backend looks up user by email
+  → If not found or account_type: :guest: always return 200 (no email enumeration)
+  → If found and account_type: :active:
+      generates JWT { user_id, purpose: 'password_reset', exp: 1h }
+      sends email with deep link: synca://auth/reset?token=<jwt>
+        ↓
+User taps link in email → app opens reset password screen
+        ↓
+POST /api/v1/auth/reset_password  { token, new_password }
+        ↓
+Backend verifies JWT (purpose must be 'password_reset', not expired)
+  → Updates user.password_digest
+  → Revokes ALL active refresh_tokens for that user (force logout everywhere)
+  → Returns new access token + refresh token
+  → User is logged in immediately after reset
+```
+
+> The response to `POST /api/v1/auth/forgot_password` is always HTTP 200
+> regardless of whether the email exists. This prevents email enumeration attacks.
+
+### Change Password Flow (authenticated)
+
+```
+Authenticated user opens "Change password" in settings
+        ↓
+PATCH /api/v1/auth/password  { current_password, new_password }  [Auth required]
+        ↓
+Backend verifies current_password with authenticate
+  → If invalid: 422 Unprocessable Entity
+  → If valid:
+      Updates user.password_digest
+      Revokes all refresh_tokens except the one used in the current session
+      Returns 200 OK
+```
+
+### Resend Magic Link Flow (guest accounts)
+
+```
+Guest user did not receive or the magic link expired
+        ↓
+POST /api/v1/auth/resend_magic_link  { email }  [No auth required]
+        ↓
+Backend looks up user by email
+  → If not found or account_type: :active: always return 200
+  → If found and account_type: :guest:
+      Generates new JWT { user_id, purpose: 'activation', exp: 72h }
+      Sends activation email
+      Rate limit: max 1 resend per 5 minutes per email
+```
+
+### Token Rules Summary
+
+| Purpose | Expiry | Revocation on use |
+|---------|--------|-------------------|
+| `activation` (magic link) | 72h | Yes — single-use |
+| `password_reset` | 1h | Yes — single-use |
+| Access token (JWT) | 30 days | No (stateless) |
+| Refresh token | 90 days | Yes — rotated on use |
+
+> `activation` and `password_reset` tokens are stateless JWTs — revocation is
+> implicit via expiry and single-use enforcement (backend rejects a token whose
+> `password_digest` has already changed after the token was issued, using `iat` claim).
+
+### API Endpoints
+
+| Method | Path | Auth required | Description |
+|--------|------|---------------|-------------|
+| POST | `/api/v1/auth/forgot_password` | No | Sends password reset email; always returns 200 |
+| POST | `/api/v1/auth/reset_password` | No | Validates reset token, updates password, revokes all refresh tokens, returns new tokens |
+| PATCH | `/api/v1/auth/password` | Yes | Changes password for authenticated user; revokes other sessions |
+| POST | `/api/v1/auth/resend_magic_link` | No | Resends activation magic link for guest accounts; rate-limited |
+
+Ref: `docs/api/openapi.yaml`
+
+### Premium Gating
+
+None — credential recovery is available to all users.
+
+### Open Questions
+
+- Should `reset_password` tokens be stored in a dedicated table for explicit
+  single-use tracking, or is the `iat`-based invalidation approach sufficient?
+- What is the deep link scheme for the reset password screen?
+  Suggested: `synca://auth/reset?token=<jwt>`
 
 ---
 
