@@ -6,13 +6,18 @@ See also:
 
 - Root overview: [../../README.md](../../README.md)
 - API spec: [../../docs/api/openapi.yaml](../../docs/api/openapi.yaml)
-- Backend conventions: [../../docs/tech/backend.md](../../docs/tech/backend.md)
+- Backend conventions: [../../docs/conventions/backend.md](../../docs/conventions/backend.md)
+- iOS conventions: [../../docs/conventions/ios.md](../../docs/conventions/ios.md)
+- Testing strategy: [../../docs/conventions/testing.md](../../docs/conventions/testing.md)
+- Development workflow: [../../docs/conventions/workflow.md](../../docs/conventions/workflow.md)
+- ML architecture: [../../docs/architecture/ml-architecture-v1.md](../../docs/architecture/ml-architecture-v1.md)
 - Matching spec: [../../docs/features/matching-v1.md](../../docs/features/matching-v1.md)
 - Signals spec: [../../docs/features/signals-v1.md](../../docs/features/signals-v1.md)
 - Moments spec: [../../docs/features/moments-v1.md](../../docs/features/moments-v1.md)
 - Circles spec: [../../docs/features/circles-v1.md](../../docs/features/circles-v1.md)
 - Spark spec: [../../docs/features/spark-v1.md](../../docs/features/spark-v1.md)
 - Trust spec: [../../docs/features/trust-v1.md](../../docs/features/trust-v1.md)
+- Notifications spec: [../../docs/features/notifications-v1.md](../../docs/features/notifications-v1.md)
 
 ## Requirements
 
@@ -139,6 +144,8 @@ bin/rails test test/models/user_test.rb
 # Run a specific test by line number
 bin/rails test test/models/user_test.rb:42
 ```
+
+Full testing conventions: [../../docs/conventions/testing.md](../../docs/conventions/testing.md)
 
 ## Full CI Flow (local)
 
@@ -342,6 +349,7 @@ Domain docs:
 - Circles: [../../docs/features/circles-v1.md](../../docs/features/circles-v1.md)
 - Spark: [../../docs/features/spark-v1.md](../../docs/features/spark-v1.md)
 - Trust: [../../docs/features/trust-v1.md](../../docs/features/trust-v1.md)
+- Notifications: [../../docs/features/notifications-v1.md](../../docs/features/notifications-v1.md)
 
 ## Environment Variables
 
