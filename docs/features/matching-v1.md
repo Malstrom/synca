@@ -23,6 +23,9 @@ produce an infinite swipeable feed.
 Prerequisites:
 - `users`, `profiles`, `preference_profiles` (ref: `docs/features/profile-v1.md`)
 - `signals`, `declared_preferences` (ref: `docs/features/signals-v1.md`)
+- Minimum signals threshold: a user enters the algorithm-origin matching pool only
+  after accumulating at least **7 days** of signals data. This value is configurable
+  (default 7) and can be adjusted per city without a code deploy.
 
 ---
 
@@ -106,6 +109,8 @@ Action Cable event.
 MatchingJob runs nightly  (Solid Queue, `algorithm` queue)
         ↓
 Iterates users with a signals record updated in the last 30 days
+and at least 7 days of signals data accumulated
+(minimum signals_days threshold, configurable, default 7)
         ↓
 Candidate pool filtered by: city, age, gender, distance, dealbreakers
 (ref: preference_profiles → docs/features/profile-v1.md)
