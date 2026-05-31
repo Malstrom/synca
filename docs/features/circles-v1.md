@@ -111,10 +111,6 @@ Real-time delivery: `CircleChannel` via Action Cable.
 
 Ref: `docs/api/openapi.yaml`
 
-### Open Questions
-
-See `docs/decisions.md` — filter by `source: docs/features/circles-v1.md`.
-
 ---
 
 ## Step 2.0 — Small Group and Event Circles
@@ -130,3 +126,9 @@ See `docs/decisions.md` — filter by `source: docs/features/circles-v1.md`.
 - Group Moment proposals (ref: `docs/features/moments-v1.md`) become available for small_group and event circles.
 
 No schema changes beyond those introduced in Step 1.0.
+
+---
+
+### Open Questions
+
+See [docs/product/decisions.md](../product/decisions.md) — filter by `source: docs/features/circles-v1.md`.

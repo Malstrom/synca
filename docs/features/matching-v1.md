@@ -163,10 +163,6 @@ For `sparks` schema see `docs/features/spark-v1.md`.
 
 Ref: `docs/api/openapi.yaml`
 
-### Open Questions
-
-See `docs/decisions.md` — filter by `source: docs/features/matching-v1.md`.
-
 ---
 
 ## Match Lifecycle
@@ -275,3 +271,9 @@ Ref: `docs/tech/backend.md` for Rails domain model.
   small-group activity proposals (runs, sauna, padel, calcetto). The
   individual compatibility profiles built in v1/v2 are the direct input
   to this layer — no re-architecture required.
+
+---
+
+### Open Questions
+
+See [docs/product/decisions.md](../product/decisions.md) — filter by `source: docs/features/matching-v1.md`.

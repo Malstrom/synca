@@ -166,6 +166,6 @@ Telegram notifications are opt-in for all tiers (user must connect the bot).
 
 ---
 
-## Open Questions
+### Open Questions
 
-See `docs/decisions.md` — filter by `source: docs/features/notifications-v1.md`.
+See [docs/product/decisions.md](../product/decisions.md) — filter by `source: docs/features/notifications-v1.md`.

@@ -97,10 +97,6 @@ Ref: `docs/api/openapi.yaml`
 
 None — phone verification and reporting are available on all tiers.
 
-### Open Questions
-
-See `docs/decisions.md` — filter by `source: docs/features/trust-v1.md`.
-
 ---
 
 ## Step 2.0 — Liveness Check + Image Moderation
@@ -144,10 +140,6 @@ in the `profiles.photos` JSON array:
 |--------|------|---------------|-------------|
 | POST | `/api/v1/trust/liveness` | Yes | Submits selfie for liveness check |
 
-### Open Questions
-
-See `docs/decisions.md` — filter by `source: docs/features/trust-v1.md`.
-
 ---
 
 ## Step 3.0 — TrustScore v1 (Behavioral Reputation)
@@ -171,6 +163,8 @@ Additional inputs on top of Step 1.0:
 
 No new tables introduced in this step.
 
+---
+
 ### Open Questions
 
-See `docs/decisions.md` — filter by `source: docs/features/trust-v1.md`.
+See [docs/product/decisions.md](../product/decisions.md) — filter by `source: docs/features/trust-v1.md`.
