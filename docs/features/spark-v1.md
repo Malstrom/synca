@@ -17,6 +17,11 @@ preferences answered during the session.
 A completed `Spark` is the strongest trust and compatibility signal in the system
 because it requires two verified users in the same physical location at the same time.
 
+Spark is also a **social icebreaker**: it gives two people a neutral, curiosity-driven
+pretext to interact IRL without the social pressure of a direct romantic approach.
+Instead of an opener, you share a Spark — the score creates a shared experience
+and a natural conversation starter regardless of the outcome.
+
 Spark is the prerequisite for creating a Match with `origin: :spark` and for joining
 or creating any Circle.
 
@@ -91,6 +96,8 @@ score >= spark minimum threshold (ref: docs/features/matching-v1.md)
   → Spark status: :completed
 score < spark minimum threshold
   → no Match created
+  → SparkReward (low-score bonus) issued — type and threshold TBD
+    (ref: docs/decisions.md — spark-low-score-bonus)
   → Spark status: :completed (stored for analytics)
 ```
 
@@ -163,7 +170,7 @@ spark_rewards
   id           bigint PK
   user_id      bigint FK -> users NOT NULL
   spark_id     bigint FK -> sparks NOT NULL
-  reward_type  string NOT NULL   -- 'premium_week' | 'match_credit'
+  reward_type  string NOT NULL   -- 'premium_week' | 'match_credit' | 'low_score_bonus'
   status       string NOT NULL DEFAULT 'pending'  -- 'pending' | 'redeemed' | 'expired'
   valid_until  datetime
   created_at   datetime
@@ -215,13 +222,12 @@ the more Sparks happen, the richer the compatibility data for everyone.
 **Rewards:**
 - Free users who complete a Spark receive a `premium_week` trial.
 - Premium users who complete a Spark receive a `match_credit`.
+- Any user whose Spark produces a low compatibility score receives a `low_score_bonus`
+  (type and threshold TBD — ref: `docs/decisions.md — spark-low-score-bonus`).
 
 ### Open Questions
 
-- Should QR-only ship in Phase 1, deferring BLE entirely to Phase 3?
-- What happens if a user has no `signals` record yet (never connected Apple Health)?
-  Scoring falls back to declared preferences domain only — should this be made
-  explicit in the score explanation shown to the user?
+See `docs/decisions.md` — filter by `source: docs/features/spark-v1.md`.
 
 ---
 
@@ -297,9 +303,4 @@ None — Group Sparks are free for all users.
 
 ### Open Questions
 
-- Maximum group size for a Group Spark? (Suggested: up to 22 for event Circle
-  compatibility, but UI may cap lower for usability.)
-- Should the group initiator see a summary of all pairwise scores after completion,
-  or only their own pairs?
-- If some participants do not confirm presence before expiry, should partial scoring
-  proceed for the pairs that did confirm?
+See `docs/decisions.md` — filter by `source: docs/features/spark-v1.md`.
