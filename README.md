@@ -20,9 +20,10 @@ Instead of endless swiping, Synca shows fewer people — but the right ones.
 | iOS architecture | [docs/architecture/ios-structure.md](docs/architecture/ios-structure.md) |
 | Android architecture | [docs/architecture/android-structure.md](docs/architecture/android-structure.md) |
 | ML architecture | [docs/architecture/ml-architecture-v1.md](docs/architecture/ml-architecture-v1.md) |
-| Backend conventions | [docs/tech/backend.md](docs/tech/backend.md) |
-| iOS conventions | [docs/tech/ios.md](docs/tech/ios.md) |
-| Testing strategy | [docs/tech/testing.md](docs/tech/testing.md) |
+| Backend conventions | [docs/conventions/backend.md](docs/conventions/backend.md) |
+| iOS conventions | [docs/conventions/ios.md](docs/conventions/ios.md) |
+| Testing strategy | [docs/conventions/testing.md](docs/conventions/testing.md) |
+| Development workflow (Git · PR · TDD · CI) | [docs/conventions/workflow.md](docs/conventions/workflow.md) |
 | Infrastructure & deploy | [docs/infra/deployment.md](docs/infra/deployment.md) |
 | ADR / decisions | [docs/decisions.md](docs/decisions.md) |
 | Investor materials | [docs/investor/](docs/investor/) |
@@ -34,10 +35,14 @@ Instead of endless swiping, Synca shows fewer people — but the right ones.
 ```text
 synca/
 ├── apps/
-│   ├── ios/        → SwiftUI app
-│   └── android/    → Kotlin + Jetpack Compose app
-├── backend/        → Rails 8 API
-└── docs/           → all product and technical documentation
+│   ├── ios/          → SwiftUI app
+│   └── android/      → Kotlin + Jetpack Compose app
+├── backend/          → Rails 8 API
+└── docs/
+    ├── architecture/  → how the system is structured
+    ├── conventions/   → how to write code in this system
+    ├── features/      → per-feature specs (canonical source of truth)
+    └── ...            → product, api, infra, investor
 ```
 
 ---
