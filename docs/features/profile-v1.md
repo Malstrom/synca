@@ -44,6 +44,11 @@ This step must also support QR-driven acquisition: a user may first encounter Sy
 by scanning another user's Spark QR code, downloading the app, and joining as a guest
 with email only.
 
+Even in guest mode, email is always collected at the entry point. The email is not
+verified before the first Spark, but becomes mandatory to verify right after the
+first completed Spark session. This ensures a contactable, growing user base from
+day one without blocking the initial IRL interaction.
+
 ### User Flow
 
 1. User opens the app for the first time, or arrives from a Spark QR code via deferred deep link.
@@ -56,7 +61,8 @@ with email only.
 6. After completing their first Spark session, a magic link is sent to their email:
    *"Activate your Synca account to save your compatibility results."*
 7. User clicks the magic link → sets a display name → account upgraded to
-   `account_type: :active`. A permanent JWT is issued.
+   `account_type: :active`. A permanent JWT is issued. From this point on,
+   an email-verified account is required to continue using the app.
 8. If the user never clicks the magic link: guest record and all associated data
    are purged after 30 days.
 
@@ -176,6 +182,7 @@ profiles
   photos                 jsonb NOT NULL DEFAULT '[]'
   onboarding_completed   boolean NOT NULL DEFAULT false
   trust_score            float NOT NULL DEFAULT 50.0
+  completeness_score     integer NOT NULL DEFAULT 0
   spark_verified         boolean NOT NULL DEFAULT false
   irl_verification_count integer NOT NULL DEFAULT 0
   premium                boolean NOT NULL DEFAULT false
@@ -397,8 +404,17 @@ See `docs/decisions.md` — filter by `source: docs/features/profile-v1.md`.
 **Phase:** 2
 **Status:** Planned
 
-A `completeness_score` (0–100) is computed server-side and returned by
-`GET /api/v1/profile`. It feeds into `trust_score` as one of its inputs.
+`completeness_score` (0–100) is computed server-side and **persisted on `profiles`**.
+It is returned by `GET /api/v1/profile` and feeds into `trust_score` as one of its inputs.
+
+The score is updated explicitly via `Profile::CompletenessCalculator` whenever a
+relevant profile change occurs (photo upload/removal, bio update, preferences saved,
+phone verification, signals connected). A nightly reconciliation job re-computes
+all scores to ensure consistency.
+
+Health signals data is synced separately (ref: `docs/features/signals-v1.md`) and
+does not directly affect `completeness_score`. It is used by Matching and Spark
+scoring instead.
 
 -- ref: docs/features/trust-v1.md
 
@@ -417,6 +433,7 @@ adds 5 points to the profile completeness score.
 
 No new tables introduced in this step. `GET /api/v1/profile` returns the
 existing response extended with `{ "completeness_score": 85 }`.
+The `completeness_score` column is defined in the `profiles` schema above (Step 1.0).
 
 ### Open Questions
 
