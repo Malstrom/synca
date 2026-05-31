@@ -1,5 +1,5 @@
 # Feature: Profile
-**Version:** 1.0
+**Version:** 1.1
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
@@ -39,19 +39,24 @@ The highest-curiosity moment in Synca is when two people are physically together
 and want to try a Spark session immediately. Any authentication wall at this moment
 causes drop-off. Guest onboarding removes that wall entirely.
 
+This step must also support QR-driven acquisition: a user may first encounter Synca
+by scanning another user's Spark QR code, downloading the app, and joining as a guest
+with email only.
+
 ### User Flow
 
-1. User opens the app for the first time.
+1. User opens the app for the first time, or arrives from a Spark QR code via deferred deep link.
 2. Enters email only — no password, no name, no photo.
 3. Backend creates a `User` record with `account_type: :guest` and issues a
    short-lived guest JWT (24-hour expiry).
-4. User proceeds directly to the Declared Preferences questionnaire
+4. If the user arrived from a Spark QR flow, the app resumes the pending Spark join automatically.
+5. User proceeds directly to the Declared Preferences questionnaire
    (ref: `signals-v1.md — Step 0`) and then to the Spark screen.
-5. After completing their first Spark session, a magic link is sent to their email:
+6. After completing their first Spark session, a magic link is sent to their email:
    *"Activate your Synca account to save your compatibility results."*
-6. User clicks the magic link → sets a display name → account upgraded to
+7. User clicks the magic link → sets a display name → account upgraded to
    `account_type: :active`. A permanent JWT is issued.
-7. If the user never clicks the magic link: guest record and all associated data
+8. If the user never clicks the magic link: guest record and all associated data
    are purged after 30 days.
 
 ### Guest account constraints
@@ -62,6 +67,7 @@ causes drop-off. Guest onboarding removes that wall entirely.
 - Cannot send messages in a Circle (requires active account)
 - Cannot receive algorithm-origin matches (requires active account + Premium)
 - Cannot upload photos (requires active account)
+- May keep `display_name` and profile photo empty until activation
 
 ### Magic link technical flow
 
