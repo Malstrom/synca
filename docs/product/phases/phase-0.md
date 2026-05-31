@@ -13,7 +13,7 @@ I want to start a Spark session immediately without creating an account,
 so that I can discover our compatibility without any barrier or commitment.
 
 ### UF-01 — First Spark (full journey, new user)
-**Refs:** profile-v1.md § Step 0, signals-v1.md § Step 0, spark-v1.md § Step 1.0
+**Refs:** [profile-v1.md — Step 0](../../features/profile-v1.md#step-0--guest-onboarding-validation-mvp) · [signals-v1.md — Step 0](../../features/signals-v1.md#step-0--declared-preferences) · [spark-v1.md — Step 1.0](../../features/spark-v1.md#step-10--proximity-spark-qr)
 
 ```
 User A (initiator, has app)          User B (receiver, no app)
@@ -61,7 +61,7 @@ score >= threshold                   score < threshold
 - No `signals` record exists for one or both users.
 - Scoring falls back to declared preferences domain only.
 - Score explanation must surface this clearly to the user.
-- Ref: spark-v1.md § Open Questions
+- Ref: [decisions.md](../../product/decisions.md) — filter by `source: docs/features/spark-v1.md`.
 
 ---
 
@@ -71,7 +71,7 @@ I want to answer a short questionnaire about what I look for in a partner,
 so that my matches reflect what actually matters to me, not just raw data.
 
 ### UF-02 — Declared preferences setup
-**Refs:** signals-v1.md § Step 0
+**Refs:** [signals-v1.md — Step 0](../../features/signals-v1.md#step-0--declared-preferences)
 
 ```
 User opens app for the first time
@@ -102,7 +102,7 @@ I want to see a human-readable summary of my lifestyle profile,
 so that I can trust that Synca understands me before I receive any match.
 
 ### UF-03 — Self-discovery (user explores their own health profile)
-**Refs:** signals-v1.md § Step 1.0, signals-v1.md § User-facing layer
+**Refs:** [signals-v1.md — Step 1.0](../../features/signals-v1.md#step-10--apple-health--health-connect) · [signals-v1.md — User-facing layer](../../features/signals-v1.md#user-facing-layer)
 
 ```
 User opens app after first Spark
@@ -143,7 +143,7 @@ I want to activate my account with a single tap from my email,
 so that I don't lose my compatibility results.
 
 ### UF-04 — Guest account activation
-**Refs:** profile-v1.md § Step 0
+**Refs:** [profile-v1.md — Step 0](../../features/profile-v1.md#step-0--guest-onboarding-validation-mvp)
 
 ```
 Spark completed
@@ -178,4 +178,4 @@ Permanent JWT issued
 - Android → Phase 2
 - Photos and bio → Phase 1
 - Circles / match chat → Phase 1
-- Notifications → Phase 1 *(feature doc: notifications-v1.md — TBD)*
+- Notifications → Phase 1 (ref: [notifications-v1.md](../../features/notifications-v1.md))

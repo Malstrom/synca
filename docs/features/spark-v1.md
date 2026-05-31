@@ -189,11 +189,11 @@ the more Sparks happen, the richer the compatibility data for everyone.
 - Free users who complete a Spark receive a `premium_week` trial.
 - Premium users who complete a Spark receive a `match_credit`.
 - Any user whose Spark produces a low compatibility score receives a `low_score_bonus`
-  (type and threshold TBD — ref: `docs/decisions.md — spark-low-score-bonus`).
+  (type and threshold TBD — ref: [decisions.md](../product/decisions.md) — filter by `source: docs/features/spark-v1.md`).
 
 ### Open Questions
 
-See `docs/decisions.md` — filter by `source: docs/features/spark-v1.md`.
+See [decisions.md](../product/decisions.md) — filter by `source: docs/features/spark-v1.md`.
 
 ---
 
@@ -248,4 +248,4 @@ None — Group Sparks are free for all users.
 
 ### Open Questions
 
-See `docs/decisions.md` — filter by `source: docs/features/spark-v1.md`.
+See [decisions.md](../product/decisions.md) — filter by `source: docs/features/spark-v1.md`.
