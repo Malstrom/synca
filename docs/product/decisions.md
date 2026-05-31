@@ -3,7 +3,7 @@
 **Last updated:** May 2026
 
 This document is the **single source of truth** for all open questions.
-Feature docs do not contain open questions — they reference this file.
+Feature docs do not contain open questions — they link to this file.
 Once resolved, the decision is recorded here and the answer is integrated
 directly into the relevant feature doc text.
 
@@ -70,21 +70,21 @@ directly into the relevant feature doc text.
 - id: profile-email-verification-mvp
   status: open
   owner: product
-  source: docs/features/profile-v1.md — Step 1.0 Open Questions
+  source: docs/features/profile-v1.md — Open Questions
   question: Is email verification mandatory before accessing the app, or optional in MVP?
   decision:
 
 - id: profile-completeness-storage
   status: open
   owner: tech
-  source: docs/features/profile-v1.md — Step 3.0 Open Questions
+  source: docs/features/profile-v1.md — Open Questions
   question: Should `completeness_score` be stored on `profiles` or computed on every request?
   decision:
 
 - id: profile-guest-magic-link-timing
   status: open
   owner: product
-  source: docs/features/profile-v1.md — Step 0 Open Questions
+  source: docs/features/profile-v1.md — Open Questions
   question: Should the magic link be sent immediately after guest account creation, or only after the first Spark session completes?
   decision:
 
@@ -95,35 +95,35 @@ directly into the relevant feature doc text.
 - id: spark-discovery-method-step1
   status: open
   owner: product
-  source: docs/features/spark-v1.md — Step 1.0 Open Questions
+  source: docs/features/spark-v1.md — Open Questions
   question: Should both Bluetooth and QR code discovery be available in Step 1.0, or ship QR only first?
   decision:
 
 - id: spark-session-expiry-window
   status: open
   owner: product
-  source: docs/features/spark-v1.md — Step 1.0 Open Questions
+  source: docs/features/spark-v1.md — Open Questions
   question: Session expiry window is set at 10 minutes — is this too short for noisy environments (concerts, gyms)?
   decision:
 
 - id: spark-group-max-size
   status: open
   owner: product
-  source: docs/features/spark-v1.md — Step 2.0 Open Questions
+  source: docs/features/spark-v1.md — Open Questions
   question: Maximum group size for a Group Spark? Suggested up to 22 for event Circle compatibility.
   decision:
 
 - id: spark-group-partial-scoring
   status: open
   owner: tech
-  source: docs/features/spark-v1.md — Step 2.0 Open Questions
+  source: docs/features/spark-v1.md — Open Questions
   question: If some participants do not confirm presence before expiry, should partial scoring proceed for the pairs that did confirm?
   decision:
 
 - id: spark-group-initiator-summary
   status: open
   owner: product
-  source: docs/features/spark-v1.md — Step 2.0 Open Questions
+  source: docs/features/spark-v1.md — Open Questions
   question: Should the group initiator see a summary of all pairwise scores after completion, or only their own pairs?
   decision:
 
@@ -160,14 +160,14 @@ directly into the relevant feature doc text.
 - id: circles-archive-on-match-end
   status: open
   owner: product
-  source: docs/features/circles-v1.md — Step 1.0 Open Questions
+  source: docs/features/circles-v1.md — Open Questions
   question: Should a Duo Circle be automatically archived if the match status transitions to `ended`?
   decision:
 
 - id: circles-moment-from-circle
   status: open
   owner: tech
-  source: docs/features/circles-v1.md — Step 1.0 Open Questions / docs/features/moments-v1.md
+  source: docs/features/circles-v1.md — Open Questions
   question: Should Moment proposals be surfaced inside the Duo Circle chat UI, or as a separate flow? No endpoint documented to propose a Moment from inside a Circle — how does Circle → Match → Moment navigation work in the API?
   decision:
 
@@ -178,35 +178,35 @@ directly into the relevant feature doc text.
 - id: moments-location-type
   status: open
   owner: product
-  source: docs/features/moments-v1.md — Step 1.0 Open Questions
+  source: docs/features/moments-v1.md — Open Questions
   question: Should `location` be a free-text field only, or should we integrate a maps API for structured venue selection?
   decision:
 
 - id: moments-counter-cap-enforcement
   status: open
   owner: tech
-  source: docs/features/moments-v1.md — Step 1.0 Open Questions
+  source: docs/features/moments-v1.md — Open Questions
   question: Is the 5-round counter-proposal cap enforced server-side or client-side only?
   decision:
 
 - id: moments-ratings-visibility
   status: open
   owner: product
-  source: docs/features/moments-v1.md — Step 1.0 Open Questions
+  source: docs/features/moments-v1.md — Open Questions
   question: Should ratings be visible to the rated user or remain fully private?
   decision:
 
 - id: moments-noshows-suspension-threshold
   status: open
   owner: product
-  source: docs/features/moments-v1.md — Step 2.0 Open Questions
+  source: docs/features/moments-v1.md — Open Questions
   question: After how many confirmed no-shows should a profile be automatically suspended?
   decision:
 
 - id: moments-positive-rating-reward
   status: open
   owner: product
-  source: docs/features/moments-v1.md — Step 2.0 Open Questions
+  source: docs/features/moments-v1.md — Open Questions
   question: Should positive ratings unlock any in-app reward or badge?
   decision:
 
@@ -217,56 +217,56 @@ directly into the relevant feature doc text.
 - id: trust-otp-provider
   status: open
   owner: tech
-  source: docs/features/trust-v1.md — Step 1.0 Open Questions
+  source: docs/features/trust-v1.md — Open Questions
   question: Which OTP provider to use (Twilio, SMS.ru for RU market)?
   decision:
 
 - id: trust-suspended-notification
   status: open
   owner: product
-  source: docs/features/trust-v1.md — Step 1.0 Open Questions
+  source: docs/features/trust-v1.md — Open Questions
   question: Should suspended profiles receive an in-app notification or be silently excluded?
   decision:
 
 - id: trust-report-appeal
   status: open
   owner: product
-  source: docs/features/trust-v1.md — Step 1.0 Open Questions
+  source: docs/features/trust-v1.md — Open Questions
   question: Can a user appeal a confirmed report?
   decision:
 
 - id: trust-photo-moderation-provider
   status: open
   owner: tech
-  source: docs/features/trust-v1.md — Step 2.0 Open Questions
+  source: docs/features/trust-v1.md — Open Questions
   question: Which provider is used for photo moderation in MVP (AWS Rekognition, Google Vision, or other)?
   decision:
 
 - id: trust-photo-pending-visibility
   status: open
   owner: product
-  source: docs/features/trust-v1.md — Step 2.0 Open Questions
+  source: docs/features/trust-v1.md — Open Questions
   question: Should photos with `pending` moderation be visible to the uploader but not to other users, or hidden entirely?
   decision:
 
 - id: trust-liveness-provider
   status: open
   owner: tech
-  source: docs/features/trust-v1.md — Step 2.0 Open Questions
+  source: docs/features/trust-v1.md — Open Questions
   question: Which liveness provider to use (iProov, Onfido, custom)?
   decision:
 
 - id: trust-score-history-log
   status: open
   owner: tech
-  source: docs/features/trust-v1.md — Step 3.0 Open Questions
+  source: docs/features/trust-v1.md — Open Questions
   question: Should `trust_score` history be logged for auditing and appeals?
   decision:
 
 - id: trust-score-hard-caps
   status: open
   owner: tech
-  source: docs/features/trust-v1.md — Step 3.0 Open Questions
+  source: docs/features/trust-v1.md — Open Questions
   question: Maximum and minimum score caps — hard floor at 0, hard ceiling at 100?
   decision:
 
