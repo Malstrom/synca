@@ -1,6 +1,6 @@
 # Synca — iOS Conventions
 
-**Version 2.0 — June 2026**
+**Version 2.1 — June 2026**
 
 > Single reference for iOS coding conventions, stack, and rules.
 > For folder layout and MVVM pattern → See [docs/architecture/ios-structure.md](../architecture/ios-structure.md).
@@ -24,6 +24,75 @@
 | Local persistence | SwiftData (MVP) |
 | Architecture | MVVM — by-feature layout |
 | Auth | JWT stored in Keychain (`SecItemAdd`) |
+
+---
+
+## Approved Patterns (iOS 17+ / Swift 5.10)
+
+These decisions are final. Do not reopen unless a new iOS major version changes them.
+Before writing any iOS code, verify the pattern is not deprecated at
+[developer.apple.com](https://developer.apple.com/documentation/) and in the
+[Swift Evolution proposals](https://github.com/apple/swift-evolution).
+
+### State & Observation
+
+| Pattern | Status | Notes |
+|---|---|---|
+| `@Observable` (Observation framework) | ✅ Use | iOS 17+. Replaces `ObservableObject` |
+| `@State private var viewModel = MyVM()` | ✅ Use | iOS 17+. Replaces `@StateObject` |
+| `ObservableObject` + `@Published` | ❌ Deprecated | Use `@Observable` instead |
+| `@StateObject` | ❌ Deprecated | Use `@State` with `@Observable` instead |
+| `@ObservedObject` | ❌ Deprecated | Use `@Bindable` or direct `@Observable` access |
+| `@EnvironmentObject` | ❌ Deprecated | Use `@Environment(MyType.self)` instead |
+| Combine (`PassthroughSubject`, `@Published`) | ❌ Avoid | Use `async/await` + `@Observable` |
+
+### Concurrency
+
+| Pattern | Status | Notes |
+|---|---|---|
+| `async/await` | ✅ Use | Standard for all async work |
+| `.task { }` modifier | ✅ Use | Replaces `onAppear` for async calls |
+| `Task { }` | ✅ Use | For fire-and-forget from sync context |
+| `@MainActor` | ✅ Use | On ViewModels to ensure UI updates on main thread |
+| Completion handlers / callbacks | ❌ Avoid | Replaced by `async/await` |
+| `DispatchQueue.main.async` | ❌ Avoid | Use `await MainActor.run { }` or `@MainActor` |
+
+### Navigation
+
+| Pattern | Status | Notes |
+|---|---|---|
+| `NavigationStack` + `navigationDestination` | ✅ Use | iOS 16+. Type-safe programmatic routing |
+| `AppRouter` (`@Observable`) | ✅ Use | → See [architecture/ios-structure.md](../architecture/ios-structure.md) |
+| `NavigationView` | ❌ Deprecated | Replaced by `NavigationStack` |
+| `NavigationLink(destination:)` | ⚠️ Avoid | Use `navigationDestination` + `AppRouter` instead |
+
+### Data & Persistence
+
+| Pattern | Status | Notes |
+|---|---|---|
+| `Codable` structs | ✅ Use | For all models crossing the network boundary |
+| `JSONDecoder.KeyDecodingStrategy.convertFromSnakeCase` | ✅ Use | No manual `CodingKeys` needed |
+| SwiftData | ✅ Use | MVP local persistence. iOS 17+ |
+| CoreData | ❌ Avoid | Replaced by SwiftData |
+| `UserDefaults` for tokens | ❌ Never | Use Keychain only |
+
+### UI
+
+| Pattern | Status | Notes |
+|---|---|---|
+| SwiftUI native components | ✅ Prefer | Always check if a native component exists before adding a library |
+| `UIViewRepresentable` | ⚠️ Only if forced | Wrap UIKit only when no SwiftUI equivalent exists |
+| Third-party UI libraries | ⚠️ Avoid | Prefer native. Exceptions must be documented here |
+| SF Symbols | ✅ Use | For all icons. No custom icon assets unless brand-required |
+
+### Testing
+
+| Pattern | Status | Notes |
+|---|---|---|
+| XCTest | ✅ Use | Native framework, no third-party needed |
+| `async throws` test methods | ✅ Use | Natively supported from iOS 15+ |
+| Swift Testing (`@Test`, `@Suite`) | ⚠️ Optional | New in Xcode 16. Can coexist with XCTest |
+| Third-party test frameworks | ❌ Avoid | XCTest is sufficient for MVP |
 
 ---
 
