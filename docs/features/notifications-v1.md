@@ -168,17 +168,4 @@ Telegram notifications are opt-in for all tiers (user must connect the bot).
 
 ## Open Questions
 
-- Should `circle_message` push be suppressed if the user has the Circle screen
-  open (i.e. real-time via Action Cable is already active)?
-- Should `signals_stale` fire at 7 days, 14 days, or both?
-- APNs/FCM token rotation: when a token is invalidated by the platform, how does
-  the backend detect and deactivate it? Suggested: parse APNs/FCM error responses
-  in `NotificationJob` and set `device_tokens.active = false`.
-- Should `notification_preferences` support per-type email overrides, or is a
-  single `email_enabled` toggle sufficient for MVP?
-- Telegram bot: dedicated `@SyncaBot` (user-facing) or shared with the field
-  research bot? Suggested: separate — the research bot is internal tooling,
-  the notification bot is user-facing.
-- Deep link scheme for each `screen` value: needs alignment with iOS/Android
-  navigation (ref: `docs/architecture/ios-structure.md`,
-  `docs/architecture/android-structure.md`).
+See `docs/decisions.md` — filter by `source: docs/features/notifications-v1.md`.
