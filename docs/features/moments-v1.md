@@ -3,7 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 3
-**User flows:** `docs/product/phases/` — no flows in Phase 0–2; flows will be added in phase-3.md
+**User flows:** `docs/product/phases/phase-2.md` — UF-13
 
 > **Canonical name:** `Moments`.
 > The DB table is `moments`, the API resource is `/api/v1/moments`,
@@ -33,34 +33,18 @@ A Moment can only be initiated between two profiles that share an active match.
 
 ### User Flow
 
-**Step 1 — Propose**
-1. User A opens a match and taps “Propose a meeting”.
-2. Fills in: location (free text), date, time.
-3. Backend creates a `Moment` with `status: pending` and notifies User B.
+→ See [phase-2.md — UF-13](../product/phases/phase-2.md#uf-13--moment-proposal-basic-propose-accept-decline)
+_(Phase 2 covers propose + accept/decline. Counter-proposal, completion and no-show are Phase 3.)_
 
-**Step 2 — Respond**
-User B can:
-- **Accept** → `status` becomes `confirmed`. Both users receive a confirmation notification.
-- **Decline** → `status` becomes `declined`. No further action.
-- **Counter-propose** → creates a new `Moment` linked via `parent_id`,
-  original becomes `superseded`. User A is notified and can accept, decline, or
-  counter again.
+### Business Rules
 
-Counter-proposal chain is capped at **5 rounds** to prevent infinite loops.
-The cap is enforced **server-side** by counting negotiation rounds in the database
-(depth of the `parent_id` chain); the client reflects the limit in the UI but is
-not the authoritative source. Returning a `422 Unprocessable Entity` when the cap
-is exceeded. Counter-proposal data is retained for analytics and future ML models.
-
-**Step 3 — Complete + Rate**
-After the scheduled date/time has passed, both users are prompted to mark the moment:
-- **Completed** → `status` becomes `completed`. Each user submits a rating (1–5 stars).
-- **No-show** → `status` becomes `no_show`. The reporter is unaffected;
-  the no-show profile receives `−15` to `trust_score`.
-
-Ratings are private and feed into `TrustScore v1`.
-
--- ref: docs/features/trust-v1.md
+- Counter-proposal chain is capped at **5 rounds** to prevent infinite loops.
+  The cap is enforced **server-side** by counting negotiation rounds in the database
+  (depth of the `parent_id` chain); the client reflects the limit in the UI but is
+  not the authoritative source. Returns `422 Unprocessable Entity` when the cap
+  is exceeded. Counter-proposal data is retained for analytics and future ML models.
+- No-show: the reporter is unaffected; the no-show profile receives `−15` to `trust_score`.
+- Ratings are private and feed into `TrustScore v1` (ref: `docs/features/trust-v1.md`).
 
 ### DB Schema
 
