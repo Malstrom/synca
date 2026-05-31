@@ -1,9 +1,8 @@
 # Feature: Matching
-**Version:** 1.1
+**Version:** 2.0
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
-**User flows:** `docs/product/phases/phase-1.md` — UF-08
 
 ---
 
@@ -20,221 +19,107 @@ The raw score (0–100) is **never exposed to users** — only plain-language in
 Matching deliberately produces **few, high-quality matches**. The system does not
 produce an infinite swipeable feed.
 
-Prerequisites:
-- `users`, `profiles`, `preference_profiles` (ref: `docs/features/profile-v1.md`)
-- `signals`, `declared_preferences` (ref: `docs/features/signals-v1.md`)
-- Minimum signals threshold: a user enters the algorithm-origin matching pool only
-  after accumulating at least **7 days** of signals data. This value is configurable
-  (default 7) and can be adjusted per city without a code deploy.
+Prerequisites: `users`, `profiles`, `preference_profiles` (profile-v1.md) · `signals`, `declared_preferences` (signals-v1.md).
 
 ---
 
-## Step 1.0 — Compatibility Score (Health Signals)
+## Steps
 
-**Phase:** 1
-**Status:** Draft
+| Step | Phase | Status | Description |
+|---|---|---|---|
+| 1.0 — Compatibility Score (Health Signals) | 1 | Draft | Rule-based scoring from health signals |
+| 2.0 — Music Signal Integration | 2 | Planned | Music sub-score added to Lifestyle domain |
+| 3.0 — Travel Signal Integration | 3 | Planned | Travel sub-score added to Lifestyle domain |
 
-### Compatibility Domains
+UX flows:
+- Phase 1 → [phase-1.md — UF-08](../product/phases/phase-1.md#uf-08--algorithm-match-nightly-job)
 
-| Domain | Weight | Signals used |
-|--------|--------|--------------|
+---
+
+## Business Rules
+
+### Match origins
+
+| Origin | Trigger | UX label |
+|---|---|---|
+| `:spark` | Two users complete a Spark in person | "Synca confermata" ✅ |
+| `:algorithm` | Nightly `MatchingJob` on signals | "Synca suggerita" 💡 |
+
+Algorithm-originated matches carry an `algorithm_confidence` float (0.0–1.0).
+Spark-originated matches leave this field `nil`.
+
+### Score thresholds
+
+These values are the **single source of truth** for match creation decisions.
+No other document should hardcode threshold values.
+
+| Threshold | Spark origin | Algorithm origin |
+|---|---|---|
+| Minimum score to create a match | 50 | 65 |
+
+Algorithm origin has a higher bar because no physical presence confirms mutual intent.
+Thresholds are configurable per city.
+
+### Algorithm matching pool
+- A user enters the algorithm matching pool only after accumulating at least **7 days**
+  of signals data. This value is configurable (default 7) and can be adjusted per city
+  without a code deploy.
+- Algorithm-origin matching requires Premium (ref: `docs/product/monetization.md`).
+
+### Compatibility domains
+
+| Domain | Weight (Step 1.0) | Signals used |
+|---|---|---|
 | Sleep | 35% | `chronotype`, `sleep_duration_avg`, `sleep_variability`, `social_jetlag` |
 | Activity | 30% | `activity_minutes_avg`, `step_count_avg`, `peak_activity_window`, `rest_hr_avg` |
 | Lifestyle | 20% | `routine_stability_index` (Step 1.0); music and travel added in Steps 2–3 |
-| Preferences | 15% | Age range, distance, stated dealbreakers, `declared_preferences` multipliers |
+| Preferences | 15% | Age range, distance, dealbreakers, `declared_preferences` multipliers |
 
-The `declared_preferences` record for each user is loaded via
-`user.declared_preference` and used as multipliers within the Preferences domain
-and as weight modifiers across Sleep/Activity domains.
-Ref: `docs/features/signals-v1.md — Step 0`.
+Weights are indicative for MVP and will be recalibrated per city as outcome data accumulates.
 
-> Weights are indicative for MVP. They will be recalibrated per city as outcome
-> data accumulates (see Evolution Plan below).
+### Lifestyle domain weight evolution
 
-### Score Thresholds
+| Sub-signal | Step 1.0 | Step 2.0 | Step 3.0 |
+|---|---|---|---|
+| `routine_stability_index` | 100% | 40% | 20% |
+| Music taste | — | 60% | 40% |
+| Travel behavior | — | — | 40% |
 
-Thresholds are the **single source of truth** for match creation decisions.
-No other document should hardcode threshold values — always reference this table.
+### Missing signals
+Missing signals never block scoring. They reduce the affected domain weight proportionally.
 
-| Threshold | Spark origin | Algorithm origin |
-|-----------|--------------|------------------|
-| Minimum score to create a match | 50 | 65 |
-
-> Algorithm origin has a higher bar than Spark because no physical presence
-> confirms mutual intent. Thresholds are configurable per city.
-
-| Score range | Spark origin | Algorithm origin | Circle (duo) admission |
-|-------------|--------------|------------------|------------------------|
-| High | High-quality match shown | High-quality suggestion shown | ✅ Eligible |
-| Standard | Standard match shown | Standard suggestion shown | ✅ Eligible (duo only) |
-| Below minimum | No match created | No match created | ❌ Not eligible |
-
-### Match Origins
-
-| Origin | Trigger | UX label |
-|--------|---------|----------|
-| `:spark` | Two users complete a `Spark` in person | "Synca confermata" ✅ |
-| `:algorithm` | Nightly `MatchingJob` on signals | "Synca suggerita" 💡 |
-
-```ruby
-# app/models/match.rb
-enum :origin, { spark: 0, algorithm: 1 }, default: :spark
-```
-
-Algorithm-originated matches also carry an `algorithm_confidence` float (0.0–1.0).
-Spark-originated matches leave this field `nil`.
-
-### Flow 1 — Spark-triggered
-
-→ See [phase-0.md — UF-01](../product/phases/phase-0.md#uf-01--first-spark-full-journey-new-user)
-
-`CompatibilityScoreService` is called synchronously at spark completion.
-Result is available to the client immediately via the `spark:scored`
-Action Cable event.
-
-### Flow 2 — Algorithm-triggered
-
-→ See [phase-1.md — UF-08](../product/phases/phase-1.md#uf-08--algorithm-match-nightly-job)
-
-The `algorithm` queue is separate from default to avoid blocking Spark scoring
-during the nightly batch run.
-
-> **V2 note:** When async matching is active and `ml_match_scores` are available,
-> `MatchingJob` will read pre-computed ML scores instead of calling
-> `CompatibilityScoreService` synchronously. Rule-based scoring remains as fallback.
-> Ref: `docs/architecture/ml-architecture-v1.md — Section 7`
-
-### DB Schema
-
-```sql
--- preference_profiles: ref docs/features/profile-v1.md
--- declared_preferences: ref docs/features/signals-v1.md
--- (canonical definitions live there; do not redefine here)
-
-matches
-  id                     bigint PK
-  user_a_id              bigint FK -> users NOT NULL
-  user_b_id              bigint FK -> users NOT NULL
-  spark_id               bigint FK -> sparks       -- nil for algorithm-origin
-  origin                 integer NOT NULL DEFAULT 0  -- 0: spark | 1: algorithm
-  algorithm_confidence   float                       -- nil for spark-origin
-  compatibility_score    float NOT NULL
-  score_breakdown        jsonb  -- domain sub-scores; never exposed raw to users
-  status                 string NOT NULL DEFAULT 'active'
-                         -- 'active' | 'drifted' | 'reconnected' | 'ended'
-  created_at             datetime
-  updated_at             datetime
-  UNIQUE (user_a_id, user_b_id)
-```
-
-For `signals` schema see `docs/features/signals-v1.md`.
-For `sparks` schema see `docs/features/spark-v1.md`.
-
-### API Endpoints
-
-| Method | Path | Auth required | Description |
-|--------|------|---------------|--------------|
-| GET | `/api/v1/matches` | Yes | Lists the current user's matches |
-| GET | `/api/v1/matches/:id` | Yes | Returns a specific match with plain-language explanation |
-| PATCH | `/api/v1/matches/:id` | Yes | Updates match status (e.g. ended) |
-
-Ref: `docs/api/openapi.yaml`
-
----
-
-## Match Lifecycle
-
-Matches have a `status` field with the following values:
+### Match lifecycle
 
 | Status | Meaning |
-|--------|---------|
-| `active` | Default on creation. Match is visible and both users can interact. |
-| `drifted` | Health signals for one or both users have not been updated in the last 30 days. Match is deprioritized in list but still visible in history. |
-| `reconnected` | A drifted match where both users have refreshed their signals and/or completed a new Spark session. |
-| `ended` | Match explicitly ended by one of the users via `PATCH /api/v1/matches/:id`. |
+|---|---|
+| `active` | Default on creation. Both users can interact. |
+| `drifted` | Health signals not updated in 30+ days. Deprioritized but still visible. |
+| `reconnected` | Drifted match where both users have refreshed signals or completed a new Spark. |
+| `ended` | Explicitly ended by one of the users. |
 
-### MatchDecayJob
+`MatchDecayJob` runs daily and marks matches as `drifted` when signals are stale.
+Drifted matches are excluded from the top of the active list and do not trigger
+new Moment proposals. Reconnected matches return to the top.
 
-`MatchDecayJob` runs daily via Solid Queue and marks matches as `drifted` when
-health signals for one or both users have not been updated in the last 30 days.
-
-Drifted matches:
-- Remain visible in match history.
-- Are excluded from the top of the active matches list.
-- Do not trigger new Moment proposals.
-
-Reconnected matches:
-- Return to the top of the active match list.
-- May generate a new Moment proposal if none is pending.
-
-Ref: `docs/tech/backend.md` for Rails domain model.
+### Scoring architecture
+- `CompatibilityScoreService` must never be called directly from jobs or services —
+  always use `MatchScoringFacade` (ref: `docs/conventions/backend.md`).
+- V2: ML ranking layer replaces rule-based candidate ordering when
+  `ML_SCORING_ENABLED=true`. Rule-based scoring remains as fallback.
+  (ref: `docs/architecture/ml-architecture-v1.md § Section 7`)
 
 ---
 
-## Step 2.0 — Music Signal Integration
+## References
 
-**Phase:** 2
-**Status:** Planned
-
-### Changes from Step 1.0
-
-- `CompatibilityScoreService` reads music columns from `signals` when available
-  (ref: `docs/features/signals-v1.md` Step 2.0).
-- Music sub-score contributes to the **Lifestyle domain**.
-- No schema change to `matches` — `score_breakdown` JSONB absorbs the new
-  music sub-score naturally.
-- Users without music signals are scored only on health + preferences.
-  Missing signals never block scoring; they reduce the Lifestyle domain weight
-  proportionally.
-
-### Lifestyle Domain Weight Distribution (Step 2.0)
-
-| Sub-signal | Weight within Lifestyle |
-|------------|-------------------------|
-| `routine_stability_index` | 40% |
-| Music taste | 60% |
+- DB Schema → [docs/architecture/db-schema.md § Matching](../architecture/db-schema.md#matching)
+- API → `docs/api/openapi.yaml`
+- Rails Model → [docs/conventions/backend.md § Domain Model](../conventions/backend.md#domain-model-rails-associations)
+- ML Architecture → [docs/architecture/ml-architecture-v1.md](../architecture/ml-architecture-v1.md)
+- Monetization → [docs/product/monetization.md](../product/monetization.md)
 
 ---
 
-## Step 3.0 — Travel Signal Integration
-
-**Phase:** 3
-**Status:** Planned
-
-### Changes from Step 2.0
-
-- `CompatibilityScoreService` reads travel columns from `signals` when available
-  (ref: `docs/features/signals-v1.md` Step 3.0).
-- Travel sub-score contributes to the **Lifestyle domain**.
-- No schema change to `matches`.
-
-### Lifestyle Domain Weight Distribution (Step 3.0)
-
-| Sub-signal | Weight within Lifestyle |
-|------------|-------------------------|
-| `routine_stability_index` | 20% |
-| Music taste | 40% |
-| Travel behavior | 40% |
-
----
-
-## Evolution Plan
-
-- **v0 (rule-based):** filter by city/age/gender; no signal-based scoring.
-- **v1 (health-based):** weighted score from health signals. Both `:spark`
-  and `:algorithm` origins active.
-- **v2 (data-driven):** ML ranking layer replaces rule-based candidate ordering.
-  Pre-computed scores stored in `ml_match_scores` via `MlMatchScoringJob`.
-  Rule-based `CompatibilityScoreService` remains as fallback.
-  Ref: `docs/architecture/ml-architecture-v1.md`
-- **v3 (group compatibility):** extend the pairwise model to compute a
-  multi-user group cohesion score across 4–22 participants; surface curated
-  small-group activity proposals (runs, sauna, padel, calcetto). The
-  individual compatibility profiles built in v1/v2 are the direct input
-  to this layer — no re-architecture required.
-
----
-
-### Open Questions
+## Open Questions
 
 See [docs/product/decisions.md](../product/decisions.md) — filter by `source: docs/features/matching-v1.md`.
