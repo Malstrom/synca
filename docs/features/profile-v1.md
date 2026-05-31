@@ -110,11 +110,7 @@ None — guest onboarding is available to all users by definition.
 
 ### Open Questions
 
-- Should the magic link be sent immediately after guest account creation, or only
-  after the first Spark session completes?
-- 30-day purge for inactive guests: is this compliant with GDPR right-to-erasure
-  requirements if no explicit consent was collected at account creation?
-- Should guests be able to view their own Lifestyle Profile before activating?
+See `docs/decisions.md` — filter by `source: docs/features/profile-v1.md`.
 
 ---
 
@@ -237,11 +233,7 @@ None — registration, login, and profile management are available on all tiers.
 
 ### Open Questions
 
-- Is email verification mandatory before accessing the app, or optional in MVP?
-- Should `city` in `preference_profiles` be a FK to a future `city_configs` table
-  or a free string in MVP?
-- Photo ordering: drag-and-drop on client only, or persisted server-side?
-- Is the minimum of 1 photo enforced at the API level or client-side only?
+See `docs/decisions.md` — filter by `source: docs/features/profile-v1.md`.
 
 ---
 
@@ -351,10 +343,7 @@ None — credential recovery is available to all users.
 
 ### Open Questions
 
-- Should `reset_password` tokens be stored in a dedicated table for explicit
-  single-use tracking, or is the `iat`-based invalidation approach sufficient?
-- What is the deep link scheme for the reset password screen?
-  Suggested: `synca://auth/reset?token=<jwt>`
+See `docs/decisions.md` — filter by `source: docs/features/profile-v1.md`.
 
 ---
 
@@ -399,11 +388,7 @@ None — social login is available on all tiers.
 
 ### Open Questions
 
-- Is VK a priority for the Russian market in Step 2.0, or deferred to Step 2.1?
-- Orphan account: user registers with Apple and later wants to add a password —
-  what is the flow?
-- Token revocation: if a user revokes access from Apple/Google, how is the active
-  Synca session handled?
+See `docs/decisions.md` — filter by `source: docs/features/profile-v1.md`.
 
 ---
 
@@ -435,4 +420,4 @@ existing response extended with `{ "completeness_score": 85 }`.
 
 ### Open Questions
 
-- Should `completeness_score` be stored on `profiles` or computed on every request?
+See `docs/decisions.md` — filter by `source: docs/features/profile-v1.md`.
