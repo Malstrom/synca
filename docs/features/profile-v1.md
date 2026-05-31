@@ -3,7 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
-**User flows:** `docs/product/phases/phase-0.md` — UF-01, UF-04
+**User flows:** `docs/product/phases/phase-0.md` — UF-01, UF-04 · `docs/product/phases/phase-1.md` — UF-05, UF-06 · `docs/product/phases/phase-2.md` — UF-11
 
 ---
 
@@ -51,20 +51,7 @@ day one without blocking the initial IRL interaction.
 
 ### User Flow
 
-1. User opens the app for the first time, or arrives from a Spark QR code via deferred deep link.
-2. Enters email only — no password, no name, no photo.
-3. Backend creates a `User` record with `account_type: :guest` and issues a
-   short-lived guest JWT (24-hour expiry).
-4. If the user arrived from a Spark QR flow, the app resumes the pending Spark join automatically.
-5. User proceeds directly to the Declared Preferences questionnaire
-   (ref: `signals-v1.md — Step 0`) and then to the Spark screen.
-6. After completing their first Spark session, a magic link is sent to their email:
-   *"Activate your Synca account to save your compatibility results."*
-7. User clicks the magic link → sets a display name → account upgraded to
-   `account_type: :active`. A permanent JWT is issued. From this point on,
-   an email-verified account is required to continue using the app.
-8. If the user never clicks the magic link: guest record and all associated data
-   are purged after 30 days.
+→ See [phase-0.md — UF-04](../product/phases/phase-0.md#uf-04--guest-account-activation)
 
 ### Guest account constraints
 
@@ -127,46 +114,7 @@ See `docs/decisions.md` — filter by `source: docs/features/profile-v1.md`.
 
 ### User Flow
 
-**Registration (new user, no prior guest account):**
-1. User opens the app and selects "Create account".
-2. Enters email + password (minimum 8 characters).
-3. Backend creates `User` (`account_type: :active`) + `Profile`, returns a JWT
-   access token and a refresh token.
-4. Tokens saved to Keychain (iOS) / EncryptedSharedPreferences (Android).
-5. User is redirected to the onboarding wizard.
-
-**Upgrade from guest account:**
-1. User arrives via magic link (Step 0 flow).
-2. Account is already `account_type: :active` after activation.
-3. User is prompted to complete the remaining onboarding steps (photos, bio,
-   extended preferences) at their own pace — these are not gated.
-
-**Subsequent login:**
-1. User enters email + password.
-2. Backend validates credentials, returns a new access token and refresh token.
-3. App updates the tokens in Keychain.
-
-**Token refresh:**
-- Access token expiry: 30 days.
-- Refresh token expiry: 90 days.
-- Client sends `POST /api/v1/auth/refresh` with the refresh token to obtain a
-  new access token.
-- Refresh tokens are single-use and rotated on each use.
-
-**Onboarding wizard (4 steps, none skippable for new registrations):**
-The app stores progress locally and resumes from the last completed step
-if the user quits mid-flow.
-
-- **Step 1 — Basic info:** display name (2–40 chars), date of birth (age ≥ 18),
-  gender (`man` | `woman` | `non_binary`), city.
-- **Step 2 — Photos:** 1–6 photos, at least 1 required. Each photo is queued
-  for moderation before being shown to other users.
-- **Step 3 — Bio:** free text, optional, max 300 chars.
-- **Step 4 — Preferences:** looking for (`man` | `woman` | `non_binary` | `any`),
-  age range (default ±5 years), max distance in km (default 25),
-  dealbreakers (optional), city (auto-filled from Step 1).
-
-On completion `profiles.onboarding_completed` is set to `true`.
+→ See [phase-1.md — UF-05](../product/phases/phase-1.md#uf-05--full-registration--onboarding-wizard)
 
 ### DB Schema
 
@@ -263,62 +211,9 @@ payload: { user_id: integer, purpose: string, exp: unix_timestamp }
 No new tables are introduced — the existing `refresh_tokens` table and
 `password_digest` column on `users` are sufficient.
 
-### Forgot Password Flow
+### User Flow
 
-```
-User enters email on "Forgot password" screen
-        ↓
-POST /api/v1/auth/forgot_password  { email }
-        ↓
-Backend looks up user by email
-  → If not found or account_type: :guest: always return 200 (no email enumeration)
-  → If found and account_type: :active:
-      generates JWT { user_id, purpose: 'password_reset', exp: 1h }
-      sends email with deep link: synca://auth/reset?token=<jwt>
-        ↓
-User taps link in email → app opens reset password screen
-        ↓
-POST /api/v1/auth/reset_password  { token, new_password }
-        ↓
-Backend verifies JWT (purpose must be 'password_reset', not expired)
-  → Updates user.password_digest
-  → Revokes ALL active refresh_tokens for that user (force logout everywhere)
-  → Returns new access token + refresh token
-  → User is logged in immediately after reset
-```
-
-> The response to `POST /api/v1/auth/forgot_password` is always HTTP 200
-> regardless of whether the email exists. This prevents email enumeration attacks.
-
-### Change Password Flow (authenticated)
-
-```
-Authenticated user opens "Change password" in settings
-        ↓
-PATCH /api/v1/auth/password  { current_password, new_password }  [Auth required]
-        ↓
-Backend verifies current_password with authenticate
-  → If invalid: 422 Unprocessable Entity
-  → If valid:
-      Updates user.password_digest
-      Revokes all refresh_tokens except the one used in the current session
-      Returns 200 OK
-```
-
-### Resend Magic Link Flow (guest accounts)
-
-```
-Guest user did not receive or the magic link expired
-        ↓
-POST /api/v1/auth/resend_magic_link  { email }  [No auth required]
-        ↓
-Backend looks up user by email
-  → If not found or account_type: :active: always return 200
-  → If found and account_type: :guest:
-      Generates new JWT { user_id, purpose: 'activation', exp: 72h }
-      Sends activation email
-      Rate limit: max 1 resend per 5 minutes per email
-```
+→ See [phase-1.md — UF-06](../product/phases/phase-1.md#uf-06--password-recovery)
 
 ### Token Rules Summary
 
@@ -361,15 +256,7 @@ See `docs/decisions.md` — filter by `source: docs/features/profile-v1.md`.
 
 ### User Flow
 
-1. User selects "Continue with Apple" / "Continue with Google" / "Continue with VK".
-2. Provider returns an OAuth token to the client.
-3. Client sends the token to `POST /api/v1/auth/social`.
-4. Backend verifies the token, finds or creates `User` + `Profile`.
-5. Returns a Synca access token + refresh token. Flow is identical to Step 1.0
-   from this point on.
-
-If the provider email matches an existing account, the two are linked
-automatically via `identity_providers`.
+→ See [phase-2.md — UF-11](../product/phases/phase-2.md#uf-11--social-login)
 
 ### DB Schema
 
