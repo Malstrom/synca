@@ -1,15 +1,12 @@
 # Feature: Moments
-**Version:** 1.0
+**Version:** 2.0
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 3
-**User flows:** `docs/product/phases/phase-2.md` — UF-13
 
 > **Canonical name:** `Moments`.
-> The DB table is `moments`, the API resource is `/api/v1/moments`,
-> and the Rails model is `Moment`.
-> The term **"date_proposals"** is **deprecated** and must not appear anywhere
-> in code, migrations, API paths, UI copy, or documentation.
+> Table: `moments` · API: `/api/v1/moments` · Model: `Moment`.
+> The term **"date_proposals" is deprecated** and must not appear anywhere.
 
 ---
 
@@ -19,91 +16,67 @@ Moments is the feature that transforms a match into a real-world appointment.
 It covers the full lifecycle of a meeting: proposal, negotiation, confirmation,
 completion, and post-meeting rating.
 
-A Moment can only be initiated between two profiles that share an active match.
+A Moment can only be initiated between two users that share an active match.
 
--- ref: docs/features/matching-v1.md
--- ref: docs/features/trust-v1.md
+Prerequisites: `matches` (matching-v1.md) · `trust_score` (trust-v1.md).
 
 ---
 
-## Step 1.0 — Moment Proposal
+## Steps
 
-**Phase:** 3
-**Status:** Draft
+| Step | Phase | Status | Description |
+|---|---|---|---|
+| 1.0 — Moment Proposal | 3 | Draft | Propose, accept, decline, counter-propose, complete, no-show |
+| 2.0 — Reputation Signals from Moments | 4 | Planned | Completed moments and ratings feed TrustScore v1 |
 
-### User Flow
+UX flows:
+- Phase 2 → [phase-2.md — UF-13](../product/phases/phase-2.md#uf-13--moment-proposal-basic-propose-accept-decline)
 
-→ See [phase-2.md — UF-13](../product/phases/phase-2.md#uf-13--moment-proposal-basic-propose-accept-decline)
-_(Phase 2 covers propose + accept/decline. Counter-proposal, completion and no-show are Phase 3.)_
+---
 
-### Business Rules
+## Business Rules
 
+### Proposal and negotiation
+- A Moment can only be proposed between two users with an `active` match.
 - Counter-proposal chain is capped at **5 rounds** to prevent infinite loops.
-  The cap is enforced **server-side** by counting negotiation rounds in the database
-  (depth of the `parent_id` chain); the client reflects the limit in the UI but is
-  not the authoritative source. Returns `422 Unprocessable Entity` when the cap
-  is exceeded. Counter-proposal data is retained for analytics and future ML models.
-- No-show: the reporter is unaffected; the no-show profile receives `−15` to `trust_score`.
-- Ratings are private and feed into `TrustScore v1` (ref: `docs/features/trust-v1.md`).
+  Enforced server-side by counting the depth of the `parent_id` chain in
+  `MomentProposalService`. Returns `422 Unprocessable Entity` when cap is exceeded.
+  Counter-proposal data is retained for analytics and future ML models.
 
-### DB Schema
+### Status transitions
 
-```sql
--- Canonical table name: moments
-moments
-  id               bigint PK
-  proposer_id      bigint FK -> profiles NOT NULL
-  receiver_id      bigint FK -> profiles NOT NULL
-  match_id         bigint FK -> matches NOT NULL
-  parent_id        bigint FK -> moments           -- set on counter-proposals
-  location         string NOT NULL
-  scheduled_at     datetime NOT NULL
-  status           string NOT NULL DEFAULT 'pending'
-                   -- 'pending' | 'confirmed' | 'declined' | 'superseded'
-                   -- 'completed' | 'no_show'
-  proposer_rating  integer                        -- 1-5, set on completion
-  receiver_rating  integer                        -- 1-5, set on completion
-  completed_at     datetime
-  created_at       datetime
-  updated_at       datetime
-```
+| From | To | Trigger |
+|---|---|---|
+| `pending` | `confirmed` | Receiver accepts |
+| `pending` | `declined` | Receiver declines |
+| `pending` | `superseded` | Counter-proposal created |
+| `confirmed` | `completed` | Either user marks as completed |
+| `confirmed` | `no_show` | Either user reports a no-show |
 
-### API Endpoints
+### Ratings
+- Ratings are private (1–5) and set on completion.
+- Ratings feed into TrustScore v1 (ref: `docs/features/trust-v1.md § Step 3.0`).
 
-| Method | Path | Auth required | Description |
-|--------|------|---------------|-------------|
-| POST | `/api/v1/moments` | Yes | Creates a new moment proposal |
-| GET | `/api/v1/moments` | Yes | Lists own moments (all statuses) |
-| GET | `/api/v1/moments/:id` | Yes | Returns a single moment |
-| PATCH | `/api/v1/moments/:id/accept` | Yes | Accepts a pending proposal |
-| PATCH | `/api/v1/moments/:id/decline` | Yes | Declines a pending proposal |
-| POST | `/api/v1/moments/:id/counter` | Yes | Creates a counter-proposal; returns 422 if the 5-round cap is reached |
-| PATCH | `/api/v1/moments/:id/complete` | Yes | Marks moment as completed and submits rating |
-| PATCH | `/api/v1/moments/:id/no_show` | Yes | Reports a no-show |
+### No-show
+- The reporter is unaffected.
+- The reported profile receives −15 to `trust_score`.
 
-Ref: `docs/api/openapi.yaml`
-
-### Premium Gating
-
-None — moment proposals are available on all tiers.
+### Reputation signals (Step 2.0)
+- Completed moments and ratings feed `TrustScore v1` as behavioral signals.
+- Profiles with repeated no-shows surface a warning indicator in the match list.
 
 ---
 
-## Step 2.0 — Reputation Signals from Moments
+## References
 
-**Phase:** 4
-**Status:** Planned
-
-Completed moments and ratings feed into `TrustScore v1` as behavioral signals.
-No-show events are surfaced in the match list as a warning indicator for
-profiles with repeated no-shows.
-
-No new tables introduced in this step.
-
--- ref: docs/features/trust-v1.md
+- DB Schema → [docs/architecture/db-schema.md § Moments](../architecture/db-schema.md#moments)
+- API → `docs/api/openapi.yaml`
+- Rails Model → [docs/conventions/backend.md § Domain Model](../conventions/backend.md#domain-model-rails-associations)
+- Trust score inputs → [docs/features/trust-v1.md](trust-v1.md)
+- Monetization → [docs/product/monetization.md](../product/monetization.md)
 
 ---
 
-### Open Questions
+## Open Questions
 
 See [docs/product/decisions.md](../product/decisions.md) — filter by `source: docs/features/moments-v1.md`.
