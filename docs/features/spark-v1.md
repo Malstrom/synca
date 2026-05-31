@@ -1,5 +1,5 @@
 # Feature: Spark
-**Version:** 1.0
+**Version:** 1.1
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
@@ -18,6 +18,10 @@ because it requires two verified users in the same physical location at the same
 
 Spark is the prerequisite for creating a Match with `origin: :spark` and for joining
 or creating any Circle.
+
+Spark owns the physical session lifecycle (discovery, join, expiry, confirmation,
+questionnaire submission). Compatibility scoring rules and match creation thresholds
+are defined in `docs/features/matching-v1.md` and are referenced by Spark.
 
 Prerequisites:
 - `users`, `profiles` (ref: `docs/features/profile-v1.md`)
@@ -39,32 +43,56 @@ User A opens "Start Spark"
         ↓
 App broadcasts BLE signal (or displays QR code)
         ↓
-User B scans / detects signal → receives invite
+User B scans / detects signal
+        ↓
+If User B already has the app:
+  → receives invite and confirms presence
+If User B does not have the app:
+  → QR opens universal link
+  → app store page opens
+  → after install, deferred deep link restores `qr_token`
+  → User B creates a guest account with email only
+  → app resumes Spark join flow automatically
         ↓
 Both users confirm presence on their own device
         ↓
-Spark created  (status: :pending)
+Spark created / updated (status: :pending or :awaiting_receiver during install flow)
         ↓
 Both users answer the Spark questionnaire on their own device
 (ref: Spark Questionnaire section below)
         ↓
-ScoringJob (Solid Queue, `spark` queue) triggers once both have submitted answers.
+ScoringJob (Solid Queue, `spark` queue, high priority) triggers once both have submitted answers.
 Computes pairwise score using both users' signals (health, music, travel)
 and declared preference weights.
         ↓
 score >= spark minimum threshold (ref: docs/features/matching-v1.md)
-  →  Match created  (origin: :spark)
-  →  trust_score incremented for both users
-  →  SparkReward issued per user
-  →  Spark status: :completed
+  → Match created (origin: :spark)
+  → trust_score incremented for both users
+  → SparkReward issued per user
+  → Spark status: :completed
 score < spark minimum threshold
-  →  no Match created
-  →  Spark status: :completed  (stored for analytics)
+  → no Match created
+  → Spark status: :completed (stored for analytics)
 ```
 
 The compatibility score is **never shown as a raw number** to users.
 It is translated into plain-language explanations
 (e.g. "Your sleep schedules are well aligned").
+
+### Receiver without app
+
+QR join must support the case where the receiving user does not have Synca installed.
+The QR encodes a universal link containing the `qr_token` for the Spark session.
+
+- If the app is installed, the universal link opens the Spark join flow directly.
+- If the app is not installed, the universal link redirects to the App Store / Play Store.
+- After installation, a deferred deep link restores the original `qr_token`.
+- The receiver completes guest onboarding with email only (ref: `docs/features/profile-v1.md — Step 0`).
+- No display name or photo is required for Spark guest join.
+- Once guest onboarding is complete, the app resumes the pending Spark join flow automatically.
+
+This flow is intentionally optimized for the highest-curiosity moment: two users are
+already together and want to test Synca immediately with minimal friction.
 
 ### Spark Questionnaire
 
@@ -94,7 +122,7 @@ sparks
   initiator_id         bigint FK -> users NOT NULL
   receiver_id          bigint FK -> users NOT NULL
   status               string NOT NULL DEFAULT 'pending'
-                       -- 'pending' | 'completed' | 'expired' | 'cancelled'
+                       -- 'pending' | 'awaiting_receiver' | 'completed' | 'expired' | 'cancelled'
   discovery_method     string NOT NULL
                        -- 'bluetooth' | 'qr_code'
   session_code         string             -- 6-digit numeric code for QR flow
@@ -102,7 +130,7 @@ sparks
   compatibility_score  float              -- nil until scoring completes
   score_breakdown      jsonb              -- domain sub-scores (never shown raw to users)
   match_created        boolean NOT NULL DEFAULT false
-  expires_at           datetime NOT NULL  -- session expires if neither confirms within 10 min
+  expires_at           datetime NOT NULL  -- default 10 min; may be extended during app install + guest join flow
   completed_at         datetime
   created_at           datetime
   updated_at           datetime
@@ -126,8 +154,8 @@ For `declared_preferences` schema see `docs/features/signals-v1.md`.
 |--------|------|---------------|--------------|
 | POST | `/api/v1/sparks` | Yes | Initiator creates a new Spark; returns `session_code` + `qr_token` |
 | PATCH | `/api/v1/sparks/:id/join` | Yes | Receiver confirms presence and joins via `session_code` or `qr_token` |
-| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits the Spark questionnaire (declared preference refinement); triggers ScoringJob when both have submitted |
-| GET | `/api/v1/sparks/:id/result` | Yes | Polls scoring result; returns 202 while in progress, 200 with score + match on completion |
+| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits the Spark questionnaire (declared preference refinement); triggers high-priority ScoringJob when both have submitted |
+| GET | `/api/v1/sparks/:id/result` | Yes | Polls scoring result; returns 202 while in progress, 200 with score explanation + match on completion |
 | GET | `/api/v1/sparks/:id` | Yes | Returns spark status and result |
 | GET | `/api/v1/sparks` | Yes | Lists the current user's past sparks |
 | GET | `/api/v1/spark_rewards` | Yes | Lists all rewards for the current user |
@@ -169,8 +197,8 @@ the more Sparks happen, the richer the compatibility data for everyone.
 
 - Bluetooth vs QR code: should both discovery methods be available in Step 1.0
   or should we ship QR only first (simpler, no BLE permission edge cases)?
-- Session expiry window: 10 minutes is the suggested default — is this too short
-  for noisy environments (concerts, gyms)?
+- Default expiry window: 10 minutes is the suggested baseline. Should QR flows that
+  require app install and guest onboarding automatically extend the expiry window?
 - What happens if a user has no `signals` record yet (never connected Apple Health)?
   Should scoring fall back to a partial score (declared preferences domain only) or
   should the Spark be blocked until signals are available?
@@ -191,7 +219,7 @@ App broadcasts BLE signal to multiple nearby users
         ↓
 Users B, C, D... confirm presence and join
         ↓
-Group Spark created  (status: :pending)
+Group Spark created (status: :pending)
         ↓
 All participants answer the Spark questionnaire on their own device
         ↓
@@ -199,10 +227,10 @@ ScoringJob computes pairwise score
 for EVERY pair in the group using their signals
         ↓
 For each pair with score >= spark minimum threshold:
-  →  Match created  (origin: :spark)
-  →  trust_score incremented for both users
+  → Match created (origin: :spark)
+  → trust_score incremented for both users
 For the group as a whole:
-  →  Circle eligible if every required pair has a verified Spark
+  → Circle eligible if every required pair has a verified Spark
         ↓
 Spark status: :completed
 ```
