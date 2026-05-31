@@ -2,122 +2,182 @@
 
 **Directory:** `apps/ios/Synca/`
 
-> This document derives entirely from the feature docs in `docs/features/`.
-> In case of conflict, the feature doc is always the source of truth.
+> This document is the single source of truth for the iOS folder layout and MVVM pattern.
+> In case of conflict with any other doc, this file wins for structural decisions.
+> For stack and coding conventions → See [docs/conventions/ios.md](../conventions/ios.md).
+> For feature-level flows → See the relevant `docs/features/<feature>-v1.md`.
 
 ---
 
 ## Folder Layout
 
+Organized **by feature**, not by type. Each feature folder owns its ViewModel and View.
+Shared infrastructure (Services, Models) lives at the top level.
+
 ```text
 apps/ios/Synca/
-├── Synca/
-│   ├── Models/                   # Plain Swift structs and enums — Codable, no business logic
-│   ├── Services/
-│   │   ├── HealthKit/             # HealthKit authorization and signal aggregation
-│   │   ├── API/                   # URLSession-based API client (async/await)
-│   │   ├── Auth/                  # JWT storage (Keychain), token refresh
-│   │   │── ActionCable/           # Action Cable WebSocket client (CircleChannel)
-│   ├── ViewModels/               # @Observable classes, one per screen
-│   ├── Views/
-│   │   ├── Auth/                  # Login, signup, token refresh
-│   │   ├── Onboarding/            # Registration wizard (4 steps), health permission
-│   │   ├── Profile/               # Own profile, photo management, preferences
-│   │   ├── Signals/               # Signal connection (Apple Health), metrics display
-│   │   ├── Spark/                 # Spark initiation (BLE / QR), scoring result
-│   │   ├── Matching/              # Match list, compatibility detail
-│   │   ├── Circles/               # Circle list, messaging (duo / small_group / event)
-│   │   ├── Moments/               # Moment proposal, counter-proposal, complete / no-show
-│   │   ├── Trust/                 # Phone verification, liveness check
-│   │   └── Dashboard/             # Home screen hub
-│   ├── Resources/                # Assets, fonts, localisation files
-│   └── SyncaApp.swift            # App entry point
-├── Synca.xcodeproj/
+├── App/
+│   ├── SyncaApp.swift          # @main entry point
+│   └── AppRouter.swift         # NavigationStack programmatic routing
+├── Features/
+│   ├── Auth/
+│   │   ├── AuthViewModel.swift
+│   │   ├── LoginView.swift
+│   │   └── RegisterView.swift
+│   ├── Onboarding/
+│   │   ├── OnboardingViewModel.swift
+│   │   └── OnboardingView.swift
+│   ├── Profile/
+│   │   ├── ProfileViewModel.swift
+│   │   └── ProfileView.swift
+│   ├── Signals/
+│   │   ├── SignalAggregatorService.swift  # HealthKit — lives here, not in Services/
+│   │   ├── SignalsViewModel.swift
+│   │   └── SignalsView.swift
+│   ├── Spark/
+│   │   ├── SparkProximityService.swift    # CoreBluetooth scanning
+│   │   ├── SparkViewModel.swift
+│   │   └── SparkView.swift
+│   ├── Matching/
+│   │   ├── MatchListViewModel.swift
+│   │   ├── MatchListView.swift
+│   │   └── MatchDetailView.swift
+│   ├── Circles/
+│   │   ├── CircleViewModel.swift
+│   │   ├── CircleView.swift
+│   │   └── CircleMessageView.swift
+│   ├── Moments/
+│   │   ├── MomentViewModel.swift
+│   │   └── MomentView.swift
+│   ├── Trust/
+│   │   ├── TrustViewModel.swift
+│   │   └── TrustView.swift
+│   └── Dashboard/
+│       ├── DashboardViewModel.swift
+│       └── DashboardView.swift
+├── Services/
+│   ├── APIClient.swift           # URLSession wrapper, JWT injection
+│   ├── KeychainService.swift     # JWT read/write
+│   └── WebSocketService.swift    # Action Cable client
+├── Models/
+│   ├── User.swift
+│   ├── Signal.swift
+│   ├── Spark.swift
+│   ├── Match.swift
+│   ├── Circle.swift
+│   ├── CircleMessage.swift
+│   ├── Moment.swift
+│   └── PreferenceProfile.swift
+├── Resources/
+│   ├── Assets.xcassets
+│   ├── Fonts/
+│   └── Localizable.strings
 └── SyncaTests/                   # Unit tests (XCTest)
 ```
 
----
+### Why by-feature?
 
-## Architecture
-
-- **Pattern:** Lightweight MVVM.
-- **State:** `@Observable` (iOS 17+) or `ObservableObject` where needed.
-- **Navigation:** `NavigationStack` with programmatic routing via a `AppRouter` observable.
-- **Networking:** thin `APIClient` wrapping `URLSession` with `async/await`. All responses
-  are decoded into `Codable` model structs.
-- **Auth:** JWT access token + refresh token. Access token stored in Keychain.
-  Refresh token stored in Keychain. `Auth/TokenRefreshService` handles silent renewal
-  before every request when the access token is near expiry.
-  Ref: `docs/features/profile-v1.md`.
-- **Health data:** raw HealthKit samples are aggregated entirely in
-  `Services/HealthKit/SignalAggregatorService` before being sent to the backend.
-  Raw samples never leave this service. The backend receives only derived metrics.
-  Ref: `docs/features/signals-v1.md`.
-- **Real-time:** `Services/ActionCable/CircleChannel` maintains the WebSocket
-  connection for Circle messaging. Ref: `docs/features/circles-v1.md`.
+- A feature's ViewModel and View are always co-located — easy to find, easy to delete.
+- `Services/` and `Models/` are shared cross-feature infrastructure.
+- Feature-specific services (HealthKit, CoreBluetooth) live inside their feature folder,
+  not in the global `Services/` directory.
 
 ---
 
-## Key Design Rules
+## Architecture Pattern: MVVM
 
-- Views are dumb. No business logic in View files.
-- ViewModels call Services; Services call the API or HealthKit.
-- Models are plain `struct`s, `Codable` where they cross the network boundary.
-- Raw HealthKit samples must never be passed to a ViewModel or View.
-  Aggregate in `SignalAggregatorService`, then send to backend.
-- JWT tokens are stored exclusively in Keychain. Never in `UserDefaults` or
-  any unencrypted storage.
-- The raw compatibility score (0–100) is **never rendered** in the UI.
-  Display only the plain-language explanation returned by the backend.
-  Ref: `docs/features/matching-v1.md`.
-- Variable names must be descriptive. Never use single-letter or abbreviated names
-  (`p`, `u`, `r`). Use full domain names (`profile`, `signal`, `match`, `moment`).
+```
+View  ──calls──▶  ViewModel  ──calls──▶  Service / APIClient
+  ▲                   │
+  └─── re-renders ────┘  (via @Observable state)
+```
 
----
-
-## Model Naming — Canonical Map
-
-Always use the canonical names from the feature docs. Old names are deprecated.
-
-| iOS Model | Canonical | Deprecated | Feature doc |
-|---|---|---|---|
-| `Signal` | `Signal` | `HealthSummary` | signals-v1.md |
-| `Moment` | `Moment` | `DateProposal` | moments-v1.md |
-| `Circle` | `Circle` | `SyncRoom` | circles-v1.md |
-| `CircleMembership` | `CircleMembership` | — | circles-v1.md |
-| `CircleMessage` | `CircleMessage` | — | circles-v1.md |
-| `Spark` | `Spark` | — | spark-v1.md |
-| `Match` | `Match` | — | matching-v1.md |
-| `PreferenceProfile` | `PreferenceProfile` | — | profile-v1.md |
-
----
-
-## Services
-
-| Service | Responsibility | Ref |
+| Layer | Responsibility | Rule |
 |---|---|---|
-| `SignalAggregatorService` | Reads HealthKit samples, computes aggregated metrics, sends `POST /api/v1/signals` | signals-v1.md |
-| `APIClient` | Base URLSession wrapper: auth headers, token refresh, error decoding | profile-v1.md |
-| `TokenRefreshService` | Silent JWT renewal using the refresh token from Keychain | profile-v1.md |
-| `SparkSessionService` | Manages BLE broadcast / QR display, session code validation, polling `spark:scored` | spark-v1.md |
-| `CircleChannelService` | Action Cable WebSocket connection for real-time Circle messaging | circles-v1.md |
+| **View** | Render state, capture user input | No business logic, no Service calls |
+| **ViewModel** | Transform data for the View, call Services | No direct HealthKit or URLSession access |
+| **Service** | Business logic, external SDKs, API calls | No SwiftUI imports |
+| **Model** | Plain data structs | Codable, no logic, no SwiftUI |
+
+---
+
+## AppRouter
+
+`AppRouter` is an `@Observable` class injected as an environment object at the root.
+It holds the navigation path for `NavigationStack` and exposes typed navigation methods.
+
+```swift
+// App/AppRouter.swift
+@Observable
+final class AppRouter {
+    var path = NavigationPath()
+
+    func navigate(to destination: AppDestination) {
+        path.append(destination)
+    }
+
+    func popToRoot() {
+        path.removeLast(path.count)
+    }
+}
+
+enum AppDestination: Hashable {
+    case matchDetail(matchId: Int)
+    case circleThread(circleId: Int)
+    case momentProposal(matchId: Int)
+    case sparkResult(sparkId: Int)
+    case profile
+    case signals
+    case trust
+}
+```
+
+Views never push routes directly — they call `router.navigate(to:)`.
+This is the iOS equivalent of `redirect_to` in a Rails controller.
+
+---
+
+## Services Map
+
+| Service | Location | Responsibility | Feature doc |
+|---|---|---|---|
+| `APIClient` | `Services/` | URLSession wrapper, JWT injection, error decoding | → See [conventions/ios.md § Networking](../conventions/ios.md) |
+| `KeychainService` | `Services/` | JWT read/write via Keychain | → See [conventions/ios.md § Auth](../conventions/ios.md) |
+| `WebSocketService` | `Services/` | Action Cable WebSocket client | → See [features/circles-v1.md](../features/circles-v1.md) |
+| `SignalAggregatorService` | `Features/Signals/` | HealthKit aggregation, sends metrics to API | → See [features/signals-v1.md](../features/signals-v1.md) |
+| `SparkProximityService` | `Features/Spark/` | CoreBluetooth BLE scan, QR session management | → See [features/spark-v1.md](../features/spark-v1.md) |
 
 ---
 
 ## Screen → Feature Doc Map
 
-| View folder | Feature | Doc |
+| Feature folder | Screens | Feature doc |
 |---|---|---|
-| `Auth/` | Registration, login, token refresh | profile-v1.md |
-| `Onboarding/` | 4-step wizard, photo upload, preferences | profile-v1.md |
-| `Profile/` | Own profile edit, `preference_profile`, `trust_score` display | profile-v1.md, trust-v1.md |
-| `Signals/` | Apple Health connection, signal metrics summary | signals-v1.md |
-| `Spark/` | Start Spark (BLE/QR), join Spark, scoring result screen | spark-v1.md |
-| `Matching/` | Match list, compatibility explanation, match status | matching-v1.md |
-| `Circles/` | Circle list, message thread (duo / small_group / event) | circles-v1.md |
-| `Moments/` | Propose date, counter-propose, confirm, complete, no-show | moments-v1.md |
-| `Trust/` | Phone OTP verification, liveness check | trust-v1.md |
-| `Dashboard/` | Home hub: active matches, pending moments, unread circles | all |
+| `Auth/` | Login, Register | → See [features/profile-v1.md](../features/profile-v1.md) |
+| `Onboarding/` | 4-step wizard, health permission | → See [features/profile-v1.md](../features/profile-v1.md) |
+| `Profile/` | Own profile edit, preferences, trust score | → See [features/profile-v1.md](../features/profile-v1.md) · [features/trust-v1.md](../features/trust-v1.md) |
+| `Signals/` | Apple Health connection, metrics summary | → See [features/signals-v1.md](../features/signals-v1.md) |
+| `Spark/` | Start Spark (BLE/QR), join Spark, result | → See [features/spark-v1.md](../features/spark-v1.md) |
+| `Matching/` | Match list, compatibility detail | → See [features/matching-v1.md](../features/matching-v1.md) |
+| `Circles/` | Circle list, message thread | → See [features/circles-v1.md](../features/circles-v1.md) |
+| `Moments/` | Propose, counter-propose, confirm, complete | → See [features/moments-v1.md](../features/moments-v1.md) |
+| `Trust/` | Phone OTP, liveness check | → See [features/trust-v1.md](../features/trust-v1.md) |
+| `Dashboard/` | Home hub: matches, moments, circles | → See all feature docs |
+
+---
+
+## Model Naming — Canonical Map
+
+| iOS Model | Canonical | Deprecated | Feature doc |
+|---|---|---|---|
+| `Signal` | `Signal` | `HealthSummary` | → See [signals-v1.md](../features/signals-v1.md) |
+| `Moment` | `Moment` | `DateProposal` | → See [moments-v1.md](../features/moments-v1.md) |
+| `Circle` | `Circle` | `SyncRoom` | → See [circles-v1.md](../features/circles-v1.md) |
+| `CircleMembership` | `CircleMembership` | — | → See [circles-v1.md](../features/circles-v1.md) |
+| `CircleMessage` | `CircleMessage` | — | → See [circles-v1.md](../features/circles-v1.md) |
+| `Spark` | `Spark` | — | → See [spark-v1.md](../features/spark-v1.md) |
+| `Match` | `Match` | — | → See [matching-v1.md](../features/matching-v1.md) |
+| `PreferenceProfile` | `PreferenceProfile` | — | → See [profile-v1.md](../features/profile-v1.md) |
 
 ---
 
@@ -129,15 +189,13 @@ iOS 17+. Required for `@Observable`, `NavigationStack`, and the latest HealthKit
 
 ## Testing
 
+→ See [docs/conventions/ios.md § TDD](../conventions/ios.md) for rules and priority targets.
+
 Unit tests live in `SyncaTests/`. TDD order: test first, implementation second.
-
-Priority test targets:
-
-- `SignalAggregatorService` — known HealthKit inputs → expected metric outputs.
-- `APIClient` — response decoding for every model, error handling.
-- `TokenRefreshService` — silent renewal flow, expired token handling.
-- `SparkSessionService` — session state machine (pending → joined → scored).
-- `MomentViewModel` — counter-proposal chain, 5-round cap enforcement.
-- `CircleChannelService` — WebSocket connect/disconnect, message delivery.
-
 UI tests are optional for MVP.
+
+---
+
+## Open Questions
+
+See [docs/product/decisions.md](../product/decisions.md) — filter by `source: docs/architecture/ios-structure.md`.
