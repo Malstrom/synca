@@ -19,9 +19,13 @@ Instead of endless swiping, Synca shows fewer people — but the right ones.
 | API spec (OpenAPI) | [docs/api/openapi.yaml](docs/api/openapi.yaml) |
 | iOS architecture | [docs/architecture/ios-structure.md](docs/architecture/ios-structure.md) |
 | Android architecture | [docs/architecture/android-structure.md](docs/architecture/android-structure.md) |
+| ML architecture | [docs/architecture/ml-architecture-v1.md](docs/architecture/ml-architecture-v1.md) |
 | Backend conventions | [docs/tech/backend.md](docs/tech/backend.md) |
+| iOS conventions | [docs/tech/ios.md](docs/tech/ios.md) |
+| Testing strategy | [docs/tech/testing.md](docs/tech/testing.md) |
 | Infrastructure & deploy | [docs/infra/deployment.md](docs/infra/deployment.md) |
 | ADR / decisions | [docs/decisions.md](docs/decisions.md) |
+| Investor materials | [docs/investor/](docs/investor/) |
 
 ---
 
