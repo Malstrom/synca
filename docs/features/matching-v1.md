@@ -121,6 +121,11 @@ score < algorithm minimum threshold
 The `algorithm` queue is separate from default to avoid blocking Spark scoring
 during the nightly batch run.
 
+> **V2 note:** When async matching is active and `ml_match_scores` are available,
+> `MatchingJob` will read pre-computed ML scores instead of calling
+> `CompatibilityScoreService` synchronously. Rule-based scoring remains as fallback.
+> Ref: `docs/architecture/ml-architecture-v1.md — Section 7`
+
 ### DB Schema
 
 ```sql
@@ -269,8 +274,10 @@ Ref: `docs/tech/backend.md` for Rails domain model.
 - **v0 (rule-based):** filter by city/age/gender; no signal-based scoring.
 - **v1 (health-based):** weighted score from health signals. Both `:spark`
   and `:algorithm` origins active.
-- **v2 (data-driven):** outcome feedback (date completed, rating) used to
-  recalibrate domain weights per user and per city.
+- **v2 (data-driven):** ML ranking layer replaces rule-based candidate ordering.
+  Pre-computed scores stored in `ml_match_scores` via `MlMatchScoringJob`.
+  Rule-based `CompatibilityScoreService` remains as fallback.
+  Ref: `docs/architecture/ml-architecture-v1.md`
 - **v3 (group compatibility):** extend the pairwise model to compute a
   multi-user group cohesion score across 4–22 participants; surface curated
   small-group activity proposals (runs, sauna, padel, calcetto). The
