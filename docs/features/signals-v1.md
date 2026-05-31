@@ -105,11 +105,7 @@ None — declared preferences are available on all tiers including guest account
 
 ### Open Questions
 
-- Should declared preferences be re-asked after 6 months, or remain static until
-  manually updated by the user?
-- Should the app surface a "your preferences vs your data" comparison — e.g. user
-  says they are a morning person but HealthKit shows average sleep offset at 09:30?
-- How many questions can be added before completion rate drops below acceptable threshold?
+See `docs/decisions.md` — filter by `source: docs/features/signals-v1.md`.
 
 ---
 
@@ -157,11 +153,7 @@ Without a `signals` record, the user cannot receive algorithm-origin matches
 
 ### Open Questions
 
-- Minimum data threshold: how many days of data are required before the user
-  enters the matching pool? (Suggested: 7 days minimum.)
-- What happens if the user revokes HealthKit permissions after onboarding?
-  Does their `signals` record get stale-flagged or deleted?
-- Should `computed_at` be validated server-side to reject signals older than 48 hours?
+See `docs/decisions.md` — filter by `source: docs/features/signals-v1.md`.
 
 ---
 
@@ -214,7 +206,7 @@ No raw menstrual-flow samples, symptom logs, or event history are stored on the 
 | Method | Path | Auth required | Description |
 |--------|------|---------------|-------------|
 | PATCH | `/api/v1/signals` | Yes | Appends or updates derived cycle metrics |
-| GET | `/api/v1/signals/me` | Yes | Returns raw signals including cycle fields if enabled |
+| GET | `/api/v1/signals/me` | Yes | Unchanged from Step 1.0 |
 | GET | `/api/v1/signals/me/summary` | Yes | Returns human-readable summary; may include cycle-aware timing insights |
 | DELETE | `/api/v1/signals/cycle` | Yes | Nullifies all cycle columns without deleting other signal groups |
 
@@ -234,11 +226,7 @@ None — cycle signals and the deletion right are free for all users.
 
 ### Open Questions
 
-- Should Android v1 launch only when Health Connect parity reaches minimum quality?
-- Is `cycle_phase` necessary server-side, or can timing decisions happen fully on-device?
-- What minimum history length is required before phase confidence is high enough to use?
-- Should the feature be available only to users who self-identify as menstruating,
-  or to anyone who enables it?
+See `docs/decisions.md` — filter by `source: docs/features/signals-v1.md`.
 
 ---
 
@@ -295,10 +283,7 @@ None — the user-facing summary is available to all users who have a `signals` 
 
 ### Open Questions
 
-- Should the summary be recomputed on every request or cached with a TTL matching
-  the signals refresh cadence (daily)?
-- Should mismatches between declared preferences and objective signals be surfaced
-  as a prompt to update preferences, or only shown as informational?
+See `docs/decisions.md` — filter by `source: docs/features/signals-v1.md`.
 
 ---
 
@@ -345,10 +330,7 @@ None — music signal is free for all users.
 
 ### Open Questions
 
-- Yandex Music does not have a public audio features API equivalent to Spotify.
-  What is the fallback for genre/energy computation on Yandex?
-- Should music taste influence Spark-origin matching or only algorithm-origin?
-- Refresh cadence for music data: daily (same as health) or weekly?
+See `docs/decisions.md` — filter by `source: docs/features/signals-v1.md`.
 
 ---
 
@@ -386,8 +368,4 @@ None — travel signal is free for all users.
 
 ### Open Questions
 
-- Polarsteps has no public API. Is manual import (GPX / JSON export) acceptable
-  for MVP of this step, or should we wait for a proper integration?
-- Should travel behavior affect the Preferences domain weight instead of Lifestyle?
-- Privacy: travel history is sensitive. Should users be able to exclude specific
-  trips from the aggregation?
+See `docs/decisions.md` — filter by `source: docs/features/signals-v1.md`.
