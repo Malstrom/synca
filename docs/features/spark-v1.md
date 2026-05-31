@@ -1,5 +1,5 @@
 # Feature: Spark
-**Version:** 1.1
+**Version:** 1.2
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
@@ -19,9 +19,9 @@ because it requires two verified users in the same physical location at the same
 Spark is the prerequisite for creating a Match with `origin: :spark` and for joining
 or creating any Circle.
 
-Spark owns the physical session lifecycle (discovery, join, expiry, confirmation,
-questionnaire submission). Compatibility scoring rules and match creation thresholds
-are defined in `docs/features/matching-v1.md` and are referenced by Spark.
+Spark owns the physical session lifecycle (discovery, join, expiry, questionnaire
+submission). Compatibility scoring rules and match creation thresholds are defined
+in `docs/features/matching-v1.md` and are referenced by Spark.
 
 Prerequisites:
 - `users`, `profiles` (ref: `docs/features/profile-v1.md`)
@@ -31,7 +31,27 @@ Prerequisites:
 
 ---
 
-## Step 1.0 — Proximity Spark (Bluetooth / QR)
+## Proximity Verification Strategy
+
+Proximity verification evolves across phases. The goal is to balance **virality and
+acquisition** in early phases with **trust and anti-abuse** as the user base grows.
+
+| Phase | Method | Anti-abuse level | Notes |
+|-------|--------|-----------------|-------|
+| **1** | QR universal link, no proximity check | Low (intentional) | Virality over precision. Every join = a download. Token expiry limits zombie links. |
+| **2** | Session code (PIN visible on initiator screen) | High | Receiver must physically see initiator's screen. No additional permissions needed. |
+| **3** | BLE ambient discovery | High | Automatic, no QR needed. Enables passive "who's nearby with Synca open" discovery. |
+
+> **Phase 1 rationale:** Spark abuse in early stages is acceptable and even desirable —
+> every shared QR link is a potential new user. Proximity enforcement is deferred to
+> Phase 2 when the user base justifies stricter trust rules.
+
+The `session_code` field is already present in the schema for Phase 2 readiness.
+BLE infrastructure is planned for Phase 3 as a premium ambient discovery layer.
+
+---
+
+## Step 1.0 — Proximity Spark (QR)
 
 **Phase:** 1
 **Status:** Draft
@@ -41,27 +61,25 @@ Prerequisites:
 ```
 User A opens "Start Spark"
         ↓
-App broadcasts BLE signal (or displays QR code)
+App displays QR code (encodes universal link with qr_token)
         ↓
-User B scans / detects signal
+User B scans the QR
         ↓
 If User B already has the app:
-  → receives invite and confirms presence
+  → universal link opens Spark join flow directly
 If User B does not have the app:
-  → QR opens universal link
-  → app store page opens
-  → after install, deferred deep link restores `qr_token`
+  → universal link redirects to App Store / Play Store
+  → after install, deferred deep link restores qr_token
   → User B creates a guest account with email only
   → app resumes Spark join flow automatically
         ↓
-Both users confirm presence on their own device
-        ↓
-Spark created / updated (status: :pending or :awaiting_receiver during install flow)
+Spark status: :pending (or :awaiting_receiver during install flow)
         ↓
 Both users answer the Spark questionnaire on their own device
+For guest receiver: questionnaire acts as the initial declared preferences setup
 (ref: Spark Questionnaire section below)
         ↓
-ScoringJob (Solid Queue, `spark` queue, high priority) triggers once both have submitted answers.
+ScoringJob (Solid Queue, `spark` queue, high priority) triggers once both have submitted.
 Computes pairwise score using both users' signals (health, music, travel)
 and declared preference weights.
         ↓
@@ -90,15 +108,20 @@ The QR encodes a universal link containing the `qr_token` for the Spark session.
 - The receiver completes guest onboarding with email only (ref: `docs/features/profile-v1.md — Step 0`).
 - No display name or photo is required for Spark guest join.
 - Once guest onboarding is complete, the app resumes the pending Spark join flow automatically.
+- Scanning the QR is the implicit proof of presence — no additional confirmation step required in Phase 1.
 
-This flow is intentionally optimized for the highest-curiosity moment: two users are
-already together and want to test Synca immediately with minimal friction.
+The `qr_token` is single-use: it is invalidated as soon as the first join is registered.
+This prevents the same link from being used by multiple receivers.
 
 ### Spark Questionnaire
 
 The Spark flow includes a short on-the-spot questionnaire to refine and update
 the user's declared preferences in real time. This is not a manual input gate —
 it is a lightweight calibration of the passive signals already on file.
+
+For guest users joining via QR, the questionnaire also serves as their **initial
+declared preferences setup**, replacing the standalone onboarding step they have not
+completed yet. No prior declared preferences record is required to participate.
 
 - Questions are a subset of the Declared Preferences questionnaire
   (ref: `docs/features/signals-v1.md — Step 0`).
@@ -125,12 +148,12 @@ sparks
                        -- 'pending' | 'awaiting_receiver' | 'completed' | 'expired' | 'cancelled'
   discovery_method     string NOT NULL
                        -- 'bluetooth' | 'qr_code'
-  session_code         string             -- 6-digit numeric code for QR flow
-  qr_token             string             -- UUID token for deep-link QR flow
+  session_code         string             -- reserved for Phase 2 PIN verification; not enforced in Phase 1
+  qr_token             string             -- UUID token for deep-link QR flow; single-use
   compatibility_score  float              -- nil until scoring completes
   score_breakdown      jsonb              -- domain sub-scores (never shown raw to users)
   match_created        boolean NOT NULL DEFAULT false
-  expires_at           datetime NOT NULL  -- default 10 min; may be extended during app install + guest join flow
+  expires_at           datetime NOT NULL  -- default 30 min; covers app install + guest onboarding window
   completed_at         datetime
   created_at           datetime
   updated_at           datetime
@@ -151,21 +174,20 @@ For `declared_preferences` schema see `docs/features/signals-v1.md`.
 ### API Endpoints
 
 | Method | Path | Auth required | Description |
-|--------|------|---------------|--------------|
-| POST | `/api/v1/sparks` | Yes | Initiator creates a new Spark; returns `session_code` + `qr_token` |
-| PATCH | `/api/v1/sparks/:id/join` | Yes | Receiver confirms presence and joins via `session_code` or `qr_token` |
-| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits the Spark questionnaire (declared preference refinement); triggers high-priority ScoringJob when both have submitted |
-| GET | `/api/v1/sparks/:id/result` | Yes | Polls scoring result; returns 202 while in progress, 200 with score explanation + match on completion |
+|--------|------|---------------|-------------|
+| POST | `/api/v1/sparks` | Yes | Initiator creates a new Spark; returns `qr_token` (and `session_code` for future use) |
+| PATCH | `/api/v1/sparks/:id/join` | Yes | Receiver joins via `qr_token`; invalidates token on first use |
+| POST | `/api/v1/sparks/:id/submit_answers` | Yes | Each participant submits questionnaire; triggers high-priority ScoringJob when both have submitted |
+| GET | `/api/v1/sparks/:id/result` | Yes | Polls scoring result; returns 202 while in progress, 200 with explanation + match on completion |
 | GET | `/api/v1/sparks/:id` | Yes | Returns spark status and result |
 | GET | `/api/v1/sparks` | Yes | Lists the current user's past sparks |
 | GET | `/api/v1/spark_rewards` | Yes | Lists all rewards for the current user |
 
 Ref: `docs/api/openapi.yaml`
 
-Scoring is triggered server-side automatically once both users have confirmed
-presence (`join`) and submitted answers. The client polls
-`GET /api/v1/sparks/:id/result` or listens via Action Cable for the
-`spark:scored` event.
+Scoring is triggered server-side automatically once both users have joined and
+submitted answers. The client polls `GET /api/v1/sparks/:id/result` or listens
+via Action Cable for the `spark:scored` event.
 
 #### Request body — `POST /api/v1/sparks/:id/submit_answers`
 
@@ -195,13 +217,10 @@ the more Sparks happen, the richer the compatibility data for everyone.
 
 ### Open Questions
 
-- Bluetooth vs QR code: should both discovery methods be available in Step 1.0
-  or should we ship QR only first (simpler, no BLE permission edge cases)?
-- Default expiry window: 10 minutes is the suggested baseline. Should QR flows that
-  require app install and guest onboarding automatically extend the expiry window?
+- Should QR-only ship in Phase 1, deferring BLE entirely to Phase 3?
 - What happens if a user has no `signals` record yet (never connected Apple Health)?
-  Should scoring fall back to a partial score (declared preferences domain only) or
-  should the Spark be blocked until signals are available?
+  Scoring falls back to declared preferences domain only — should this be made
+  explicit in the score explanation shown to the user?
 
 ---
 
@@ -261,7 +280,7 @@ spark_participants
 ### API Endpoints
 
 | Method | Path | Auth required | Description |
-|--------|------|---------------|--------------|
+|--------|------|---------------|-------------|
 | POST | `/api/v1/sparks` | Yes | Creates a duo or group Spark (type in body) |
 | POST | `/api/v1/sparks/:id/participants` | Yes | User joins a group Spark |
 | POST | `/api/v1/sparks/:id/submit_answers` | Yes | Participant submits questionnaire answers |
