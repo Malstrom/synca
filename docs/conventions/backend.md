@@ -122,7 +122,7 @@ belongs_to :user
 
 | Service | Description |
 |---|---|
-| `CompatibilityScoreService` | Computes pairwise compatibility score from `signals` and `declared_preferences`. Accepts `user_a, user_b`. Returns score (0–100) + `score_breakdown` hash. **Do not call directly from jobs — use `MatchScoringFacade`.**|
+| `CompatibilityScoreService` | Computes pairwise compatibility score from `signals` and `declared_preferences`. Accepts `user_a, user_b`. Returns score (0–100) + `score_breakdown` hash. **Do not call directly from jobs — use `MatchScoringFacade`.** |
 | `MatchScoringFacade` | **Single entry point for all match scoring.** Routes to `MlRecommenderClient` when `ML_SCORING_ENABLED=true`, otherwise delegates to `CompatibilityScoreService`. All jobs and services must call this, never `CompatibilityScoreService` directly. Ref: `docs/architecture/ml-architecture-v1.md — Section 7.3` |
 | `MlEventLogger` | Writes `MlEvent` records for ML training data collection. Must be called on: profile shown to user, profile liked, profile skipped, match created, first message sent, moment completed. Never raises — failures are silently rescued and logged. Ref: `docs/architecture/ml-architecture-v1.md — Section 9` |
 | `MlRecommenderClient` | **V2 — not active in V1.** HTTP client to the external ML Service. Handles timeout (5s), 2 retries, circuit breaker. Returns empty array on failure so `MatchScoringFacade` falls back to rule-based scoring transparently. Ref: `docs/architecture/ml-architecture-v1.md — Section 6` |
