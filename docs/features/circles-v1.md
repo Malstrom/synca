@@ -113,10 +113,7 @@ Ref: `docs/api/openapi.yaml`
 
 ### Open Questions
 
-- Should a Duo Circle be automatically archived if the match status transitions to `ended`?
-- Should Moment proposals be surfaced inside the Duo Circle chat UI, or as a separate flow?
-  Ref: `docs/features/moments-v1.md`.
-  See also: `docs/decisions.md`
+See `docs/decisions.md` — filter by `source: docs/features/circles-v1.md`.
 
 ---
 
