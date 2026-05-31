@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
+**User flows:** `docs/product/phases/phase-0.md` — UF-02, UF-03
 
 ---
 
@@ -117,18 +118,6 @@ None — declared preferences are available on all tiers including guest account
 **Phase:** 1
 **Status:** Draft
 
-### User Flow
-
-1. After profile onboarding, user is prompted to connect Apple Health (iOS) or
-   Health Connect (Android).
-2. App requests read-only permissions for sleep, steps, heart rate, and activity.
-3. `SignalsAggregatorService` reads the last 30 days of samples and computes
-   aggregated metrics entirely on-device.
-4. Aggregated metrics are sent to the backend (`POST /api/v1/signals`).
-5. Backend stores the metrics in `signals`. Raw samples are never transmitted.
-6. Metrics are refreshed automatically once per day in the background.
-7. User can manually trigger a refresh from the Profile screen.
-
 ### DB Schema
 
 New table introduced by this step:
@@ -173,6 +162,83 @@ Without a `signals` record, the user cannot receive algorithm-origin matches
 - What happens if the user revokes HealthKit permissions after onboarding?
   Does their `signals` record get stale-flagged or deleted?
 - Should `computed_at` be validated server-side to reject signals older than 48 hours?
+
+---
+
+## Step 1.1 — Menstrual Cycle
+
+**Phase:** 1
+**Status:** Draft
+
+### Purpose
+
+An optional extension of the health signal layer for users who menstruate and choose
+to import cycle-related data from Apple Health or Health Connect. The goal is to
+improve timing personalisation and self-understanding — not fertility tracking or
+medical inference.
+
+This step is entirely opt-in with a separate explicit consent gate. Access to Step 1.0
+health signals does not imply consent for cycle processing.
+
+This feature is **not medical**. It must never present medical claims, fertility
+predictions, pregnancy-related inference, or health advice of any kind.
+
+### Consent
+
+- Separate toggle from general Health permissions — never bundled with Step 1.0.
+- Plain-language pre-permission screen required before any data access.
+- Explicit statement that cycle data is **never shown to matches**.
+- Explicit statement that the feature is not a medical or contraceptive tool.
+- Independent revocation and deletion: `DELETE /api/v1/signals/cycle` nullifies only
+  cycle columns without affecting the rest of the `signals` record.
+
+### DB Schema
+
+New columns appended to `signals` in this step:
+
+```sql
+signals
+  -- Step 1.1: cycle (optional, explicit opt-in only)
+  cycle_tracking_enabled   boolean   -- explicit user consent flag
+  cycle_phase              string    -- 'menstrual' | 'follicular' | 'ovulatory_window' | 'luteal' | 'unknown'
+  cycle_regularity_score   float     -- rhythm stability across recent complete cycles (0.0-1.0)
+  cycle_length_avg         float     -- average cycle length in days
+  cycle_phase_confidence   float     -- confidence of current phase classification (0.0-1.0)
+  cycle_last_computed_at   datetime  -- when cycle aggregation last ran on-device
+```
+
+No raw menstrual-flow samples, symptom logs, or event history are stored on the backend.
+
+### API Endpoints
+
+| Method | Path | Auth required | Description |
+|--------|------|---------------|-------------|
+| PATCH | `/api/v1/signals` | Yes | Appends or updates derived cycle metrics |
+| GET | `/api/v1/signals/me` | Yes | Returns raw signals including cycle fields if enabled |
+| GET | `/api/v1/signals/me/summary` | Yes | Returns human-readable summary; may include cycle-aware timing insights |
+| DELETE | `/api/v1/signals/cycle` | Yes | Nullifies all cycle columns without deleting other signal groups |
+
+Ref: `docs/api/openapi.yaml`
+
+### Matching integration
+
+Cycle is a soft contextual modifier on product timing only:
+- Allowed: reduce notification pressure in low-engagement phases; shift Spark prompt
+  delivery toward historically higher-engagement moments.
+- Forbidden: hard boost or penalty on desirability score; pairing logic based on
+  phase; any match explanation that mentions cycle state.
+
+### Premium Gating
+
+None — cycle signals and the deletion right are free for all users.
+
+### Open Questions
+
+- Should Android v1 launch only when Health Connect parity reaches minimum quality?
+- Is `cycle_phase` necessary server-side, or can timing decisions happen fully on-device?
+- What minimum history length is required before phase confidence is high enough to use?
+- Should the feature be available only to users who self-identify as menstruating,
+  or to anyone who enables it?
 
 ---
 
@@ -241,18 +307,6 @@ None — the user-facing summary is available to all users who have a `signals` 
 **Phase:** 2
 **Status:** Planned
 
-### User Flow
-
-1. User connects their Spotify or Yandex Music account from the Profile screen.
-2. App requests read-only OAuth access to listening history and top artists/genres.
-3. `SignalsAggregatorService` computes a music taste profile on-device:
-   - Top genres (weighted by listening time)
-   - Energy and valence averages (from Spotify audio features)
-   - Listening time-of-day pattern
-4. Music metrics are appended via `PATCH /api/v1/signals`.
-5. `CompatibilityScoreService` includes music taste as a sub-signal within
-   the Lifestyle domain (ref: `docs/features/matching-v1.md`).
-
 ### DB Schema
 
 New columns added to `signals` in this step:
@@ -302,18 +356,6 @@ None — music signal is free for all users.
 
 **Phase:** 3
 **Status:** Planned
-
-### User Flow
-
-1. User connects Polarsteps or grants access to location history.
-2. `SignalsAggregatorService` computes travel behavior on-device:
-   - Average trips per year
-   - Typical trip duration
-   - Travel style (city vs nature vs mixed)
-   - Preferred regions
-3. Travel metrics are appended via `PATCH /api/v1/signals`.
-4. `CompatibilityScoreService` includes travel behavior as a sub-signal
-   within the Lifestyle domain (ref: `docs/features/matching-v1.md`).
 
 ### DB Schema
 
