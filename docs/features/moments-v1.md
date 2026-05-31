@@ -99,10 +99,6 @@ Ref: `docs/api/openapi.yaml`
 
 None — moment proposals are available on all tiers.
 
-### Open Questions
-
-See `docs/decisions.md` — filter by `source: docs/features/moments-v1.md`.
-
 ---
 
 ## Step 2.0 — Reputation Signals from Moments
@@ -118,6 +114,8 @@ No new tables introduced in this step.
 
 -- ref: docs/features/trust-v1.md
 
+---
+
 ### Open Questions
 
-See `docs/decisions.md` — filter by `source: docs/features/moments-v1.md`.
+See [docs/product/decisions.md](../product/decisions.md) — filter by `source: docs/features/moments-v1.md`.
