@@ -3,7 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
-**User flows:** `docs/product/phases/` — no flows in Phase 0; flows will be added in phase-1.md
+**User flows:** `docs/product/phases/phase-1.md` — UF-08
 
 ---
 
@@ -84,45 +84,17 @@ enum :origin, { spark: 0, algorithm: 1 }, default: :spark
 Algorithm-originated matches also carry an `algorithm_confidence` float (0.0–1.0).
 Spark-originated matches leave this field `nil`.
 
-### Flow 1 — Spark-triggered (`:spark`)
+### Flow 1 — Spark-triggered
 
-```
-Both users confirm presence in Spark
-        ↓
-CompatibilityScoreService.call(user_a, user_b)
-        ↓
-score >= spark minimum threshold
-  →  Match.create!(origin: :spark, compatibility_score: score)
-  →  trust_score incremented for both users on profiles
-score <  spark minimum threshold
-  →  no Match created
-  →  Spark stored for analytics
-```
+→ See [phase-0.md — UF-01](../product/phases/phase-0.md#uf-01--first-spark-full-journey-new-user)
 
 `CompatibilityScoreService` is called synchronously at spark completion.
 Result is available to the client immediately via the `spark:scored`
 Action Cable event.
 
-### Flow 2 — Algorithm-triggered (`:algorithm`)
+### Flow 2 — Algorithm-triggered
 
-```
-MatchingJob runs nightly  (Solid Queue, `algorithm` queue)
-        ↓
-Iterates users with a signals record updated in the last 30 days
-and at least 7 days of signals data accumulated
-(minimum signals_days threshold, configurable, default 7)
-        ↓
-Candidate pool filtered by: city, age, gender, distance, dealbreakers
-(ref: preference_profiles → docs/features/profile-v1.md)
-        ↓
-CompatibilityScoreService.call(user_a, user_b)
-        ↓
-score >= algorithm minimum threshold
-  →  Match.create!(origin: :algorithm, compatibility_score: score,
-                   algorithm_confidence: confidence)
-score < algorithm minimum threshold
-  →  silently skipped
-```
+→ See [phase-1.md — UF-08](../product/phases/phase-1.md#uf-08--algorithm-match-nightly-job)
 
 The `algorithm` queue is separate from default to avoid blocking Spark scoring
 during the nightly batch run.
@@ -185,22 +157,6 @@ Matches have a `status` field with the following values:
 
 `MatchDecayJob` runs daily via Solid Queue and marks matches as `drifted` when
 health signals for one or both users have not been updated in the last 30 days.
-
-```
-MatchDecayJob runs daily
-        ↓
-Iterates matches with status: 'active'
-        ↓
-For each match: checks signals.updated_at for user_a and user_b
-        ↓
-If either user's signals.updated_at < 30 days ago:
-  →  match.update!(status: 'drifted')
-
-For each match with status: 'drifted':
-  →  If both users have signals.updated_at >= (now - 7 days)
-     OR a new Spark was completed between the same users:
-  →  match.update!(status: 'reconnected')
-```
 
 Drifted matches:
 - Remain visible in match history.

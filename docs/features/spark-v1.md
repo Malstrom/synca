@@ -3,7 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
-**User flows:** `docs/product/phases/phase-0.md` — UF-01
+**User flows:** `docs/product/phases/phase-0.md` — UF-01 · `docs/product/phases/phase-1.md` — UF-05
 
 ---
 
@@ -68,58 +68,7 @@ BLE infrastructure is planned for Phase 3 as a premium ambient discovery layer.
 
 ### User Flow
 
-```
-User A opens "Start Spark"
-        ↓
-App checks Apple Health connection:
-  → If not connected: blocking nudge shown
-     "Connect Apple Health to start a Spark — your health data powers compatibility."
-     User must grant HealthKit permissions and complete initial sync before proceeding.
-  → If connected: continue
-        ↓
-App displays QR code (encodes universal link with qr_token)
-        ↓
-User B scans the QR
-        ↓
-If User B already has the app:
-  → universal link opens Spark join flow directly
-If User B does not have the app:
-  → universal link redirects to App Store / Play Store
-  → after install, deferred deep link restores qr_token
-  → User B creates a guest account with email only
-  → app prompts User B to connect Apple Health before joining
-  → app resumes Spark join flow automatically once Health is connected
-        ↓
-Spark status: :pending (or :awaiting_receiver during install flow)
-        ↓
-Both users answer the Spark questionnaire on their own device
-For guest receiver: questionnaire acts as the initial declared preferences setup
-(ref: Spark Questionnaire section below)
-        ↓
-ScoringJob (Solid Queue, `spark` queue, high priority) triggers once both have submitted.
-Computes pairwise score using both users' signals (health, music, travel)
-and declared preference weights.
-        ↓
-score >= spark minimum threshold (ref: docs/features/matching-v1.md)
-  → Match created (origin: :spark)
-  → trust_score incremented for both users
-  → SparkReward issued per user
-  → Spark status: :completed
-score < spark minimum threshold
-  → no Match created
-  → SparkReward (low-score bonus) issued — type and threshold TBD
-    (ref: docs/decisions.md — spark-low-score-bonus)
-  → Spark status: :completed (stored for analytics)
-```
-
-The compatibility score is **never shown as a raw number** to users.
-It is translated into plain-language explanations
-(e.g. "Your sleep schedules are well aligned").
-
-> **MVP note (iOS only):** Spark requires at least one connected health data source
-> (Apple Health). There is no fallback scoring path without health data. Support for
-> additional connectors and partial scoring without health data will be introduced
-> in a future version when Android (Health Connect) and other connectors are available.
+→ See [phase-0.md — UF-01](../product/phases/phase-0.md#uf-01--first-spark-full-journey-new-user)
 
 ### Receiver without app
 
@@ -255,28 +204,7 @@ See `docs/decisions.md` — filter by `source: docs/features/spark-v1.md`.
 
 ### User Flow
 
-```
-User A opens "Start Group Spark"
-        ↓
-App broadcasts BLE signal to multiple nearby users
-        ↓
-Users B, C, D... confirm presence and join
-        ↓
-Group Spark created (status: :pending)
-        ↓
-All participants answer the Spark questionnaire on their own device
-        ↓
-ScoringJob computes pairwise score
-for EVERY pair in the group using their signals
-        ↓
-For each pair with score >= spark minimum threshold:
-  → Match created (origin: :spark)
-  → trust_score incremented for both users
-For the group as a whole:
-  → Circle eligible if every required pair has a verified Spark
-        ↓
-Spark status: :completed
-```
+→ Will be documented in `docs/product/phases/phase-7.md — UF-xx`
 
 ### DB Schema
 

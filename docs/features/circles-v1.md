@@ -3,7 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
-**User flows:** `docs/product/phases/` — no flows in Phase 0; flows will be added in phase-1.md
+**User flows:** `docs/product/phases/phase-1.md` — UF-09
 
 > **Phase note:**
 > - `duo` circles are created automatically for every match, from Phase 0/1 (Validation MVP / iOS MVP).
@@ -51,23 +51,9 @@ both users complete a Spark at some point to strengthen the trust signal.
 | `small_group` | 3–8 | Every pair of members must have ≥1 confirmed Spark (full graph). Phase 4+. |
 | `event` | 9–22 | Every member must have ≥1 confirmed Spark with the circle creator. Phase 4+. |
 
-### Match → Circle Creation Flow
+### User Flow
 
-```
-Match created (origin: :spark or :algorithm)
-        ↓
-circle = Circle.create!(circle_type: :duo, created_by: match.user_a.profile)
-        ↓
-CircleMembership.create!(circle: circle, profile: match.user_a.profile, spark_id: match.spark_id)
-CircleMembership.create!(circle: circle, profile: match.user_b.profile, spark_id: match.spark_id)
-        ↓
-Both users are notified and the Circle is immediately available for messaging
-```
-
-> Note: `circles.created_by` and `circle_memberships.profile_id` reference `profiles`.
-> Match records use `user_a_id` / `user_b_id` referencing `users`.
-> The creation flow resolves this via `match.user_a.profile` / `match.user_b.profile`.
-> Ref: `docs/features/matching-v1.md`, `docs/features/profile-v1.md`.
+→ See [phase-1.md — UF-09](../product/phases/phase-1.md#uf-09--duo-circle-creation-and-messaging)
 
 ### DB Schema
 
