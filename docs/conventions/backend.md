@@ -17,6 +17,7 @@
 | Auth | `has_secure_password` + JWT (gem `jwt`) |
 | File storage | Active Storage + S3-compatible |
 | Tests | Minitest + SimpleCov (≥ 90%) |
+| Gems reference | [docs/conventions/gems.md](gems.md) |
 
 ---
 
@@ -161,7 +162,7 @@ belongs_to :user
 | `MlEventLogger` | Writes `MlEvent` records for ML training data. Must be called on: profile shown, profile liked, profile skipped, match created, first message sent, moment completed. Never raises — failures are silently rescued and logged. |
 | `MlRecommenderClient` | **V2 — not active in V1.** HTTP client to the external ML Service. Timeout 5s, 2 retries, circuit breaker. Returns empty array on failure so `MatchScoringFacade` falls back to rule-based scoring transparently. |
 | `MatchProposalService` | Wraps `MatchScoringFacade` for algorithm flow; filters candidate pool. |
-| `TrustScoreService` | Computes or recomputes a user’s `TrustScore` from image, behavioral, and IRL signals. |
+| `TrustScoreService` | Computes or recomputes a user's `TrustScore` from image, behavioral, and IRL signals. |
 | `MomentProposalService` | Generates 1–3 Moment proposals from match signals, city, and time preferences. Enforces the 5-round counter-proposal cap by counting the `parent_id` chain depth. |
 | `SparkRewardService` | Determines and creates `SparkReward` records after a Spark is completed. |
 
