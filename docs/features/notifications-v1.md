@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
+**User flows:** `docs/product/phases/` — no flows in Phase 0; flows will be added in phase-1.md
 
 ---
 
@@ -55,8 +56,8 @@ in the `notifications` table.
 | `notification_type` | Event | Channels | Ref |
 |---|---|---|---|
 | `moment_received` | User B receives a Moment proposal | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
-| `moment_accepted` | User A’s proposal was accepted | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
-| `moment_declined` | User A’s proposal was declined | Push + In-app | moments-v1.md § Step 1.0 |
+| `moment_accepted` | User A's proposal was accepted | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
+| `moment_declined` | User A's proposal was declined | Push + In-app | moments-v1.md § Step 1.0 |
 | `moment_counter` | Counter-proposal received | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
 | `moment_reminder` | Reminder 2h before scheduled Moment | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
 | `moment_rate_prompt` | Prompt to rate after scheduled date/time | Push + In-app | moments-v1.md § Step 1.0 |
@@ -151,7 +152,7 @@ Delivery failures are retried up to 3 times with exponential backoff
 | PATCH | `/api/v1/notifications/read_all` | Yes | Marks all notifications as read |
 | POST | `/api/v1/device_tokens` | Yes | Registers a device token (APNs / FCM / Telegram chat_id) |
 | DELETE | `/api/v1/device_tokens/:token` | Yes | Deregisters a device token on logout |
-| GET | `/api/v1/notification_preferences` | Yes | Returns current user’s notification preferences |
+| GET | `/api/v1/notification_preferences` | Yes | Returns current user's notification preferences |
 | PATCH | `/api/v1/notification_preferences` | Yes | Updates push/email/telegram toggles and per-type mutes |
 
 Ref: `docs/api/openapi.yaml`

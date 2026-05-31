@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 3
+**User flows:** `docs/product/phases/` — no flows in Phase 0–2; flows will be added in phase-3.md
 
 > **Canonical name:** `Moments`.
 > The DB table is `moments`, the API resource is `/api/v1/moments`,
