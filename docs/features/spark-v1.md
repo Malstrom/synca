@@ -34,6 +34,10 @@ Prerequisites:
 - `signals` (ref: `docs/features/signals-v1.md`)
 - `declared_preferences` (ref: `docs/features/signals-v1.md — Step 0`)
 - `matches` (ref: `docs/features/matching-v1.md`)
+- Apple Health connection (iOS MVP) — Spark is blocked if the user has not granted
+  HealthKit permissions and completed an initial signals sync
+  (ref: `docs/features/signals-v1.md`). Support for additional connectors
+  (e.g. Health Connect on Android) will be introduced in a future version.
 
 ---
 
@@ -67,6 +71,12 @@ BLE infrastructure is planned for Phase 3 as a premium ambient discovery layer.
 ```
 User A opens "Start Spark"
         ↓
+App checks Apple Health connection:
+  → If not connected: blocking nudge shown
+     "Connect Apple Health to start a Spark — your health data powers compatibility."
+     User must grant HealthKit permissions and complete initial sync before proceeding.
+  → If connected: continue
+        ↓
 App displays QR code (encodes universal link with qr_token)
         ↓
 User B scans the QR
@@ -77,7 +87,8 @@ If User B does not have the app:
   → universal link redirects to App Store / Play Store
   → after install, deferred deep link restores qr_token
   → User B creates a guest account with email only
-  → app resumes Spark join flow automatically
+  → app prompts User B to connect Apple Health before joining
+  → app resumes Spark join flow automatically once Health is connected
         ↓
 Spark status: :pending (or :awaiting_receiver during install flow)
         ↓
@@ -105,6 +116,11 @@ The compatibility score is **never shown as a raw number** to users.
 It is translated into plain-language explanations
 (e.g. "Your sleep schedules are well aligned").
 
+> **MVP note (iOS only):** Spark requires at least one connected health data source
+> (Apple Health). There is no fallback scoring path without health data. Support for
+> additional connectors and partial scoring without health data will be introduced
+> in a future version when Android (Health Connect) and other connectors are available.
+
 ### Receiver without app
 
 QR join must support the case where the receiving user does not have Synca installed.
@@ -115,7 +131,8 @@ The QR encodes a universal link containing the `qr_token` for the Spark session.
 - After installation, a deferred deep link restores the original `qr_token`.
 - The receiver completes guest onboarding with email only (ref: `docs/features/profile-v1.md — Step 0`).
 - No display name or photo is required for Spark guest join.
-- Once guest onboarding is complete, the app resumes the pending Spark join flow automatically.
+- The receiver is prompted to connect Apple Health before the Spark join is resumed.
+- Once Health is connected and the initial sync is complete, the app resumes the pending Spark join flow automatically.
 - Scanning the QR is the implicit proof of presence — no additional confirmation step required in Phase 1.
 
 The `qr_token` is single-use: it is invalidated as soon as the first join is registered.

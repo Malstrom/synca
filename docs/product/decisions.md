@@ -25,11 +25,11 @@ directly into the relevant feature doc text.
 ## Matching
 
 - id: matching-min-days-signals
-  status: open
+  status: decided
   owner: product
   source: docs/features/matching-v1.md — Open Questions
   question: Minimum signals data threshold before a user enters the algorithm pool — suggested 7 days. Confirmed?
-  decision:
+  decision: Minimum 7 days of signals, configurable (default 7).
 
 - id: matching-max-algo-matches-per-day
   status: open
@@ -57,29 +57,29 @@ directly into the relevant feature doc text.
   decision:
 
 - id: signals-partial-spark-scoring
-  status: open
+  status: decided
   owner: tech
   source: docs/features/spark-v1.md — Open Questions
   question: If a user has no signals record yet (never connected Apple Health), should Spark scoring fall back to declared preferences only, or should the Spark be blocked?
-  decision:
+  decision: In MVP (iOS only), Spark is blocked if Apple Health is not connected. Users see a nudge to connect it. Fallback scoring without health data is deferred to a future version when additional connectors are available.
 
 ---
 
 ## Profile
 
 - id: profile-email-verification-mvp
-  status: open
+  status: decided
   owner: product
   source: docs/features/profile-v1.md — Open Questions
   question: Is email verification mandatory before accessing the app, or optional in MVP?
-  decision:
+  decision: Email is not required at first Spark (guest mode). After the first completed Spark session, email registration with magic link verification is mandatory before further app use.
 
 - id: profile-completeness-storage
-  status: open
+  status: decided
   owner: tech
   source: docs/features/profile-v1.md — Open Questions
   question: Should `completeness_score` be stored on `profiles` or computed on every request?
-  decision:
+  decision: completeness_score is persisted on profiles and updated explicitly via Profile::CompletenessCalculator after each profile change. A nightly reconciliation job ensures consistency. Health signals data is synced separately and does not affect completeness_score directly.
 
 - id: profile-guest-magic-link-timing
   status: open
@@ -183,11 +183,11 @@ directly into the relevant feature doc text.
   decision:
 
 - id: moments-counter-cap-enforcement
-  status: open
+  status: decided
   owner: tech
   source: docs/features/moments-v1.md — Open Questions
   question: Is the 5-round counter-proposal cap enforced server-side or client-side only?
-  decision:
+  decision: The 5-round counter-proposal cap is enforced server-side by counting negotiation rounds in the database. The client reflects this limit in the UI but is not the authoritative source. Counter data is retained for ML metrics.
 
 - id: moments-ratings-visibility
   status: open
@@ -264,22 +264,22 @@ directly into the relevant feature doc text.
   decision:
 
 - id: trust-score-hard-caps
-  status: open
+  status: decided
   owner: tech
   source: docs/features/trust-v1.md — Open Questions
   question: Maximum and minimum score caps — hard floor at 0, hard ceiling at 100?
-  decision:
+  decision: Trust score is clamped between 0 and 100 inclusive.
 
 ---
 
 ## Notifications
 
 - id: notifications-circle-message-suppression
-  status: open
+  status: decided
   owner: tech
   source: docs/features/notifications-v1.md — Open Questions
   question: Should `circle_message` push be suppressed if the user has the Circle screen open (real-time via Action Cable is already active)?
-  decision:
+  decision: Suppress circle_message push when a live real-time subscription for that Circle is active; otherwise send as normal.
 
 - id: notifications-signals-stale-cadence
   status: open
@@ -289,11 +289,11 @@ directly into the relevant feature doc text.
   decision:
 
 - id: notifications-token-rotation
-  status: open
+  status: decided
   owner: tech
   source: docs/features/notifications-v1.md — Open Questions
   question: APNs/FCM token rotation — when a token is invalidated by the platform, how does the backend detect and deactivate it? Suggested: parse APNs/FCM error responses in NotificationJob and set device_tokens.active = false.
-  decision:
+  decision: Parse APNs/FCM error responses in NotificationJob and set device_tokens.active = false when a token is invalid.
 
 - id: notifications-email-per-type-overrides
   status: open
@@ -328,8 +328,8 @@ directly into the relevant feature doc text.
   decision:
 
 - id: infra-ci-path-trigger
-  status: open
+  status: decided
   owner: tech
   source: docs/infra/deployment.md — Phase 2
   question: CI trigger path is `backend/api/**` but repo structure may differ. Verify actual path before first deploy.
-  decision:
+  decision: Update CI config to match actual backend path (e.g. api/**) and ensure any backend change triggers CI.

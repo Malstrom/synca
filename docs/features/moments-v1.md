@@ -46,7 +46,11 @@ User B can:
   original becomes `superseded`. User A is notified and can accept, decline, or
   counter again.
 
-Counter-proposal chain is capped at 5 rounds to prevent infinite loops.
+Counter-proposal chain is capped at **5 rounds** to prevent infinite loops.
+The cap is enforced **server-side** by counting negotiation rounds in the database
+(depth of the `parent_id` chain); the client reflects the limit in the UI but is
+not the authoritative source. Returning a `422 Unprocessable Entity` when the cap
+is exceeded. Counter-proposal data is retained for analytics and future ML models.
 
 **Step 3 — Complete + Rate**
 After the scheduled date/time has passed, both users are prompted to mark the moment:
@@ -89,7 +93,7 @@ moments
 | GET | `/api/v1/moments/:id` | Yes | Returns a single moment |
 | PATCH | `/api/v1/moments/:id/accept` | Yes | Accepts a pending proposal |
 | PATCH | `/api/v1/moments/:id/decline` | Yes | Declines a pending proposal |
-| POST | `/api/v1/moments/:id/counter` | Yes | Creates a counter-proposal |
+| POST | `/api/v1/moments/:id/counter` | Yes | Creates a counter-proposal; returns 422 if the 5-round cap is reached |
 | PATCH | `/api/v1/moments/:id/complete` | Yes | Marks moment as completed and submits rating |
 | PATCH | `/api/v1/moments/:id/no_show` | Yes | Reports a no-show |
 
