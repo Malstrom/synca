@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
+**User flows:** `docs/product/phases/` — no flows in Phase 0; flows will be added in phase-1.md
 
 ---
 
@@ -55,8 +56,8 @@ in the `notifications` table.
 | `notification_type` | Event | Channels | Ref |
 |---|---|---|---|
 | `moment_received` | User B receives a Moment proposal | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
-| `moment_accepted` | User A’s proposal was accepted | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
-| `moment_declined` | User A’s proposal was declined | Push + In-app | moments-v1.md § Step 1.0 |
+| `moment_accepted` | User A's proposal was accepted | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
+| `moment_declined` | User A's proposal was declined | Push + In-app | moments-v1.md § Step 1.0 |
 | `moment_counter` | Counter-proposal received | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
 | `moment_reminder` | Reminder 2h before scheduled Moment | Push + In-app + Telegram | moments-v1.md § Step 1.0 |
 | `moment_rate_prompt` | Prompt to rate after scheduled date/time | Push + In-app | moments-v1.md § Step 1.0 |
@@ -151,7 +152,7 @@ Delivery failures are retried up to 3 times with exponential backoff
 | PATCH | `/api/v1/notifications/read_all` | Yes | Marks all notifications as read |
 | POST | `/api/v1/device_tokens` | Yes | Registers a device token (APNs / FCM / Telegram chat_id) |
 | DELETE | `/api/v1/device_tokens/:token` | Yes | Deregisters a device token on logout |
-| GET | `/api/v1/notification_preferences` | Yes | Returns current user’s notification preferences |
+| GET | `/api/v1/notification_preferences` | Yes | Returns current user's notification preferences |
 | PATCH | `/api/v1/notification_preferences` | Yes | Updates push/email/telegram toggles and per-type mutes |
 
 Ref: `docs/api/openapi.yaml`
@@ -167,17 +168,4 @@ Telegram notifications are opt-in for all tiers (user must connect the bot).
 
 ## Open Questions
 
-- Should `circle_message` push be suppressed if the user has the Circle screen
-  open (i.e. real-time via Action Cable is already active)?
-- Should `signals_stale` fire at 7 days, 14 days, or both?
-- APNs/FCM token rotation: when a token is invalidated by the platform, how does
-  the backend detect and deactivate it? Suggested: parse APNs/FCM error responses
-  in `NotificationJob` and set `device_tokens.active = false`.
-- Should `notification_preferences` support per-type email overrides, or is a
-  single `email_enabled` toggle sufficient for MVP?
-- Telegram bot: dedicated `@SyncaBot` (user-facing) or shared with the field
-  research bot? Suggested: separate — the research bot is internal tooling,
-  the notification bot is user-facing.
-- Deep link scheme for each `screen` value: needs alignment with iOS/Android
-  navigation (ref: `docs/architecture/ios-structure.md`,
-  `docs/architecture/android-structure.md`).
+See `docs/decisions.md` — filter by `source: docs/features/notifications-v1.md`.

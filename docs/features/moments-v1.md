@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 3
+**User flows:** `docs/product/phases/` — no flows in Phase 0–2; flows will be added in phase-3.md
 
 > **Canonical name:** `Moments`.
 > The DB table is `moments`, the API resource is `/api/v1/moments`,
@@ -100,10 +101,7 @@ None — moment proposals are available on all tiers.
 
 ### Open Questions
 
-- Should `location` be a free-text field only, or should we integrate a maps API
-  for structured venue selection?
-- Is the 5-round counter-proposal cap enforced server-side or client-side only?
-- Should ratings be visible to the rated user or remain fully private?
+See `docs/decisions.md` — filter by `source: docs/features/moments-v1.md`.
 
 ---
 
@@ -122,5 +120,4 @@ No new tables introduced in this step.
 
 ### Open Questions
 
-- After how many confirmed no-shows should a profile be automatically suspended?
-- Should positive ratings unlock any in-app reward or badge?
+See `docs/decisions.md` — filter by `source: docs/features/moments-v1.md`.

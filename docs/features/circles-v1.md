@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
+**User flows:** `docs/product/phases/` — no flows in Phase 0; flows will be added in phase-1.md
 
 > **Phase note:**
 > - `duo` circles are created automatically for every match, from Phase 0/1 (Validation MVP / iOS MVP).
@@ -112,10 +113,7 @@ Ref: `docs/api/openapi.yaml`
 
 ### Open Questions
 
-- Should a Duo Circle be automatically archived if the match status transitions to `ended`?
-- Should Moment proposals be surfaced inside the Duo Circle chat UI, or as a separate flow?
-  Ref: `docs/features/moments-v1.md`.
-  See also: `docs/decisions.md`
+See `docs/decisions.md` — filter by `source: docs/features/circles-v1.md`.
 
 ---
 

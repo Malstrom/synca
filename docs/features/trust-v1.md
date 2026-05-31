@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 2
+**User flows:** `docs/product/phases/` — no flows in Phase 0–1; flows will be added in phase-2.md
 
 ---
 
@@ -98,9 +99,7 @@ None — phone verification and reporting are available on all tiers.
 
 ### Open Questions
 
-- Which OTP provider to use (Twilio, SMS.ru for RU market)?
-- Should suspended profiles receive an in-app notification or be silently excluded?
-- Can a user appeal a confirmed report?
+See `docs/decisions.md` — filter by `source: docs/features/trust-v1.md`.
 
 ---
 
@@ -147,9 +146,7 @@ in the `profiles.photos` JSON array:
 
 ### Open Questions
 
-- Which liveness provider to use (iProov, Onfido, custom)?
-- Should photos with `pending` moderation be visible to the uploader but not
-  to other users, or hidden entirely?
+See `docs/decisions.md` — filter by `source: docs/features/trust-v1.md`.
 
 ---
 
@@ -176,5 +173,4 @@ No new tables introduced in this step.
 
 ### Open Questions
 
-- Should `trust_score` history be logged for auditing and appeals?
-- Maximum and minimum score caps: hard floor at 0, hard ceiling at 100?
+See `docs/decisions.md` — filter by `source: docs/features/trust-v1.md`.

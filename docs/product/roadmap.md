@@ -2,6 +2,8 @@
 
 This document defines **sequencing only**.
 Specs, schemas, and API details live exclusively in the feature docs under `docs/features/`.
+User flows for each phase live in `docs/product/phases/` — see [phase-0.md](phases/phase-0.md).
+Go-to-market strategy by phase lives in `docs/growth/go-to-market.md` *(planned)*.
 
 Each entry follows the pattern:
 `Feature — Step X.Y` → [`feature-file.md`](../features/feature-file.md)
@@ -14,6 +16,8 @@ Each entry follows the pattern:
 > Primary mechanic: Spark IRL. Onboarding is frictionless (guest account via email only).
 > Success metric: 50 active users, 20 completed Spark sessions, 5+ spontaneous re-encounters
 > tracked within 30 days of a Spark session.
+
+**User flows:** [`docs/product/phases/phase-0.md`](phases/phase-0.md)
 
 ### Research — Field Research Bot
 

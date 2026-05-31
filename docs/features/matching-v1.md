@@ -3,6 +3,7 @@
 **Last updated:** May 2026
 **Status:** Draft
 **Phase:** 1
+**User flows:** `docs/product/phases/` — no flows in Phase 0; flows will be added in phase-1.md
 
 ---
 
@@ -164,16 +165,7 @@ Ref: `docs/api/openapi.yaml`
 
 ### Open Questions
 
-See `docs/decisions.md` for tracked decisions on this feature.
-
-- Minimum signals data threshold before a user enters the algorithm pool:
-  how many days of health data are required? (Suggested: 7 days.)
-- Should the algorithm run daily for all eligible users, or only for users
-  who have not yet received a match in the last N days?
-- What is the maximum number of algorithm-origin matches surfaced per user
-  per nightly run? (Suggested: 1–3 to reinforce scarcity positioning.)
-- How is `algorithm_confidence` computed? Suggested: normalized pairwise score
-  relative to the candidate pool for that user.
+See `docs/decisions.md` — filter by `source: docs/features/matching-v1.md`.
 
 ---
 
