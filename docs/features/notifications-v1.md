@@ -141,6 +141,21 @@ NotificationJob#perform
 Delivery failures are retried up to 3 times with exponential backoff
 (Solid Queue default).
 
+### circle_message push suppression
+
+For `circle_message` events, `NotificationJob` suppresses push delivery when
+the user has an active real-time Action Cable subscription open for that specific
+Circle (i.e. the user already sees the message in real time). If the subscription
+state is uncertain or unavailable, the push is sent as normal to avoid missed messages.
+
+### APNs / FCM token rotation
+
+`NotificationJob` parses the provider response after every push delivery attempt.
+When APNs or FCM returns an error indicating a token is invalid, unregistered,
+or permanently unreachable, the corresponding `device_tokens.active` flag is set
+to `false`. Inactive tokens are skipped on subsequent delivery attempts, keeping
+the table clean without requiring manual cleanup.
+
 ---
 
 ## API Endpoints
