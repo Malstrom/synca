@@ -1,0 +1,11 @@
+framework: XCTest
+ui_tests: deferred to Phase 2 (Spark + match flows)
+stub_healthkit: HealthKitProtocol mock — never hit real HKHealthStore
+stub_network: MockURLProtocol
+always_test:
+  viewmodels: state transitions, data binding, error states
+  services: happy path, error handling, auth token refresh
+  healthkit_service: all signal types via mock protocol
+forbidden:
+  - XCUITest in MVP
+  - Real HKHealthStore in any test

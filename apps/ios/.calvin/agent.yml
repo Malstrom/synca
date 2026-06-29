@@ -1,0 +1,10 @@
+parent_agent: zeroth/frameworks/calvin/ios
+target_repo: Malstrom/synca
+target_path: apps/ios/
+stack: ios
+reads:
+  - apps/ios/.calvin/stack.yml
+  - apps/ios/.calvin/conventions.yml
+  - apps/ios/.calvin/testing.yml
+  - apps/ios/.calvin/decisions.yml
+  - .calvin/decisions.yml

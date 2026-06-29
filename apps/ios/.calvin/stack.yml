@@ -1,0 +1,16 @@
+language: Swift
+framework: SwiftUI
+architecture: MVVM
+min_ios: 17.0
+health: HealthKit (Apple Health)
+bluetooth: CoreBluetooth (Spark IRL proximity)
+network: URLSession (no Alamofire in MVP)
+auth: JWT — stored in Keychain
+storage: UserDefaults (prefs), Keychain (tokens)
+ci: GitHub Actions + Xcode Cloud
+key_frameworks:
+  - SwiftUI
+  - HealthKit
+  - CoreBluetooth
+  - Combine
+  - XCTest

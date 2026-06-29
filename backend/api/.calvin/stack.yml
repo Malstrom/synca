@@ -1,0 +1,19 @@
+language: Ruby 3.3
+framework: Rails 8.0 (API mode)
+database: PostgreSQL 16
+test_framework: Minitest + SimpleCov
+coverage_threshold: 90%
+background_jobs: Solid Queue (no Redis)
+websockets: Action Cable + Solid Cable
+auth: jwt gem (no Devise)
+storage: Active Storage + S3-compatible
+deploy: Docker + Kamal + GitHub Container Registry
+ci_command: bin/rails ci
+key_gems:
+  - jwt
+  - solid_queue
+  - solid_cable
+  - active_storage
+  - kamal
+  - dry-validation
+  - rack-cors

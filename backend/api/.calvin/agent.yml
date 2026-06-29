@@ -1,9 +1,11 @@
-version: 1
-name: synca-backend
-stack: rails-api
-sources:
-  conventions: backend/api/.calvin/backend.yml
-  schema: backend/api/.calvin/schema.yml
-rules:
-  - use: conventions
-  - use: schema
+parent_agent: zeroth/frameworks/calvin/backend
+target_repo: Malstrom/synca
+target_path: backend/api/
+stack: backend
+reads:
+  - backend/api/.calvin/stack.yml
+  - backend/api/.calvin/conventions.yml
+  - backend/api/.calvin/testing.yml
+  - backend/api/.calvin/decisions.yml
+  - backend/api/.calvin/schema.yml
+  - .calvin/decisions.yml
