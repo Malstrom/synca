@@ -1,0 +1,34 @@
+# Calvin agent config for Synca monorepo
+# This is the root-level agent for the Synca repo.
+# It is invoked by the global Calvin agent in zeroth, and routes
+# to the stack-specific agents living next to the code.
+
+version: 1
+name: synca
+type: monorepo
+
+# Agent chain: zeroth (global) → synca root (this file) → stack agent
+parent_agent: zeroth  # resolved by Calvin from the zeroth framework
+
+stacks:
+  backend:
+    stack: rails-api
+    agent: backend/api/.calvin/agent.yml
+
+  # Future stacks:
+  # ios:
+  #   stack: swift-ios
+  #   agent: apps/ios/.calvin/agent.yml
+
+# Shared sources at monorepo level (cross-stack docs)
+sources:
+  product_phases: docs/product/phases
+  feature_specs:  docs/features
+  conventions:    docs/conventions
+
+# Rules applied before delegating to stack agents
+rules:
+  - read: sources.product_phases
+  - read: sources.feature_specs
+  - read: sources.conventions
+  - delegate: stacks.backend
