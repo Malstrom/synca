@@ -1,0 +1,43 @@
+# Calvin backend conventions for Synca (Rails API)
+# NOTE: this is a first skeleton, to be filled from docs/conventions/backend.md and feature specs.
+
+version: 1
+stack: rails-api
+
+soft_delete:
+  enabled: true
+  field: deleted_at
+  default_scope: true
+
+services:
+  pattern: instance_call
+  class_method: call
+  instance_method: call
+  namespaces:
+    - app/services
+
+controllers:
+  api_namespace: Api::V1
+  error_format:
+    keys: [code, message]
+    status_field: http_status
+
+jobs:
+  queue_backend: solid_queue
+  naming: "*Job"
+
+security:
+  jwt:
+    type_field: type
+    access_type: access
+    refresh_type: refresh
+
+status_enums:
+  spark_session:
+    - pending
+    - active
+    - completed
+    - expired
+  match:
+    planned: true
+
