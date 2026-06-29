@@ -1,15 +1,9 @@
-# Calvin agent config for Synca backend (Rails API)
-# This file tells Calvin where to find conventions and schema.
-
 version: 1
 name: synca-backend
 stack: rails-api
-
 sources:
-  backend_conventions: backend/api/.calvin/backend.yml
+  conventions: backend/api/.calvin/backend.yml
   schema: backend/api/.calvin/schema.yml
-
 rules:
-  - use: backend_conventions
+  - use: conventions
   - use: schema
-
