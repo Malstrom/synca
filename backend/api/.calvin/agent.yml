@@ -1,0 +1,9 @@
+version: 1
+name: synca-backend
+stack: rails-api
+sources:
+  conventions: backend/api/.calvin/backend.yml
+  schema: backend/api/.calvin/schema.yml
+rules:
+  - use: conventions
+  - use: schema

@@ -1,0 +1,17 @@
+version: 1
+name: synca
+type: monorepo
+parent_agent: zeroth
+stacks:
+  backend:
+    stack: rails-api
+    agent: backend/api/.calvin/agent.yml
+sources:
+  product_phases: docs/product/phases
+  feature_specs: docs/features
+  conventions: docs/conventions
+rules:
+  - read: sources.product_phases
+  - read: sources.feature_specs
+  - read: sources.conventions
+  - delegate: stacks.backend

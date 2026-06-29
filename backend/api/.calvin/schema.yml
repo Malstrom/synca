@@ -1,0 +1,29 @@
+version: 1
+models:
+  User:
+    table: users
+    fields: [email, phone, auth_provider, provider_uid, password_digest]
+    has_one: [Profile, PreferenceProfile]
+    has_many: [SparkSessions, SparkRewards, HealthSummaries]
+  Profile:
+    table: profiles
+    fields: [display_name, birth_date, gender, city]
+    belongs_to: User
+  HealthSummary:
+    table: health_summaries
+    fields: [chronotype, activity_level, routine_stability_index, avg_sleep_duration_minutes]
+    belongs_to: User
+  SparkSession:
+    table: spark_sessions
+    fields: [initiator_id, partner_id, status, session_code, qr_token, started_at, completed_at, compatibility_score]
+    belongs_to: [Initiator/User, Partner/User]
+    has_many: [SparkRewards]
+  SparkReward:
+    table: spark_rewards
+    fields: [user_id, spark_session_id, reward_type, status, valid_until]
+    belongs_to: [User, SparkSession]
+  Match:
+    table: matches
+    fields: [compatibility_score, status, accepted_at, rejected_at]
+    has_many: [MatchParticipants]
+    has_many_through: [Users, MatchParticipants]
