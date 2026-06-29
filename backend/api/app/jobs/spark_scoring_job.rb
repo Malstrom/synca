@@ -9,15 +9,16 @@ class SparkScoringJob < ApplicationJob
     return if spark_session.completed?
 
     initiator_health = spark_session.initiator.health_summary
-    partner_health   = spark_session.partner.health_summary
+    partner_health   = spark_session.partner&.health_summary
 
-    compatibility_result = if initiator_health && partner_health
-      CompatibilityService.call(initiator_health, partner_health)
-    else
-      CompatibilityService::Result.new(
-        total: 50.0, sleep: 50.0, activity: 50.0, lifestyle: 50.0, preferences: 50.0
-      )
+    # Product decision (signals-partial-spark-scoring): in MVP lo Spark è bloccato
+    # se Apple Health non è connesso. Non esiste fallback score "di default".
+    unless initiator_health && partner_health
+      spark_session.update!(status: :expired)
+      return
     end
+
+    compatibility_result = CompatibilityService.call(initiator_health, partner_health)
 
     spark_session.update!(
       status:              :completed,
