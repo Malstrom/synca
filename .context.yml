@@ -1,0 +1,115 @@
+project:
+  name: "Synca"
+  repo: "malstrom/synca"
+  description: >
+    Health-based dating app (iOS + Android + Rails API).
+    Uses Apple Health / Health Connect data to generate
+    few, high-quality matches based on real lifestyle
+    compatibility: sleep, activity, music, travel.
+    Core mechanic: Spark IRL (proximity BLE/QR session).
+  phase: "Phase 0 → Phase 1 (Validation MVP → iOS MVP)"
+
+stack:
+  language: "Ruby 3.3 (backend) · Swift (iOS) · Kotlin (Android)"
+  framework: "Rails 8.0 (API mode) · SwiftUI · Jetpack Compose"
+  version: "Rails 8.0 · Ruby 3.3 · PostgreSQL 16"
+  database: "PostgreSQL 16"
+  test_framework: "Minitest + SimpleCov (backend) · XCTest (iOS)"
+  key_libraries:
+    - "Solid Queue (background jobs, no Redis)"
+    - "Action Cable + Solid Cable (WebSockets)"
+    - "jwt gem (auth — no Devise)"
+    - "Active Storage + S3-compatible (file storage)"
+    - "Kamal (deploy)"
+    - "HealthKit (iOS) · Health Connect (Android)"
+  deployment: "Docker + Kamal · GitHub Container Registry"
+
+conventions:
+  naming: >
+    Rails: snake_case files/methods, CamelCase classes.
+    iOS: camelCase methods, PascalCase types (MVVM).
+    Android: camelCase methods, PascalCase classes.
+  folder_structure: >
+    backend/ → Rails API (backend/api/).
+    apps/ios/ → SwiftUI app.
+    apps/android/ → Kotlin + Compose app.
+    docs/ → architecture/, conventions/, features/ (canonical source of truth), product/, api/, infra/.
+  patterns:
+    - "All FK columns point to users.id — never to profiles.id"
+    - "Soft delete on all primary domain tables (deleted_at); no hard deletes"
+    - "Background jobs must call MatchScoringFacade, never CompatibilityScoreService directly"
+    - "MlEventLogger must be called at all interaction points (profile_shown, profile_liked, profile_skipped, match_created, first_message_sent, moment_completed) — never raises"
+    - "All API endpoints under /api/v1/ with Bearer JWT auth"
+    - "Pagination: page + per_page params; response includes meta.total_count"
+    - "iOS: never hit real HKHealthStore in tests — use HealthKitProtocol mock"
+    - "iOS/Android: stub network layer via MockURLProtocol / similar pattern"
+  do_not_touch:
+    - "Score threshold values — defined exclusively in docs/features/matching-v1.md and docs/features/circles-v1.md; never duplicated elsewhere"
+    - "profiles.id — never used as FK target in any table"
+    - "MlEventLogger rescue block — must never raise"
+    - "ML_SCORING_ENABLED — defaults to false in all environments; MlMatchScoringJob is V2, not active in V1"
+  style_guide: "docs/conventions/backend.md · docs/conventions/ios.md · docs/conventions/workflow.md"
+
+testing:
+  strategy: >
+    TDD mandatory: red → green → refactor.
+    Backend: Minitest, fixtures (no FactoryBot in MVP).
+    iOS: XCTest, mock HealthKit protocol, MockURLProtocol for network.
+    No XCUITest for MVP (add in Phase 2 for Spark + match flows).
+    Stub external services via define_singleton_method on instance (not .stub on class).
+    Test files live only in test/ — never in app/ (Zeitwerk conflict).
+    Never require "minitest/mock" explicitly — breaks Bootsnap on Ruby 3.3.
+  coverage_rule: "≥ 90% line coverage via SimpleCov; build fails below threshold"
+  always_test:
+    - "Models: validations, scopes, enums, custom methods"
+    - "Services: core logic, DB side-effects, error handling"
+    - "Controllers: HTTP status codes, JSON structure, auth enforcement (401 on missing/invalid token)"
+    - "Jobs: happy path, graceful skip on missing data, side-effect records"
+    - "Channels: subscription accepted for authorized, rejected for non-members"
+  command: "bin/rails ci  # rubocop → bundle-audit → brakeman → rails test"
+
+decisions:
+  - date: "2026-05"
+    decision: "Minimum 7 days of signals required before a user enters the algorithm pool (configurable, default 7)"
+    rationale: "Insufficient data produces unreliable scores; 7 days is the minimum meaningful window."
+    source: "docs/product/decisions.md — matching-min-days-signals"
+
+  - date: "2026-05"
+    decision: "Spark is blocked if Apple Health is not connected (iOS MVP); fallback scoring deferred to future version"
+    rationale: "Compatibility score without health data is not meaningful in MVP; nudge user to connect."
+    source: "docs/product/decisions.md — signals-partial-spark-scoring"
+
+  - date: "2026-05"
+    decision: "Email not required before first Spark (guest mode); magic link verification mandatory after first completed Spark"
+    rationale: "Removes the auth wall from the highest-curiosity moment (two people IRL wanting to try Spark immediately)."
+    source: "docs/product/decisions.md — profile-email-verification-mvp"
+
+  - date: "2026-05"
+    decision: "completeness_score persisted on profiles, updated via Profile::CompletenessCalculator; nightly reconciliation job ensures consistency"
+    rationale: "Avoids per-request recomputation; health signals data does not affect completeness_score directly."
+    source: "docs/product/decisions.md — profile-completeness-storage"
+
+  - date: "2026-05"
+    decision: "5-round counter-proposal cap for Moments is enforced server-side (parent_id chain depth); client reflects but is not authoritative"
+    rationale: "Client-side only enforcement is bypassable; counter data is retained for ML metrics."
+    source: "docs/product/decisions.md — moments-counter-cap-enforcement"
+
+  - date: "2026-05"
+    decision: "TrustScore clamped between 0 and 100 inclusive (hard floor/ceiling)"
+    rationale: "Prevents score drift outside meaningful range."
+    source: "docs/product/decisions.md — trust-score-hard-caps"
+
+  - date: "2026-05"
+    decision: "circle_message push suppressed when a live Action Cable subscription for that Circle is active"
+    rationale: "Avoids duplicate notification when real-time channel is already open."
+    source: "docs/product/decisions.md — notifications-circle-message-suppression"
+
+  - date: "2026-05"
+    decision: "APNs/FCM token rotation: parse error responses in NotificationJob, set device_tokens.active = false on invalid token"
+    rationale: "Prevents repeated delivery failures and stale token accumulation."
+    source: "docs/product/decisions.md — notifications-token-rotation"
+
+  - date: "2026-05"
+    decision: "CI trigger path must match actual backend directory (backend/api/**); any backend change triggers CI"
+    rationale: "Original path was a placeholder; verified to match repo structure."
+    source: "docs/product/decisions.md — infra-ci-path-trigger"
