@@ -1,0 +1,25 @@
+naming:
+  files: snake_case
+  methods: snake_case
+  classes: CamelCase
+folder_structure:
+  controllers: app/controllers/api/v1/
+  services: app/services/
+  jobs: app/jobs/
+  channels: app/channels/
+  models: app/models/
+  tests: test/ (never in app/ — Zeitwerk conflict)
+patterns:
+  - All FK columns point to users.id — never profiles.id
+  - Soft delete on all primary domain tables (deleted_at) — no hard deletes
+  - Background jobs call MatchScoringFacade, never CompatibilityScoreService directly
+  - MlEventLogger called at all interaction points — never raises
+  - All API endpoints under /api/v1/ with Bearer JWT auth
+  - Pagination: page + per_page params, response includes meta.total_count
+  - Stub external services via define_singleton_method on instance (not .stub on class)
+do_not_touch:
+  - Score threshold values — defined only in docs/features/matching-v1.md and docs/features/circles-v1.md
+  - profiles.id — never used as FK target
+  - MlEventLogger rescue block — must never raise
+  - ML_SCORING_ENABLED — defaults false in all envs
+style_guide: docs/conventions/backend.md

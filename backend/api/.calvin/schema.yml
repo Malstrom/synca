@@ -1,29 +1,60 @@
-version: 1
-models:
-  User:
-    table: users
-    fields: [email, phone, auth_provider, provider_uid, password_digest]
-    has_one: [Profile, PreferenceProfile]
-    has_many: [SparkSessions, SparkRewards, HealthSummaries]
-  Profile:
-    table: profiles
-    fields: [display_name, birth_date, gender, city]
-    belongs_to: User
-  HealthSummary:
-    table: health_summaries
-    fields: [chronotype, activity_level, routine_stability_index, avg_sleep_duration_minutes]
-    belongs_to: User
-  SparkSession:
-    table: spark_sessions
-    fields: [initiator_id, partner_id, status, session_code, qr_token, started_at, completed_at, compatibility_score]
-    belongs_to: [Initiator/User, Partner/User]
-    has_many: [SparkRewards]
-  SparkReward:
-    table: spark_rewards
-    fields: [user_id, spark_session_id, reward_type, status, valid_until]
-    belongs_to: [User, SparkSession]
-  Match:
-    table: matches
-    fields: [compatibility_score, status, accepted_at, rejected_at]
-    has_many: [MatchParticipants]
-    has_many_through: [Users, MatchParticipants]
+User:
+  fk_rule: all FK columns point to users.id, never profiles.id
+  key_fields: [id, email, phone, trust_score, deleted_at]
+  associations:
+    has_one: [profile, preference_profile, health_summary]
+    has_many: [spark_sessions (as initiator/receiver), matches (via match_participants), device_tokens]
+  notes: soft delete via deleted_at
+
+Profile:
+  fk: user_id
+  key_fields: [user_id, display_name, completeness_score, deleted_at]
+  associations:
+    belongs_to: user
+  notes:
+    - completeness_score updated via Profile::CompletenessCalculator
+    - profiles.id never used as FK target anywhere
+
+PreferenceProfile:
+  fk: user_id
+  key_fields: [user_id, age_min, age_max, max_distance_km]
+  associations:
+    belongs_to: user
+
+HealthSummary:
+  fk: user_id
+  key_fields: [user_id, date, steps, sleep_hours, active_minutes, source]
+  associations:
+    belongs_to: user
+  notes: one record per user per day per source
+
+SparkSession:
+  fk: [initiator_id → users.id, receiver_id → users.id]
+  key_fields: [initiator_id, receiver_id, status, compatibility_score, completed_at]
+  statuses: [pending, active, completed, expired, declined]
+  associations:
+    belongs_to: [initiator (User), receiver (User)]
+    has_many: [spark_rewards]
+  notes:
+    - Spark blocked if Apple Health not connected (iOS MVP)
+    - compatibility_score computed via MatchScoringFacade
+
+Match:
+  fk: via match_participants → users.id
+  key_fields: [status, matched_at, deleted_at]
+  statuses: [active, unmatched, blocked]
+  associations:
+    has_many: [match_participants, messages]
+  notes: soft delete via deleted_at
+
+MatchParticipant:
+  fk: [match_id, user_id]
+  key_fields: [match_id, user_id]
+  associations:
+    belongs_to: [match, user]
+
+SparkReward:
+  fk: [spark_session_id, user_id]
+  key_fields: [spark_session_id, user_id, reward_type, granted_at]
+  associations:
+    belongs_to: [spark_session, user]

@@ -1,0 +1,20 @@
+naming:
+  methods: camelCase
+  types: PascalCase
+  files: PascalCase.swift
+architecture: MVVM — View / ViewModel / Model
+folder_structure:
+  views: apps/ios/Synca/Views/
+  viewmodels: apps/ios/Synca/ViewModels/
+  models: apps/ios/Synca/Models/
+  services: apps/ios/Synca/Services/
+  tests: apps/ios/SyncaTests/
+patterns:
+  - Never hit real HKHealthStore in tests — use HealthKitProtocol mock
+  - Stub network layer via MockURLProtocol
+  - ViewModels are @Observable (iOS 17+), not ObservableObject
+  - No business logic in Views
+do_not_touch:
+  - Real HKHealthStore in test targets
+  - Keychain write logic outside AuthService
+style_guide: docs/conventions/ios.md
