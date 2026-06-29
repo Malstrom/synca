@@ -77,4 +77,3 @@ models:
     relations:
       - has_many: MatchParticipants
       - has_many: Users through MatchParticipants
-
