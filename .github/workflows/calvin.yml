@@ -7,7 +7,8 @@ on:
 jobs:
   calvin:
     if: github.event.label.name == 'agent'
-    uses: Malstrom/zeroth/.github/workflows/calvin-engine.yml@main
+    uses: malstrom/zeroth/.github/workflows/calvin-engine.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
+      target_repo: malstrom/synca
     secrets: inherit
