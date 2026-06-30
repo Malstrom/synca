@@ -16,4 +16,6 @@ jobs:
     with:
       issue_number: ${{ github.event.issue.number }}
       target_repo: malstrom/synca
-    secrets: inherit
+    secrets:
+      SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
