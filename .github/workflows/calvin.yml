@@ -4,6 +4,11 @@ on:
   issues:
     types: [labeled]
 
+permissions:
+  issues: write
+  contents: write
+  pull-requests: write
+
 jobs:
   calvin:
     if: github.event.label.name == 'agent'
