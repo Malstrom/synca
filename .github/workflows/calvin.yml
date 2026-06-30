@@ -1,0 +1,13 @@
+name: Calvin
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  calvin:
+    if: github.event.label.name == 'agent'
+    uses: Malstrom/zeroth/.github/workflows/calvin-engine.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+    secrets: inherit
