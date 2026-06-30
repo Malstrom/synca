@@ -1,0 +1,26 @@
+language:
+  backend: Ruby 3.3
+  ios: Swift
+  android: Kotlin
+
+framework:
+  backend: Rails 8.0 (API mode)
+  ios: SwiftUI
+  android: Jetpack Compose
+
+database: PostgreSQL 16
+
+test_framework:
+  backend: Minitest + SimpleCov
+  ios: XCTest
+
+key_libraries:
+  - Solid Queue (background jobs, no Redis)
+  - Action Cable + Solid Cable (WebSockets)
+  - jwt gem (auth — no Devise)
+  - Active Storage + S3-compatible
+  - Kamal (deploy)
+  - HealthKit (iOS)
+  - Health Connect (Android)
+
+deployment: Docker + Kamal · GitHub Container Registry

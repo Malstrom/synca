@@ -1,10 +1,7 @@
-parent_agent: zeroth/frameworks/calvin
-target_repo: Malstrom/synca
-stack_agents:
-  backend: backend/api/.calvin/agent.yml
-  ios: apps/ios/.calvin/agent.yml
-shared_context:
-  - docs/
-  - .context.yml
-decisions:
-  - .calvin/decisions.yml
+repo: malstrom/synca
+description: >
+  Health-based dating app (iOS + Android + Rails API).
+  Core mechanic: Spark IRL. Match engine basato su Apple Health / Health Connect.
+language: italian
+default_branch: main
+context_path: .calvin/
