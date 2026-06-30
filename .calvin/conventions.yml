@@ -1,0 +1,28 @@
+naming:
+  backend: snake_case files/methods, CamelCase classes
+  ios: camelCase methods, PascalCase types (MVVM)
+  android: camelCase methods, PascalCase classes
+
+folder_structure:
+  backend: backend/api/
+  ios: apps/ios/
+  android: apps/android/
+  docs: docs/ (canonical source of truth — architecture, conventions, features, product, api, infra)
+
+patterns:
+  - All FK columns point to users.id — never to profiles.id
+  - Soft delete on all primary domain tables (deleted_at); no hard deletes
+  - Background jobs must call MatchScoringFacade, never CompatibilityScoreService directly
+  - MlEventLogger must be called at all interaction points — never raises
+  - All API endpoints under /api/v1/ with Bearer JWT auth
+  - Pagination: page + per_page params; response includes meta.total_count
+  - iOS: never hit real HKHealthStore in tests — use HealthKitProtocol mock
+  - iOS/Android: stub network layer via MockURLProtocol / similar pattern
+
+do_not_touch:
+  - Score threshold values — defined in docs/features/matching-v1.md and docs/features/circles-v1.md only
+  - profiles.id — never used as FK target
+  - MlEventLogger rescue block — must never raise
+  - ML_SCORING_ENABLED — defaults to false; MlMatchScoringJob is V2, not active in V1
+
+style_guide: docs/conventions/backend.md · docs/conventions/ios.md · docs/conventions/workflow.md

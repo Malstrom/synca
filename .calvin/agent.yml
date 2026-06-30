@@ -1,0 +1,7 @@
+repo: malstrom/synca
+description: >
+  Health-based dating app (iOS + Android + Rails API).
+  Core mechanic: Spark IRL. Match engine basato su Apple Health / Health Connect.
+language: italian
+default_branch: main
+context_path: .calvin/

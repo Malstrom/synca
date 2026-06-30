@@ -1,0 +1,45 @@
+decisions:
+  - date: "2026-05"
+    decision: "Minimum 7 days of signals required before a user enters the algorithm pool (configurable, default 7)"
+    rationale: "Insufficient data produces unreliable scores; 7 days is the minimum meaningful window."
+    source: "docs/product/decisions.md — matching-min-days-signals"
+
+  - date: "2026-05"
+    decision: "Spark is blocked if Apple Health is not connected (iOS MVP); fallback scoring deferred to future version"
+    rationale: "Compatibility score without health data is not meaningful in MVP; nudge user to connect."
+    source: "docs/product/decisions.md — signals-partial-spark-scoring"
+
+  - date: "2026-05"
+    decision: "Email not required before first Spark (guest mode); magic link verification mandatory after first completed Spark"
+    rationale: "Removes the auth wall from the highest-curiosity moment (two people IRL wanting to try Spark immediately)."
+    source: "docs/product/decisions.md — profile-email-verification-mvp"
+
+  - date: "2026-05"
+    decision: "completeness_score persisted on profiles, updated via Profile::CompletenessCalculator; nightly reconciliation job ensures consistency"
+    rationale: "Avoids per-request recomputation; health signals data does not affect completeness_score directly."
+    source: "docs/product/decisions.md — profile-completeness-storage"
+
+  - date: "2026-05"
+    decision: "5-round counter-proposal cap for Moments is enforced server-side (parent_id chain depth); client reflects but is not authoritative"
+    rationale: "Client-side only enforcement is bypassable; counter data is retained for ML metrics."
+    source: "docs/product/decisions.md — moments-counter-cap-enforcement"
+
+  - date: "2026-05"
+    decision: "TrustScore clamped between 0 and 100 inclusive (hard floor/ceiling)"
+    rationale: "Prevents score drift outside meaningful range."
+    source: "docs/product/decisions.md — trust-score-hard-caps"
+
+  - date: "2026-05"
+    decision: "circle_message push suppressed when a live Action Cable subscription for that Circle is active"
+    rationale: "Avoids duplicate notification when real-time channel is already open."
+    source: "docs/product/decisions.md — notifications-circle-message-suppression"
+
+  - date: "2026-05"
+    decision: "APNs/FCM token rotation: parse error responses in NotificationJob, set device_tokens.active = false on invalid token"
+    rationale: "Prevents repeated delivery failures and stale token accumulation."
+    source: "docs/product/decisions.md — notifications-token-rotation"
+
+  - date: "2026-05"
+    decision: "CI trigger path must match actual backend directory (backend/api/**); any backend change triggers CI"
+    rationale: "Original path was a placeholder; verified to match repo structure."
+    source: "docs/product/decisions.md — infra-ci-path-trigger"
