@@ -1,25 +1,107 @@
+# Convenzioni del backend API — derivate dall'analisi del codice esistente
+# Aggiornare questo file ogni volta che si introduce un nuovo pattern architetturale.
+
+# ─── Naming ───────────────────────────────────────────
 naming:
   files: snake_case
   methods: snake_case
   classes: CamelCase
+  constants: SCREAMING_SNAKE_CASE
+  database_columns: snake_case
+  boolean_columns: "prefisso is_ o suffisso _at / _verified (es: spark_verified, deleted_at)"
+
+# ─── Struttura cartelle ─────────────────────────────
 folder_structure:
   controllers: app/controllers/api/v1/
   services: app/services/
+  serializers: app/serializers/
   jobs: app/jobs/
   channels: app/channels/
   models: app/models/
-  tests: test/ (never in app/ — Zeitwerk conflict)
+  contracts: app/contracts/   # dry-validation contracts, un file per resource
+  tests: test/                # mai in app/ — conflitto Zeitwerk
+
+# ─── Risposta API ────────────────────────────────
+api_response:
+  concern: ApiResponse (incluso in ApplicationController)
+  helpers:
+    - render_success(data, status: :ok)       # 200 con payload diretto, no wrapper {data:}
+    - render_created(data)                    # 201
+    - render_error(code:, message:, field:)   # { error: { code, message, field? } }
+    - render_unauthorized                     # 401 — token assente o non valido
+    - render_not_found(resource)              # 404
+    - render_validation_errors(record)        # 422 da AR errors
+    - auth_response(user)                     # access_token + refresh_token + user
+  notes:
+    - "I payload di successo non usano un wrapper {data:} — la chiave è il nome della resource (es: {user:, profile:})"
+    - "Gli errori usano sempre un codice stringa snake_case (es: validation_failed, not_found)"
+    - "Il campo field: negli errori indica il parametro che ha causato il problema"
+
+# ─── Controller ───────────────────────────────────
+controllers:
+  - Tutti i controller sono sotto Api::V1 e montati in /api/v1/
+  - Autenticazione JWT via before_action :authenticate_user! in ApplicationController
+  - Il controller non costruisce hash di risposta direttamente — delega al serializer Alba
+  - La validazione input avviene tramite un dry-validation contract, non con params.require
+  - I metodi pubblici corrispondono alle azioni REST standard (index, show, create, update, destroy)
+  - Logica di business delegata a service objects o interactor, mai inline nel controller
+
+# ─── Serializer (Alba) ────────────────────────────
+serializers:
+  location: app/serializers/
+  naming: "ResourceSerializer (es: UserSerializer, MatchSerializer)"
+  usage: "render_success UserSerializer.new(user).serialize"
+  notes:
+    - "Un serializer per resource, non per endpoint"
+    - "Le associazioni nested usano serializer dedicati (es: ProfileSerializer dentro UserSerializer)"
+    - "Nessun hash inline nei controller — ogni risposta passa dal serializer"
+
+# ─── Input validation (dry-validation) ───────────────
+contracts:
+  location: app/contracts/
+  naming: "ResourceContract (es: HealthSummaryContract, RegistrationContract)"
+  usage: |
+    result = HealthSummaryContract.new.call(params.to_unsafe_h)
+    return render_validation_errors_from(result) if result.failure?
+  notes:
+    - "I contract usano dry-struct per tipizzare l'output validato"
+    - "params.require / params.permit non si usano nei controller che hanno un contract"
+    - "I messaggi di errore dei contract sono mappati nel formato {error: {code, message, field}}"
+
+# ─── Service objects ─────────────────────────────
+service_objects:
+  pattern: "ServiceName.call(args) — entry point sempre .call su classe"
+  result_object: "Data.define(:campo1, :campo2) — vedi CompatibilityService::Result"
+  location: app/services/
+  notes:
+    - "I service con stato usano initialize + call, quelli stateless solo self.call"
+    - "I service non rendono mai direttamente — restituiscono un Result object"
+    - "Le costanti di configurazione (pesi, soglie) sono definite nel service stesso o in docs/, mai hardcoded nei controller"
+
+# ─── Modelli ──────────────────────────────────────
+models:
+  - Tutti i modelli ereditano da ApplicationRecord
+  - Tutti i file hanno # frozen_string_literal: true
+  - Tutte le FK puntano a users.id — mai a profiles.id
+  - Soft delete su tutte le tabelle di dominio primarie (colonna deleted_at) — no hard delete
+  - Gli enum usano la sintassi Ruby moderna: enum :campo, { valore: integer }
+  - I callback before_save normalizzano i dati (es: normalize_email)
+  - Le validazioni custom usano validate :nome_metodo
+
+# ─── Pattern architetturali ─────────────────────────
 patterns:
-  - All FK columns point to users.id — never profiles.id
-  - Soft delete on all primary domain tables (deleted_at) — no hard deletes
-  - Background jobs call MatchScoringFacade, never CompatibilityScoreService directly
-  - MlEventLogger called at all interaction points — never raises
-  - All API endpoints under /api/v1/ with Bearer JWT auth
-  - Pagination: page + per_page params, response includes meta.total_count
-  - Stub external services via define_singleton_method on instance (not .stub on class)
+  - Tutti gli endpoint sono sotto /api/v1/ con Bearer JWT auth
+  - Paginazione: parametri page + per_page, response include meta.total_count
+  - Background jobs chiamano la facade di alto livello, mai i service di scoring direttamente
+  - MlEventLogger chiamato in tutti i punti di interazione — non deve mai sollevare eccezioni
+  - I client esterni (iOS/Android) si autenticano sempre con Bearer token nell'header Authorization
+  - Stub dei servizi esterni nei test via define_singleton_method sull'istanza (non .stub sulla classe)
+
+# ─── Do not touch ───────────────────────────────
 do_not_touch:
-  - Score threshold values — defined only in docs/features/matching-v1.md and docs/features/circles-v1.md
-  - profiles.id — never used as FK target
-  - MlEventLogger rescue block — must never raise
-  - ML_SCORING_ENABLED — defaults false in all envs
+  - "Valori soglia scoring — definiti solo in docs/features/matching-v1.md e docs/features/circles-v1.md"
+  - "profiles.id — mai usato come target di FK"
+  - "MlEventLogger rescue block — non deve mai sollevare eccezioni"
+  - "ML_SCORING_ENABLED — default false in tutti gli ambienti"
+
 style_guide: docs/conventions/backend.md
