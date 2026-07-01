@@ -6,60 +6,129 @@ base_classes:
   unit: ActiveSupport::TestCase
   integration: ApiTestCase < ActionDispatch::IntegrationTest
 
-fixtures: true
-factories: factory_bot_rails (use for complex setup requiring trait composition)
+# ─── Fixtures vs FactoryBot ───────────────────────────────────────────────────
+fixtures: true  # fixtures :all loaded in every TestCase via test_helper.rb
+factories: factory_bot_rails
+fixture_vs_factory_rule: |
+  Use FIXTURES as the default. They are faster (bulk-inserted once per suite),
+  deterministic, and already cover all existing models.
+  Use FactoryBot ONLY when a test needs combinations or states not in fixtures
+  (e.g. 10 users with random chronotypes for a stats test). Do NOT create
+  FactoryBot definitions that duplicate existing fixture rows.
 
+fixture_catalogue:
+  # Source of truth: test/fixtures/*.yml
+  # Named rows available as helpers: users(:alice), spark_sessions(:alice_spark), etc.
+  users:
+    alice:   email auth, alice@example.com, password: 'password'
+    bob:     email auth, bob@example.com,   password: 'password'
+    charlie: email auth, charlie@example.com — used as spark initiator in model tests only
+    dave:    email auth, dave@example.com
+  spark_sessions:
+    alice_spark:   completed, alice→bob, score 75.0, rewards issued
+    pending_spark: pending,   charlie initiated, 15min old (stale scope test)
+    dave_spark:    completed, dave→charlie, score 80.0, rewards issued
+  matches:
+    one_match: single active match record (participants: alice + bob via match_participants)
+  profiles:
+    alice_profile, bob_profile, charlie_profile, dave_profile
+  health_summaries:
+    alice_health (morning chronotype), bob_health (evening)
+  preference_profiles:
+    alice_prefs, bob_prefs
+  match_participants:
+    alice_participant (match: one_match, user: alice)
+    bob_participant   (match: one_match, user: bob)
+  spark_rewards:
+    alice_reward (alice_spark, boost, active)
+    bob_reward   (alice_spark, boost, active)
+
+fixture_antipatterns:
+  - Hardcode BCrypt digests — use <%= BCrypt::Password.create('password') %>
+  - Invent fixture names not in the catalogue above — risk of nil reference
+  - Add a fixture row that duplicates an existing one with only a renamed key
+  - Use fixture rows from a different test's exclusive domain
+    (e.g. charlie is reserved for model/scope tests; do not use as controller actor)
+
+# ─── Coverage ─────────────────────────────────────────────────────────────────
 coverage:
   tool: simplecov
-  threshold: 90%
+  threshold: 90%  # global; enforced at CI — bin/rails ci fails below this
   filters:
     - /config/
     - /test/
     - /app/mailers/application_mailer.rb
     - /app/jobs/application_job.rb
+  critical_paths_note: |
+    90% global is necessary but insufficient. The following paths require
+    explicit branch coverage — do not rely on incidental coverage:
+      - Auth token issuance and verification (JwtService)
+      - SparkSession lifecycle transitions (pending→active→completed→expired)
+      - Reward guard (reward_issued_initiator / reward_issued_partner must not double-grant)
+      - MatchScoringFacade score computation paths
+      - Pundit policy deny paths (user cannot touch other user's resources)
 
+# ─── Helpers available in ApiTestCase ────────────────────────────────────────
 helpers:
-  json: "JSON.parse(response.body, symbolize_names: true)"
-  auth_headers: "auth_headers(user) — injects Bearer token + Content-Type"
-  post_json: "post_json(path, params:, headers:)"
-  put_json: "put_json(path, params:, headers:)"
+  json:        "JSON.parse(response.body, symbolize_names: true)"
+  auth_headers: |
+    auth_headers(user) → { 'Authorization' => 'Bearer <token>', 'Content-Type' => 'application/json' }
+    Internally calls JwtService.access_token(user). Never hardcode tokens.
+  post_json:   "post_json(path, params:, headers:)"
+  put_json:    "put_json(path, params:, headers:)"
 
-stub_pattern: define_singleton_method on instance (never .stub on class)
+# ─── Stub pattern ─────────────────────────────────────────────────────────────
+stub_pattern: |
+  Use define_singleton_method on the instance, NEVER .stub on the class.
 
+  CORRECT:
+    service = CompatibilityService.new(user)
+    service.define_singleton_method(:call) { Result.new(score: 99.0) }
+
+  WRONG:
+    CompatibilityService.stub(:new, mock_instance) { ... }  # breaks parallel safety
+    require 'minitest/mock'                                  # Bootsnap crash on Ruby 3.3
+
+# ─── Forbidden ────────────────────────────────────────────────────────────────
 forbidden:
-  - "require 'minitest/mock' — breaks Bootsnap on Ruby 3.3"
-  - test files in app/ — Zeitwerk conflict
+  - "require 'minitest/mock' — crashes Bootsnap on Ruby 3.3"
+  - test files in app/ — Zeitwerk auto-loads them as application code
+  - define_singleton_method on a class (class-level stub) — use instance-level only
+  - Calling MatchScoringFacade or MlEventLogger in tests without stubbing
+    (both make external calls / write event log; stub them on the instance)
 
+# ─── What to always test per layer ───────────────────────────────────────────
 always_test:
   models:
-    - validations (presence, uniqueness, format, custom)
-    - enum values and transitions
-    - scopes
-    - before_save / before_create callbacks
+    - validations (presence, uniqueness, format, custom validate methods)
+    - enum values match schema (value integers must match schema.yml)
+    - scopes (call the scope, assert subset and exclusion)
+    - before_save / before_create callbacks (e.g. normalize_email downcases)
   services:
-    - happy path result object fields
-    - edge cases (nil inputs, zero distances)
-    - no DB side effects unless explicitly expected
+    - happy path: assert result fields by name and type
+    - edge cases: nil inputs, boundary values, empty collections
+    - no unintended DB side effects (assert count unchanged when not expected)
   controllers:
-    - HTTP status for each branch
-    - JSON response structure (key presence, types)
-    - 401 on missing token
-    - 401 on invalid/malformed token
-    - 422 on validation failure with error code + field
+    - HTTP status for every branch (200, 201, 401, 403, 404, 422)
+    - JSON response structure: key presence and types, not exact values
+    - 401 on missing Authorization header
+    - 401 on expired or malformed JWT
+    - 422 on validation failure: response includes { errors: { field: [message] } }
+    - Pundit deny: 403 when user tries to act on another user's resource
   contracts:
-    - success with valid input
-    - failure with each invalid field
-    - coercion of types (string → integer, etc.)
+    - success with valid input: result is dry-struct value object
+    - failure per invalid field: errors hash keyed by field name
+    - type coercion: string '1' → integer 1 where applicable
   serializers:
-    - all expected keys present
+    - all declared keys present in output hash
     - nested associations serialized correctly
-    - nil associations return nil, not raise
+    - nil associations return nil, not raise NoMethodError
   jobs:
-    - happy path
-    - graceful skip on missing data
-    - side-effect records created
+    - happy path: assert enqueued side-effects (records created, events logged)
+    - graceful skip: missing or stale data → job returns without raising
+    - idempotency: running twice does not double-create records
   channels:
     - subscription accepted for authorized user
-    - subscription rejected for non-member
+    - subscription rejected (close_connection) for unauthenticated request
 
 command: bin/rails ci
