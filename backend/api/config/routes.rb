@@ -34,6 +34,8 @@ Rails.application.routes.draw do
           post :simulate
         end
       end
+
+      get 'health', to: 'health#show'
     end
   end
 end
