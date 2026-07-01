@@ -26,6 +26,21 @@ gem "rack-cors"
 # Lightweight pagination for API endpoints
 gem "pagy"
 
+# Fast, plain-Ruby serializer for JSON responses
+# Serializer objects live in app/resources/
+gem "alba"
+
+# ─── Input Validation & Typed Value Objects ───────────
+
+# Type system — prerequisite for dry-validation and dry-struct
+gem "dry-types"
+
+# Contract-based input validation (replaces ad-hoc params checks)
+gem "dry-validation"
+
+# Typed value objects for validated input structs
+gem "dry-struct"
+
 # ─── Auth ─────────────────────────────────────────────
 
 # Password hashing via has_secure_password

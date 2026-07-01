@@ -1,19 +1,50 @@
-language: Ruby 3.3
-framework: Rails 8.0 (API mode)
-database: PostgreSQL 16
-test_framework: Minitest + SimpleCov
-coverage_threshold: 90%
-background_jobs: Solid Queue (no Redis)
-websockets: Action Cable + Solid Cable
-auth: jwt gem (no Devise)
-storage: Active Storage + S3-compatible
-deploy: Docker + Kamal + GitHub Container Registry
-ci_command: bin/rails ci
-key_gems:
-  - jwt
-  - solid_queue
-  - solid_cable
-  - active_storage
-  - kamal
-  - dry-validation
-  - rack-cors
+ruby: "3.3.1"
+framework: "Rails 8.0.3 (API-only)"
+server: "Puma + Thruster"
+deploy: "Kamal + Docker"
+
+database:
+  primary: "PostgreSQL"
+  cache: "SolidCache (DB-backed, no Redis)"
+  queue: "SolidQueue (DB-backed, no Sidekiq)"
+  cable: "SolidCable (DB-backed, no Redis)"
+
+storage: "Yandex Object Storage (S3-compatible, aws-sdk-s3)"
+
+auth:
+  password: "bcrypt + has_secure_password"
+  tokens: "JWT (jwt ~> 3.2) — access + refresh"
+  note: "No Devise"
+
+api:
+  cors: "rack-cors"
+  pagination: "pagy"
+  serializer: "Alba — plain Ruby serializer objects in app/resources/"
+
+input_validation:
+  note: "Tutti i parametri in entrata passano attraverso un contract dry-validation prima di raggiungere il controller"
+  gems:
+    - "dry-validation — contratti di validazione input"
+    - "dry-struct — value objects tipizzati per rappresentare input validati"
+    - "dry-types — sistema di tipi base, prerequisito di dry-validation e dry-struct"
+
+authorization: "pundit"
+service_objects: "interactor"
+
+monitoring: "GlitchTip (sentry-ruby + sentry-rails, no-op se SENTRY_DSN assente)"
+
+testing:
+  framework: "Minitest"
+  factories: "factory_bot_rails"
+  fakes: "faker"
+  coverage: "simplecov (soglia >= 90%)"
+  db_cleaner: "database_cleaner-active_record"
+  http_mock: "webmock"
+
+dev_tools:
+  linter: "rubocop-rails-omakase"
+  security: "brakeman + bundler-audit"
+  schema_comments: "annotate"
+  api_docs: "scalar_ruby (Scalar UI)"
+
+ci_command: "bin/rails ci"
