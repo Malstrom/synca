@@ -19,7 +19,7 @@ auth:
 api:
   cors: "rack-cors"
   pagination: "pagy"
-  serializer: "Alba — plain Ruby serializer objects in app/resources/"
+  serializer: "Alba — plain Ruby serializer objects in app/serializers/"
 
 input_validation:
   note: "Tutti i parametri in entrata passano attraverso un contract dry-validation prima di raggiungere il controller"
