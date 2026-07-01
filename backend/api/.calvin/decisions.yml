@@ -1,1 +1,50 @@
-decisions: []
+decisions:
+  - id: no_devise
+    date: 2025-01
+    decision: No Devise — auth via has_secure_password + jwt gem
+    reason: Devise adds view helpers, route macros, and session logic that have no place in an API-only app. JWT access + refresh tokens are sufficient for iOS/Android clients.
+
+  - id: no_redis
+    date: 2025-01
+    decision: No Redis — SolidCache + SolidQueue + SolidCable on PostgreSQL
+    reason: Eliminates a runtime dependency. PostgreSQL is already required; Solid* gems provide equivalent functionality with fewer moving parts in production.
+
+  - id: no_rspec
+    date: 2025-01
+    decision: Minitest over RSpec
+    reason: Ships with Rails, zero configuration, faster boot. SimpleCov threshold enforced at 90%.
+
+  - id: fk_to_users
+    date: 2025-01
+    decision: All FK columns point to users.id, never profiles.id
+    reason: User is the identity root. Profile is a dependent child record that can be nil. Referencing profiles.id would create a hard dependency on profile existence.
+
+  - id: soft_delete
+    date: 2025-01
+    decision: Soft delete (deleted_at) on all primary domain tables, no hard deletes
+    reason: Preserves audit trail and enables recovery. Hard deletes on user-generated content are irreversible and complicate compliance.
+
+  - id: alba_serializer
+    date: 2026-07
+    decision: Alba for JSON serialization, serializers in app/serializers/
+    reason: Fastest plain-Ruby serializer, zero magic, integrates cleanly with dry-struct output objects. Replaces ad-hoc inline hashes in controllers.
+
+  - id: dry_validation
+    date: 2026-07
+    decision: dry-validation + dry-struct + dry-types for input normalization and validation
+    reason: Moves input validation out of controllers into typed contracts. Eliminates params.require/permit fragmentation. dry-struct provides typed value objects as contract output.
+
+  - id: interactor_service_pattern
+    date: 2025-01
+    decision: Service objects via interactor gem, entry point always .call
+    reason: Consistent interface across all services. Result objects use Data.define for immutable, typed return values.
+
+  - id: pundit_authorization
+    date: 2025-01
+    decision: Pundit for resource-level authorization
+    reason: Lightweight, explicit policy objects. Users can only modify their own resources.
+
+  - id: yandex_storage
+    date: 2025-01
+    decision: Yandex Object Storage as primary S3-compatible backend for RU region
+    reason: Data residency requirements. aws-sdk-s3 is used with custom endpoint, allowing a drop-in swap to AWS S3 for other regions.
