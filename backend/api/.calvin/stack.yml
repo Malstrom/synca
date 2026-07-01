@@ -4,47 +4,46 @@ server: "Puma + Thruster"
 deploy: "Kamal + Docker"
 
 database:
-  primary: "PostgreSQL"
-  cache: "SolidCache (DB-backed, no Redis)"
-  queue: "SolidQueue (DB-backed, no Sidekiq)"
-  cable: "SolidCable (DB-backed, no Redis)"
+  primary: PostgreSQL
+  cache: SolidCache
+  queue: SolidQueue
+  cable: SolidCable
 
-storage: "Yandex Object Storage (S3-compatible, aws-sdk-s3)"
+storage: "aws-sdk-s3 (Yandex Object Storage / AWS S3)"
 
 auth:
   password: "bcrypt + has_secure_password"
-  tokens: "JWT (jwt ~> 3.2) — access + refresh"
-  note: "No Devise"
+  tokens: "jwt ~> 3.2 — access + refresh"
+  note: no Devise
 
 api:
-  cors: "rack-cors"
-  pagination: "pagy"
-  serializer: "Alba — plain Ruby serializer objects in app/serializers/"
+  cors: rack-cors
+  pagination: pagy
+  serializer: "Alba — app/serializers/"
 
 input_validation:
-  note: "Tutti i parametri in entrata passano attraverso un contract dry-validation prima di raggiungere il controller"
   gems:
-    - "dry-validation — contratti di validazione input"
-    - "dry-struct — value objects tipizzati per rappresentare input validati"
-    - "dry-types — sistema di tipi base, prerequisito di dry-validation e dry-struct"
+    - dry-types
+    - dry-validation
+    - dry-struct
+  contracts_location: app/contracts/
 
-authorization: "pundit"
-service_objects: "interactor"
-
-monitoring: "GlitchTip (sentry-ruby + sentry-rails, no-op se SENTRY_DSN assente)"
+authorization: pundit
+service_objects: interactor
+monitoring: "sentry-ruby + sentry-rails (GlitchTip, no-op without SENTRY_DSN)"
 
 testing:
-  framework: "Minitest"
-  factories: "factory_bot_rails"
-  fakes: "faker"
-  coverage: "simplecov (soglia >= 90%)"
-  db_cleaner: "database_cleaner-active_record"
-  http_mock: "webmock"
+  framework: Minitest
+  factories: factory_bot_rails
+  fakes: faker
+  coverage: "simplecov >= 90%"
+  db_cleaner: database_cleaner-active_record
+  http_mock: webmock
 
 dev_tools:
-  linter: "rubocop-rails-omakase"
-  security: "brakeman + bundler-audit"
-  schema_comments: "annotate"
-  api_docs: "scalar_ruby (Scalar UI)"
+  linter: rubocop-rails-omakase
+  security: brakeman + bundler-audit
+  schema_comments: annotate
+  api_docs: scalar_ruby
 
-ci_command: "bin/rails ci"
+ci_command: bin/rails ci
