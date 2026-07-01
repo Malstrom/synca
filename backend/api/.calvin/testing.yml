@@ -1,17 +1,65 @@
 approach: TDD — red → green → refactor
 framework: Minitest
-fixtures: true (no FactoryBot in MVP)
+parallelism: disabled (SimpleCov cannot aggregate across forked workers)
+
+base_classes:
+  unit: ActiveSupport::TestCase
+  integration: ApiTestCase < ActionDispatch::IntegrationTest
+
+fixtures: true
+factories: factory_bot_rails (use for complex setup requiring trait composition)
+
 coverage:
-  tool: SimpleCov
-  threshold: 90% line coverage — build fails below
+  tool: simplecov
+  threshold: 90%
+  filters:
+    - /config/
+    - /test/
+    - /app/mailers/application_mailer.rb
+    - /app/jobs/application_job.rb
+
+helpers:
+  json: "JSON.parse(response.body, symbolize_names: true)"
+  auth_headers: "auth_headers(user) — injects Bearer token + Content-Type"
+  post_json: "post_json(path, params:, headers:)"
+  put_json: "put_json(path, params:, headers:)"
+
+stub_pattern: define_singleton_method on instance (never .stub on class)
+
 forbidden:
-  - require "minitest/mock" — breaks Bootsnap on Ruby 3.3
+  - "require 'minitest/mock' — breaks Bootsnap on Ruby 3.3"
   - test files in app/ — Zeitwerk conflict
-stub_pattern: define_singleton_method on instance (not .stub on class)
+
 always_test:
-  models: validations, scopes, enums, custom methods
-  services: core logic, DB side-effects, error handling
-  controllers: HTTP status, JSON structure, auth enforcement (401 on missing/invalid token)
-  jobs: happy path, graceful skip on missing data, side-effect records
-  channels: subscription accepted for authorized, rejected for non-members
+  models:
+    - validations (presence, uniqueness, format, custom)
+    - enum values and transitions
+    - scopes
+    - before_save / before_create callbacks
+  services:
+    - happy path result object fields
+    - edge cases (nil inputs, zero distances)
+    - no DB side effects unless explicitly expected
+  controllers:
+    - HTTP status for each branch
+    - JSON response structure (key presence, types)
+    - 401 on missing token
+    - 401 on invalid/malformed token
+    - 422 on validation failure with error code + field
+  contracts:
+    - success with valid input
+    - failure with each invalid field
+    - coercion of types (string → integer, etc.)
+  serializers:
+    - all expected keys present
+    - nested associations serialized correctly
+    - nil associations return nil, not raise
+  jobs:
+    - happy path
+    - graceful skip on missing data
+    - side-effect records created
+  channels:
+    - subscription accepted for authorized user
+    - subscription rejected for non-member
+
 command: bin/rails ci
