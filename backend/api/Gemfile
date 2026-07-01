@@ -27,7 +27,7 @@ gem "rack-cors"
 gem "pagy"
 
 # Fast, plain-Ruby serializer for JSON responses
-# Serializer objects live in app/resources/
+# Serializer objects live in app/serializers/
 gem "alba"
 
 # ─── Input Validation & Typed Value Objects ───────────
