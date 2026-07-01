@@ -1,282 +1,205 @@
-# Auto-generated from db/schema.rb (ActiveRecord::Schema v2026_05_27_000008)
-# Source of truth: backend/api/db/schema.rb
-# Purpose: dense reference for LLM context — reflects real DB structure,
-#          enums, indexes, FK rules, and working notes per table.
-#
-# FK RULE (enforced everywhere): all FK columns point to users.id, NEVER profiles.id
-# Soft delete: deleted_at present only on tables that need recovery/audit (see notes)
-
-# ─────────────────────────────────────────
-# IDENTITY ROOT
-# ─────────────────────────────────────────
+fk_rule: all FK columns point to users.id, NEVER profiles.id
 
 users:
-  table: users
   pk: id (bigserial)
   columns:
-    email:          string, unique (partial: where email IS NOT NULL)
-    phone:          string, unique (partial: where phone IS NOT NULL)
-    auth_provider:  integer enum, default: 0, NOT NULL
-    provider_uid:   string, nullable — present for OAuth providers
-    password_digest: string, nullable — present only when auth_provider = email
-    created_at:     datetime, NOT NULL
-    updated_at:     datetime, NOT NULL
+    email:           string, unique partial (NOT NULL)
+    phone:           string, unique partial (NOT NULL)
+    auth_provider:   integer enum NOT NULL default:0
+    provider_uid:    string nullable
+    password_digest: string nullable
+    created_at:      datetime NOT NULL
+    updated_at:      datetime NOT NULL
   enums:
-    auth_provider: { email: 0, apple: 1, google: 2 }   # inferred from provider usage
+    auth_provider: {email: 0, apple: 1, google: 2}
   indexes:
     - [auth_provider, provider_uid] UNIQUE where provider_uid IS NOT NULL
     - [email] UNIQUE where email IS NOT NULL
     - [phone] UNIQUE where phone IS NOT NULL
-  associations:
-    has_one:  profile, preference_profile
-    has_many: health_summaries, spark_sessions (as initiator + partner),
-              spark_rewards, match_participants → matches
+  has_one: [profile, preference_profile]
+  has_many: [health_summaries, spark_sessions(initiator+partner), spark_rewards, match_participants]
   notes:
-    - Identity root. Every other table FK targets users.id.
-    - No deleted_at — users are not soft-deleted at this layer.
-    - email OR phone must be present (enforced at model/contract level, not DB constraint).
-    - provider_uid + auth_provider form a compound unique identity for OAuth.
-
-# ─────────────────────────────────────────
-# USER PROFILE LAYER (1-to-1 with users)
-# ─────────────────────────────────────────
+    - email OR phone must be present (model-level, not DB constraint)
+    - provider_uid + auth_provider = compound OAuth identity
 
 profiles:
-  table: profiles
   pk: id (bigserial)
-  fk: user_id → users.id (unique index — enforces 1:1)
+  fk: user_id -> users.id UNIQUE
   columns:
-    user_id:         bigint, NOT NULL
-    display_name:    string, NOT NULL
-    birth_date:      date, nullable
-    gender:          string, nullable
-    bio:             text, nullable
-    city:            string, nullable
-    photo_url_main:  string, nullable — primary photo CDN URL
-    photo_urls:      jsonb, default: [], NOT NULL — ordered array of CDN URLs
-    trust_score:     float, default: 50.0, NOT NULL — range 0–100
-    spark_verified:  boolean, default: false, NOT NULL
-    created_at:      datetime, NOT NULL
-    updated_at:      datetime, NOT NULL
+    user_id:        bigint NOT NULL
+    display_name:   string NOT NULL
+    birth_date:     date nullable
+    gender:         string nullable
+    bio:            text nullable
+    city:           string nullable
+    photo_url_main: string nullable
+    photo_urls:     jsonb default:[] NOT NULL
+    trust_score:    float default:50.0 NOT NULL
+    spark_verified: boolean default:false NOT NULL
+    created_at:     datetime NOT NULL
+    updated_at:     datetime NOT NULL
   indexes:
     - [user_id] UNIQUE
   notes:
-    - profiles.id is NEVER used as FK in any other table. Always join via user_id.
-    - completeness_score is computed (not stored) by Profile::CompletenessCalculator.
-    - spark_verified = true once HealthKit/Apple Health data has been validated.
-    - photo_urls is an ordered JSON array; photo_url_main mirrors the first element.
+    - profiles.id is NEVER a FK target anywhere
+    - completeness_score is computed (Profile::CompletenessCalculator), not stored
+    - photo_urls ordered array of CDN URLs; photo_url_main mirrors first element
 
 preference_profiles:
-  table: preference_profiles
   pk: id (bigserial)
-  fk: user_id → users.id (unique index — enforces 1:1)
+  fk: user_id -> users.id UNIQUE
   columns:
-    user_id:         bigint, NOT NULL
-    visual_embedding: jsonb, nullable — vector embedding of user's visual taste
-    travel_style:    integer enum, nullable
-    music_profile:   jsonb, nullable — structured music taste data
-    created_at:      datetime, NOT NULL
-    updated_at:      datetime, NOT NULL
+    user_id:          bigint NOT NULL
+    visual_embedding: jsonb nullable
+    travel_style:     integer enum nullable
+    music_profile:    jsonb nullable
+    created_at:       datetime NOT NULL
+    updated_at:       datetime NOT NULL
   enums:
-    travel_style: { adventure: 0, relax: 1, culture: 2, mixed: 3 }   # inferred
+    travel_style: {adventure: 0, relax: 1, culture: 2, mixed: 3}
   indexes:
     - [user_id] UNIQUE
   notes:
-    - Stores soft preference signals used by MatchScoringFacade.
-    - visual_embedding is a JSON array (float vector); similarity computed in app layer.
-    - music_profile structure: { genres: [], artists: [], energy_level: int }
-
-# ─────────────────────────────────────────
-# HEALTH & BIOMETRIC DATA
-# ─────────────────────────────────────────
+    - visual_embedding is float vector array; similarity computed in app layer
+    - music_profile structure: {genres: [], artists: [], energy_level: int}
 
 health_summaries:
-  table: health_summaries
   pk: id (bigserial)
-  fk: user_id → users.id
+  fk: user_id -> users.id
   columns:
-    user_id:                  bigint, NOT NULL
-    chronotype:               integer enum, NOT NULL
-    sleep_start_local:        time, nullable — local timezone wall clock
-    sleep_end_local:          time, nullable
-    avg_sleep_duration_minutes: integer, nullable
-    routine_stability_index:  float, nullable — 0.0–1.0, higher = more consistent
-    activity_level:           integer enum, nullable
-    peak_energy_start_local:  time, nullable
-    peak_energy_end_local:    time, nullable
-    recovery_score:           integer, nullable — 0–100
-    source:                   integer enum, NOT NULL
-    effective_from:           date, NOT NULL
-    effective_to:             date, nullable — NULL = currently active record
-    created_at:               datetime, NOT NULL
-    updated_at:               datetime, NOT NULL
+    user_id:                    bigint NOT NULL
+    chronotype:                 integer enum NOT NULL
+    sleep_start_local:          time nullable
+    sleep_end_local:            time nullable
+    avg_sleep_duration_minutes: integer nullable
+    routine_stability_index:    float nullable
+    activity_level:             integer enum nullable
+    peak_energy_start_local:    time nullable
+    peak_energy_end_local:      time nullable
+    recovery_score:             integer nullable
+    source:                     integer enum NOT NULL
+    effective_from:             date NOT NULL
+    effective_to:               date nullable
+    created_at:                 datetime NOT NULL
+    updated_at:                 datetime NOT NULL
   enums:
-    chronotype:     { morning: 0, intermediate: 1, evening: 2 }
-    activity_level: { sedentary: 0, light: 1, moderate: 2, active: 3, very_active: 4 }
-    source:         { apple_health: 0, google_fit: 1, manual: 2 }
+    chronotype:     {morning: 0, intermediate: 1, evening: 2}
+    activity_level: {sedentary: 0, light: 1, moderate: 2, active: 3, very_active: 4}
+    source:         {apple_health: 0, google_fit: 1, manual: 2}
   indexes:
     - [user_id, effective_from]
     - [user_id]
   notes:
-    - Versioned records via effective_from/effective_to (SCD Type 2 pattern).
-    - Current active record: effective_to IS NULL.
-    - One active record per user per source at any time.
-    - Populated by HealthKit sync job on iOS; used by MatchScoringFacade for chronotype compatibility.
-
-# ─────────────────────────────────────────
-# SPARK SESSION (IRL meeting flow)
-# ─────────────────────────────────────────
+    - SCD Type 2: effective_to IS NULL = current active record
+    - current record query: where(effective_to: nil).order(effective_from: :desc).first
+    - used by MatchScoringFacade for chronotype compatibility
 
 spark_sessions:
-  table: spark_sessions
   pk: id (bigserial)
   fk:
-    initiator_id → users.id
-    partner_id   → users.id (nullable — NULL until partner scans QR)
+    initiator_id -> users.id
+    partner_id   -> users.id nullable
   columns:
-    initiator_id:            bigint, NOT NULL
-    partner_id:              bigint, nullable
-    status:                  integer enum, default: 0, NOT NULL
-    session_code:            string, NOT NULL, UNIQUE
-    qr_token:                string, NOT NULL, UNIQUE
-    location_lat:            float, nullable
-    location_lng:            float, nullable
-    started_at:              datetime, nullable
-    completed_at:            datetime, nullable
-    initiator_answers:       jsonb, nullable — questionnaire responses
-    partner_answers:         jsonb, nullable
-    compatibility_score:     float, nullable — computed after both answer
-    reward_issued_initiator: boolean, default: false, NOT NULL
-    reward_issued_partner:   boolean, default: false, NOT NULL
-    created_at:              datetime, NOT NULL
-    updated_at:              datetime, NOT NULL
+    initiator_id:            bigint NOT NULL
+    partner_id:              bigint nullable
+    status:                  integer enum default:0 NOT NULL
+    session_code:            string NOT NULL UNIQUE
+    qr_token:                string NOT NULL UNIQUE
+    location_lat:            float nullable
+    location_lng:            float nullable
+    started_at:              datetime nullable
+    completed_at:            datetime nullable
+    initiator_answers:       jsonb nullable
+    partner_answers:         jsonb nullable
+    compatibility_score:     float nullable
+    reward_issued_initiator: boolean default:false NOT NULL
+    reward_issued_partner:   boolean default:false NOT NULL
+    created_at:              datetime NOT NULL
+    updated_at:              datetime NOT NULL
   enums:
-    status: { pending: 0, active: 1, completed: 2, expired: 3, declined: 4 }
+    status: {pending: 0, active: 1, completed: 2, expired: 3, declined: 4}
   indexes:
     - [initiator_id]
     - [partner_id]
     - [session_code] UNIQUE
     - [qr_token] UNIQUE
     - [status]
-  associations:
-    belongs_to: initiator (User), partner (User, optional)
-    has_many:   spark_rewards
+  has_many: [spark_rewards]
   notes:
-    - Flow: initiator creates session (status: pending) → generates QR → partner scans
-      qr_token → status: active → both answer questionnaire → compatibility_score computed
-      via MatchScoringFacade → status: completed → rewards issued.
-    - Spark is blocked if initiator has no connected Apple Health (iOS MVP gate).
-    - reward_issued_* flags prevent double-granting; set atomically with SparkReward creation.
-    - location_lat/lng captured at session start for proximity context.
-
-# ─────────────────────────────────────────
-# SPARK REWARDS
-# ─────────────────────────────────────────
+    - flow: pending -> QR scan -> active -> both answer -> score computed -> completed -> rewards
+    - Spark blocked if initiator has no Apple Health connected (iOS MVP)
+    - reward_issued_* flags are atomic guard against double-grant
+    - session_code and qr_token generated server-side (SecureRandom), never client-supplied
 
 spark_rewards:
-  table: spark_rewards
   pk: id (bigserial)
   fk:
-    user_id          → users.id
-    spark_session_id → spark_sessions.id
+    user_id          -> users.id
+    spark_session_id -> spark_sessions.id
   columns:
-    user_id:          bigint, NOT NULL
-    spark_session_id: bigint, NOT NULL
-    reward_type:      integer enum, NOT NULL
-    status:           integer enum, default: 0, NOT NULL
-    valid_until:      datetime, NOT NULL
-    created_at:       datetime, NOT NULL
-    updated_at:       datetime, NOT NULL
+    user_id:          bigint NOT NULL
+    spark_session_id: bigint NOT NULL
+    reward_type:      integer enum NOT NULL
+    status:           integer enum default:0 NOT NULL
+    valid_until:      datetime NOT NULL
+    created_at:       datetime NOT NULL
+    updated_at:       datetime NOT NULL
   enums:
-    reward_type: { boost: 0, extended_match: 1, super_spark: 2 }   # inferred
-    status:      { active: 0, used: 1, expired: 2 }
+    reward_type: {boost: 0, extended_match: 1, super_spark: 2}
+    status:      {active: 0, used: 1, expired: 2}
   indexes:
     - [spark_session_id]
     - [user_id, status]
     - [user_id]
   notes:
-    - One reward record per participant per completed SparkSession.
-    - valid_until enforces time-limited rewards; expiry checked at consumption.
-    - Guard against double-issue: spark_sessions.reward_issued_* checked before creation.
-
-# ─────────────────────────────────────────
-# MATCHES (post-Spark match graph)
-# ─────────────────────────────────────────
+    - one record per participant per completed SparkSession
+    - valid_until checked at reward consumption
 
 matches:
-  table: matches
   pk: id (bigserial)
   columns:
-    compatibility_score: float, NOT NULL — copied from spark_session at match creation
-    status:              integer enum, default: 0, NOT NULL
-    accepted_at:         datetime, nullable
-    rejected_at:         datetime, nullable
-    created_at:          datetime, NOT NULL
-    updated_at:          datetime, NOT NULL
+    compatibility_score: float NOT NULL
+    status:              integer enum default:0 NOT NULL
+    accepted_at:         datetime nullable
+    rejected_at:         datetime nullable
+    created_at:          datetime NOT NULL
+    updated_at:          datetime NOT NULL
   enums:
-    status: { pending: 0, active: 1, rejected: 2, unmatched: 3, blocked: 4 }
-  associations:
-    has_many: match_participants, messages (future)
+    status: {pending: 0, active: 1, rejected: 2, unmatched: 3, blocked: 4}
+  has_many: [match_participants]
   notes:
-    - matches has NO direct user_id FK — user association is always via match_participants.
-    - To find a user's matches: JOIN match_participants ON match_id WHERE user_id = ?
-    - accepted_at/rejected_at record decision timestamps for analytics.
+    - NO direct user_id FK — user association always via match_participants
+    - query pattern: Match.joins(:match_participants).where(match_participants: {user_id: id}).where(status: :active)
 
 match_participants:
-  table: match_participants
   pk: id (bigserial)
   fk:
-    match_id → matches.id
-    user_id  → users.id
+    match_id -> matches.id
+    user_id  -> users.id
   columns:
-    match_id:   bigint, NOT NULL
-    user_id:    bigint, NOT NULL
-    role:       integer enum, default: 0, NOT NULL
-    created_at: datetime, NOT NULL
-    updated_at: datetime, NOT NULL
+    match_id:   bigint NOT NULL
+    user_id:    bigint NOT NULL
+    role:       integer enum default:0 NOT NULL
+    created_at: datetime NOT NULL
+    updated_at: datetime NOT NULL
   enums:
-    role: { participant: 0, initiator: 1 }
+    role: {participant: 0, initiator: 1}
   indexes:
     - [match_id, user_id] UNIQUE
     - [match_id]
     - [user_id]
   notes:
-    - Join table between matches and users. Always 2 rows per match.
-    - UNIQUE constraint on (match_id, user_id) prevents duplicate participants.
-    - Query pattern for "user's active matches":
-        Match.joins(:match_participants)
-             .where(match_participants: { user_id: current_user.id })
-             .where(status: :active)
-
-# ─────────────────────────────────────────
-# RELATIONSHIP MAP
-# ─────────────────────────────────────────
+    - always 2 rows per match
 
 relationship_map: |
   users
-    ├── profiles              (1:1, FK: profiles.user_id)
-    ├── preference_profiles   (1:1, FK: preference_profiles.user_id)
-    ├── health_summaries      (1:N, FK: health_summaries.user_id, versioned SCD2)
-    ├── spark_sessions        (1:N as initiator, FK: spark_sessions.initiator_id)
-    ├── spark_sessions        (1:N as partner,   FK: spark_sessions.partner_id, nullable)
-    ├── spark_rewards         (1:N, FK: spark_rewards.user_id)
-    └── match_participants    (1:N, FK: match_participants.user_id)
-           └── matches        (N:M via match_participants)
-
+    |-- profiles              1:1  profiles.user_id
+    |-- preference_profiles   1:1  preference_profiles.user_id
+    |-- health_summaries      1:N  health_summaries.user_id (SCD2)
+    |-- spark_sessions        1:N  spark_sessions.initiator_id
+    |-- spark_sessions        1:N  spark_sessions.partner_id (nullable)
+    |-- spark_rewards         1:N  spark_rewards.user_id
+    |-- match_participants    1:N  match_participants.user_id
+           |-- matches        N:M  via match_participants
   spark_sessions
-    └── spark_rewards         (1:N, FK: spark_rewards.spark_session_id)
-
-# ─────────────────────────────────────────
-# WORKING RULES FOR THE MODEL
-# ─────────────────────────────────────────
-
-working_rules:
-  - Never use profiles.id as a FK target. Always traverse via user_id.
-  - To get a user's profile: User.find(id).profile  (not Profile.find)
-  - To get a user's matches: use match_participants join, never add user_id to matches.
-  - health_summaries current record: where(effective_to: nil).order(effective_from: :desc).first
-  - Soft delete: NOT present in this schema version. Models use status enums + timestamps instead.
-  - Enums are integer-backed in DB. In Rails models they map to symbols via enum declarations.
-  - jsonb fields (photo_urls, visual_embedding, music_profile, initiator_answers, partner_answers)
-    are always validated at contract layer (dry-validation) before write.
-  - session_code and qr_token are generated server-side (SecureRandom); never client-supplied.
+    |-- spark_rewards         1:N  spark_rewards.spark_session_id
