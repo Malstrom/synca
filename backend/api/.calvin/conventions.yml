@@ -1,107 +1,93 @@
-# Convenzioni del backend API — derivate dall'analisi del codice esistente
-# Aggiornare questo file ogni volta che si introduce un nuovo pattern architetturale.
-
-# ─── Naming ───────────────────────────────────────────
 naming:
   files: snake_case
   methods: snake_case
   classes: CamelCase
   constants: SCREAMING_SNAKE_CASE
   database_columns: snake_case
-  boolean_columns: "prefisso is_ o suffisso _at / _verified (es: spark_verified, deleted_at)"
+  boolean_columns: "suffix _verified or _at (e.g. spark_verified, deleted_at)"
 
-# ─── Struttura cartelle ─────────────────────────────
 folder_structure:
   controllers: app/controllers/api/v1/
   services: app/services/
   serializers: app/serializers/
+  contracts: app/contracts/
   jobs: app/jobs/
   channels: app/channels/
   models: app/models/
-  contracts: app/contracts/   # dry-validation contracts, un file per resource
-  tests: test/                # mai in app/ — conflitto Zeitwerk
+  tests: test/
 
-# ─── Risposta API ────────────────────────────────
 api_response:
-  concern: ApiResponse (incluso in ApplicationController)
+  concern: ApiResponse included in ApplicationController
   helpers:
-    - render_success(data, status: :ok)       # 200 con payload diretto, no wrapper {data:}
-    - render_created(data)                    # 201
-    - render_error(code:, message:, field:)   # { error: { code, message, field? } }
-    - render_unauthorized                     # 401 — token assente o non valido
-    - render_not_found(resource)              # 404
-    - render_validation_errors(record)        # 422 da AR errors
-    - auth_response(user)                     # access_token + refresh_token + user
-  notes:
-    - "I payload di successo non usano un wrapper {data:} — la chiave è il nome della resource (es: {user:, profile:})"
-    - "Gli errori usano sempre un codice stringa snake_case (es: validation_failed, not_found)"
-    - "Il campo field: negli errori indica il parametro che ha causato il problema"
+    - render_success(data, status: :ok)
+    - render_created(data)
+    - render_error(code:, message:, field:)
+    - render_unauthorized
+    - render_not_found(resource)
+    - render_validation_errors(record)
+    - auth_response(user)
+  rules:
+    - success payloads use the resource name as key, never a {data:} wrapper
+    - error codes are snake_case strings (e.g. validation_failed, not_found)
+    - field: in errors identifies the offending parameter
 
-# ─── Controller ───────────────────────────────────
 controllers:
-  - Tutti i controller sono sotto Api::V1 e montati in /api/v1/
-  - Autenticazione JWT via before_action :authenticate_user! in ApplicationController
-  - Il controller non costruisce hash di risposta direttamente — delega al serializer Alba
-  - La validazione input avviene tramite un dry-validation contract, non con params.require
-  - I metodi pubblici corrispondono alle azioni REST standard (index, show, create, update, destroy)
-  - Logica di business delegata a service objects o interactor, mai inline nel controller
+  - all under Api::V1, mounted at /api/v1/
+  - authentication via before_action :authenticate_user! in ApplicationController
+  - no inline response hashes — delegate to Alba serializer
+  - input validation via dry-validation contract, not params.require/permit
+  - public methods map to standard REST actions only
+  - business logic delegated to service objects or interactors, never inline
 
-# ─── Serializer (Alba) ────────────────────────────
 serializers:
   location: app/serializers/
-  naming: "ResourceSerializer (es: UserSerializer, MatchSerializer)"
-  usage: "render_success UserSerializer.new(user).serialize"
-  notes:
-    - "Un serializer per resource, non per endpoint"
-    - "Le associazioni nested usano serializer dedicati (es: ProfileSerializer dentro UserSerializer)"
-    - "Nessun hash inline nei controller — ogni risposta passa dal serializer"
+  naming: ResourceSerializer (e.g. UserSerializer, MatchSerializer)
+  usage: "render_success UserSerializer.new(resource).serialize"
+  rules:
+    - one serializer per resource, not per endpoint
+    - nested associations use dedicated serializers
+    - no inline hashes in controllers
 
-# ─── Input validation (dry-validation) ───────────────
 contracts:
   location: app/contracts/
-  naming: "ResourceContract (es: HealthSummaryContract, RegistrationContract)"
+  naming: ResourceContract (e.g. HealthSummaryContract, RegistrationContract)
   usage: |
     result = HealthSummaryContract.new.call(params.to_unsafe_h)
-    return render_validation_errors_from(result) if result.failure?
-  notes:
-    - "I contract usano dry-struct per tipizzare l'output validato"
-    - "params.require / params.permit non si usano nei controller che hanno un contract"
-    - "I messaggi di errore dei contract sono mappati nel formato {error: {code, message, field}}"
+    return render_contract_errors(result) if result.failure?
+  rules:
+    - contract output typed via dry-struct
+    - params.require/permit not used in controllers that have a contract
+    - contract errors mapped to {error: {code, message, field}}
 
-# ─── Service objects ─────────────────────────────
 service_objects:
-  pattern: "ServiceName.call(args) — entry point sempre .call su classe"
-  result_object: "Data.define(:campo1, :campo2) — vedi CompatibilityService::Result"
+  pattern: "ServiceName.call(args) — always .call as entry point"
+  result_object: "Data.define(:field1, :field2) — see CompatibilityService::Result"
   location: app/services/
-  notes:
-    - "I service con stato usano initialize + call, quelli stateless solo self.call"
-    - "I service non rendono mai direttamente — restituiscono un Result object"
-    - "Le costanti di configurazione (pesi, soglie) sono definite nel service stesso o in docs/, mai hardcoded nei controller"
+  rules:
+    - stateful services use initialize + call; stateless use self.call only
+    - services never render — always return a Result object
+    - weights and thresholds defined as constants in the service or in docs/, never in controllers
 
-# ─── Modelli ──────────────────────────────────────
 models:
-  - Tutti i modelli ereditano da ApplicationRecord
-  - Tutti i file hanno # frozen_string_literal: true
-  - Tutte le FK puntano a users.id — mai a profiles.id
-  - Soft delete su tutte le tabelle di dominio primarie (colonna deleted_at) — no hard delete
-  - Gli enum usano la sintassi Ruby moderna: enum :campo, { valore: integer }
-  - I callback before_save normalizzano i dati (es: normalize_email)
-  - Le validazioni custom usano validate :nome_metodo
+  - all inherit from ApplicationRecord
+  - all files have # frozen_string_literal: true
+  - all FK columns point to users.id — never profiles.id
+  - soft delete on all primary domain tables (deleted_at) — no hard deletes
+  - enums use modern syntax: enum :field, { value: integer }
+  - before_save callbacks handle normalization (e.g. normalize_email)
+  - custom validations use validate :method_name
 
-# ─── Pattern architetturali ─────────────────────────
 patterns:
-  - Tutti gli endpoint sono sotto /api/v1/ con Bearer JWT auth
-  - Paginazione: parametri page + per_page, response include meta.total_count
-  - Background jobs chiamano la facade di alto livello, mai i service di scoring direttamente
-  - MlEventLogger chiamato in tutti i punti di interazione — non deve mai sollevare eccezioni
-  - I client esterni (iOS/Android) si autenticano sempre con Bearer token nell'header Authorization
-  - Stub dei servizi esterni nei test via define_singleton_method sull'istanza (non .stub sulla classe)
+  - all endpoints under /api/v1/ with Bearer JWT auth
+  - pagination: page + per_page params, response includes meta.total_count
+  - background jobs call high-level facade, never scoring services directly
+  - MlEventLogger called at all interaction points — must never raise
+  - external services stubbed in tests via define_singleton_method on instance
 
-# ─── Do not touch ───────────────────────────────
 do_not_touch:
-  - "Valori soglia scoring — definiti solo in docs/features/matching-v1.md e docs/features/circles-v1.md"
-  - "profiles.id — mai usato come target di FK"
-  - "MlEventLogger rescue block — non deve mai sollevare eccezioni"
-  - "ML_SCORING_ENABLED — default false in tutti gli ambienti"
+  - score threshold values — defined only in docs/features/matching-v1.md and docs/features/circles-v1.md
+  - profiles.id — never used as FK target
+  - MlEventLogger rescue block — must never raise
+  - ML_SCORING_ENABLED — defaults false in all envs
 
 style_guide: docs/conventions/backend.md
