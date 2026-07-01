@@ -16,34 +16,30 @@ folder_structure:
   models: app/models/
   tests: test/
 
-# ---------------------------------------------------------------------------
-# API RESPONSE
-# ApiResponse is included in ApplicationController. Use ONLY these helpers.
-# Never call render json: directly in a controller.
-# ---------------------------------------------------------------------------
+# ─── API RESPONSE ───────────────────────────────────────────────────────────────────────
 api_response:
   concern: app/controllers/concerns/api_response.rb
   helpers:
-    render_success:          "render_success(data, status: :ok)       → 200 + raw data hash"
-    render_created:          "render_created(data)                    → 201 + raw data hash"
-    render_error:            "render_error(code:, message:, field:)   → 422 by default; field is optional"
-    render_unauthorized:     "render_unauthorized                     → 401 {error: {code: 'unauthorized', message: ...}}"
-    render_not_found:        "render_not_found('SparkSession')        → 404 {error: {code: 'not_found', message: 'SparkSession not found'}}"
-    render_validation_errors: "render_validation_errors(record)       → 422 using record.errors.first"
-    auth_response:           "auth_response(user)                     → {access_token:, refresh_token:, user: {id:, email:}}"
+    render_success:           "render_success(data, status: :ok)       → 200 + raw data hash"
+    render_created:           "render_created(data)                    → 201 + raw data hash"
+    render_error:             "render_error(code:, message:, field:)   → 422 by default; field is optional"
+    render_unauthorized:      "render_unauthorized                     → 401 {error: {code: 'unauthorized', message: ...}}"
+    render_not_found:         "render_not_found('SparkSession')        → 404 {error: {code: 'not_found', message: 'SparkSession not found'}}"
+    render_validation_errors: "render_validation_errors(record)        → 422 using record.errors.first"
+    auth_response:            "auth_response(user)                     → {access_token:, refresh_token:, user: {id:, email:}}"
 
   json_shapes: |
-    # Success (render_success / render_created):
+    # Success:
     { "spark_session": { "id": 1, "status": "pending" } }
 
-    # Error (render_error):
+    # Error:
     { "error": { "code": "validation_failed", "message": "Email can't be blank", "field": "email" } }
     # field key is omitted when nil — do NOT include it as null
 
-    # Unauthorized (render_unauthorized):
+    # Unauthorized:
     { "error": { "code": "unauthorized", "message": "Invalid or missing token" } }
 
-    # Auth response (render_success auth_response(user)):
+    # Auth response:
     { "access_token": "...", "refresh_token": "...", "user": { "id": 1, "email": "a@b.com" } }
 
   rules:
@@ -52,23 +48,21 @@ api_response:
     - field: in errors identifies the offending parameter name as a string
     - never call render json: directly — always go through ApiResponse helpers
 
-# ---------------------------------------------------------------------------
-# CONTROLLERS
-# ---------------------------------------------------------------------------
+# ─── CONTROLLERS ───────────────────────────────────────────────────────────────────────
 controllers:
   rules:
     - all under Api::V1, mounted at /api/v1/
     - authentication via before_action :authenticate_user! in ApplicationController (inherited)
-    - no inline response hashes — use Alba serializer (see serializers section)
-    - input validation via dry-validation contract (see contracts section)
+    - no inline response hashes — use Alba serializer
+    - input validation via dry-validation contract
     - public methods map to standard REST actions only (index, show, create, update, destroy)
     - business logic delegated to service objects — never inline in controllers
 
   migration_note: |
-    Some existing controllers (e.g. health_summary_controller.rb, me_controller.rb) still use
-    params.require/permit and inline hashes. These predate the Alba + dry-validation decision.
+    Some existing controllers (health_summary_controller.rb, me_controller.rb) still use
+    params.require/permit and inline hashes — they predate the Alba + dry-validation decision.
     NEW controllers MUST use the contract + serializer pattern.
-    Do NOT copy the old params.require/permit pattern when generating new code.
+    Do NOT copy the old params.require/permit pattern.
 
   canonical_pattern: |
     # frozen_string_literal: true
@@ -76,33 +70,29 @@ controllers:
     module Api
       module V1
         class ExamplesController < ApplicationController
-          # GET /api/v1/examples
           def index
             examples = policy_scope(Example).active.order(created_at: :desc)
             render_success ExampleSerializer.new(examples).serialize
           end
 
-          # POST /api/v1/examples
           def create
             result = ExampleContract.new.call(params.to_unsafe_h)
             return render_contract_errors(result) if result.failure?
 
-            example = ExampleService.call(current_user: current_user, attrs: result.to_h)
-            return render_error(code: example.error_code, message: example.error_message) if example.failure?
+            outcome = ExampleService.call(current_user: current_user, attrs: result.to_h)
+            return render_error(code: outcome.error_code, message: outcome.error_message) if outcome.failure?
 
-            render_created ExampleSerializer.new(example.record).serialize
+            render_created ExampleSerializer.new(outcome.record).serialize
           end
         end
       end
     end
 
-# ---------------------------------------------------------------------------
-# SERIALIZERS (Alba)
-# ---------------------------------------------------------------------------
+# ─── SERIALIZERS ───────────────────────────────────────────────────────────────────────
 serializers:
   location: app/serializers/
   naming: ResourceSerializer (e.g. UserSerializer, MatchSerializer)
-  gem: Alba
+  gem: alba (no pinned version in Gemfile)
   usage: "render_success ExampleSerializer.new(resource).serialize"
 
   canonical_pattern: |
@@ -124,12 +114,10 @@ serializers:
     - nil associations return nil, never raise
     - no inline hashes in controllers
 
-# ---------------------------------------------------------------------------
-# CONTRACTS (dry-validation + dry-struct + dry-types)
-# ---------------------------------------------------------------------------
+# ─── CONTRACTS ───────────────────────────────────────────────────────────────────────
 contracts:
   location: app/contracts/
-  naming: ResourceContract (e.g. HealthSummaryContract, RegistrationContract)
+  naming: OperationContract (e.g. CreateSparkSessionContract, RegisterUserContract)
 
   canonical_pattern: |
     # frozen_string_literal: true
@@ -154,17 +142,14 @@ contracts:
     # result.to_h contains typed, validated attributes — pass directly to service
 
   rules:
-    - params do block defines types and coercions (string → integer, etc.)
+    - params block defines types and coercions (string → integer, date, etc.)
     - rule blocks add domain-level validations beyond type coercion
-    - contract errors are mapped to {error: {code: 'validation_failed', message: ..., field: ...}}
+    - contract errors render as {error: {code: 'validation_failed', message: ..., field: ...}}
     - params.require/permit is NOT used in controllers that have a contract
-    - contract output is typed via dry-struct when the service needs a value object
 
-# ---------------------------------------------------------------------------
-# SERVICE OBJECTS
-# ---------------------------------------------------------------------------
+# ─── SERVICE OBJECTS ────────────────────────────────────────────────────────────────────
 service_objects:
-  gem: interactor
+  gem: interactor (no pinned version in Gemfile)
   entry_point: "ServiceName.call(args) — always .call, never .new.call from outside"
   result_pattern: "Result = Data.define(:field1, :field2) — immutable typed return value"
   location: app/services/
@@ -196,81 +181,113 @@ service_objects:
         end
     end
 
+  existing_services:
+    CompatibilityService:
+      file: app/services/compatibility_service.rb
+      signature: "CompatibilityService.call(first_health_summary, second_health_summary)"
+      result: "Data.define(:total, :sleep, :activity, :lifestyle, :preferences)"
+      constants: WEIGHT_SLEEP, WEIGHT_ACTIVITY, WEIGHT_LIFESTYLE, WEIGHT_PREFERENCES
+      note: NEVER call directly from a job — always go through MatchScoringFacade
+
+    JwtService:
+      file: app/services/jwt_service.rb
+      signatures:
+        - "JwtService.access_token(user)  → String"
+        - "JwtService.refresh_token(user) → String"
+        - "JwtService.decode(token)       → { user_id: Integer } or raises JWT::DecodeError"
+      note: called in ApplicationController#authenticate_user! and auth controllers
+
+    RewardEngine:
+      file: app/services/reward_engine.rb
+      note: issues SparkReward records post SparkSession completion
+
+    MatchScoringFacade:
+      status: NOT YET IMPLEMENTED (V2 — do not generate stubs or calls to it)
+      intended_signature: "MatchScoringFacade.call(match) → Result"
+      note: |
+        Referenced in conventions as the required entrypoint for background jobs.
+        When implemented, jobs must call this, never CompatibilityService directly.
+        ML_SCORING_ENABLED env var guards whether the ML path is active (default: false).
+
+    MlEventLogger:
+      status: NOT YET IMPLEMENTED (V2 — do not generate stubs or calls to it)
+      intended_signature: "MlEventLogger.call(event_type:, user_id:, payload:) → nil"
+      intended_behavior: |
+        Must never raise — wraps all logic in rescue StandardError.
+        Call at every interaction point in hot paths (match scoring, spark completion).
+        When implemented, stub in tests via define_singleton_method on the instance.
+
   rules:
     - stateless services use self.call only; stateful use initialize + call
     - services never call render — always return a Result object
-    - weights and thresholds defined as constants in the service (see CompatibilityService)
-    - never call CompatibilityScoreService directly — go through MatchScoringFacade
-    - MlEventLogger.call(...) at all interaction points — it rescues internally, never raises
+    - weights and thresholds defined as constants inside the service
+    - never call CompatibilityService directly from a job — go through MatchScoringFacade when it exists
+    - do NOT generate calls to MatchScoringFacade or MlEventLogger until they exist in app/services/
 
-  real_example: app/services/compatibility_service.rb
-  # CompatibilityService uses:
-  #   Result = Data.define(:total, :sleep, :activity, :lifestyle, :preferences)
-  #   def self.call(first_health_summary, second_health_summary)
-  #   Constants: WEIGHT_SLEEP, WEIGHT_ACTIVITY, WEIGHT_LIFESTYLE, WEIGHT_PREFERENCES
-
-# ---------------------------------------------------------------------------
-# MODELS
-# ---------------------------------------------------------------------------
+# ─── MODELS ───────────────────────────────────────────────────────────────────────
 models:
   rules:
     - all inherit from ApplicationRecord
     - all files have # frozen_string_literal: true as first line
     - all FK columns point to users.id — NEVER profiles.id
-    - soft delete on all primary domain tables: deleted_at column, no hard deletes
-    - soft delete scope: default_scope { where(deleted_at: nil) } unless audit read required
+    - soft delete: NOT YET IN DB (see schema.yml implementation_gaps). When added: deleted_at column + scope
     - enums use modern syntax only: enum :field, { value: integer }
-    - before_save callbacks handle normalization (e.g. normalize_email)
+    - before_save callbacks handle normalization (e.g. normalize_email → downcase)
     - custom validations use validate :method_name
 
+  auth_providers: |
+    User.auth_provider enum has FOUR values (not three):
+      email: 0, apple: 1, google: 2, telegram: 3
+    The schema shows auth_provider default: 0. telegram (3) is defined in the model
+    but has no production flow yet — do NOT generate telegram auth controllers.
+
   soft_delete_pattern: |
-    # In migration:
+    # Not active yet. When implementing:
+    # Migration:
     add_column :examples, :deleted_at, :datetime
     add_index  :examples, :deleted_at
-
-    # In model:
+    # Model:
     scope :active, -> { where(deleted_at: nil) }
     def soft_delete! = update!(deleted_at: Time.current)
 
-# ---------------------------------------------------------------------------
-# PATTERNS — global rules that apply everywhere
-# ---------------------------------------------------------------------------
+# ─── PATTERNS ───────────────────────────────────────────────────────────────────────
 patterns:
   - all endpoints under /api/v1/ with Bearer JWT auth
-  - pagination: page + per_page params (integers); response includes meta: { total_count: N }
-  - background jobs call MatchScoringFacade — never CompatibilityService directly
-  - MlEventLogger called at all interaction points — must never raise (has internal rescue)
-  - external services stubbed in tests via define_singleton_method on instance
+  - background jobs: inherit ApplicationJob < ActiveJob::Base, enqueued via SolidQueue
+  - external services stubbed in tests via define_singleton_method on the instance
 
 pagination_defaults:
   default_page: 1
   default_per_page: 20
   max_per_page: 100
+  gem: pagy
   response_shape: |
     {
       "matches": [...],
       "meta": { "total_count": 42 }
     }
+  usage: |
+    pagy, records = pagy(scope, items: params.fetch(:per_page, 20).to_i.clamp(1, 100))
+    render_success({ resource_name => serialize(records), meta: { total_count: pagy.count } })
 
-# ---------------------------------------------------------------------------
-# DO NOT TOUCH — these will break production or ML integrity
-# ---------------------------------------------------------------------------
+# ─── DO NOT TOUCH ───────────────────────────────────────────────────────────────────────
 do_not_touch:
   score_thresholds:
-    what: "Numeric threshold values for match scoring and circle eligibility"
+    what: Numeric threshold values for match scoring and circle eligibility
     where: "docs/features/matching-v1.md and docs/features/circles-v1.md only"
-    why: "Thresholds are calibrated against real data; changing them breaks ML baseline."
+    why: Thresholds are calibrated against real data; changing them breaks ML baseline.
 
   profiles_id_as_fk:
-    what: "profiles.id must NEVER be used as a FK target"
+    what: profiles.id must NEVER be used as a FK target
     why: "User is the identity root. Profile is a dependent child that can be nil. See decisions.yml: fk_to_users."
 
   ml_event_logger_rescue:
-    what: "The rescue block inside MlEventLogger must never raise"
-    why: "MlEventLogger is called in hot paths. An exception here would break the entire request."
+    what: The rescue block inside MlEventLogger (when implemented) must never raise
+    why: MlEventLogger is called in hot paths. An exception here would break the entire request.
+    current_status: MlEventLogger does not exist yet — do not generate it unless the issue targets V2.
 
   ml_scoring_enabled_flag:
-    what: "ML_SCORING_ENABLED defaults to false in all environments"
-    why: "MlMatchScoringJob is V2, not active in V1. Enabling it prematurely breaks scoring pipeline."
+    what: ML_SCORING_ENABLED defaults to false in all environments
+    why: MlMatchScoringJob is V2, not active in V1. Enabling it prematurely breaks scoring pipeline.
 
 style_guide: docs/conventions/backend.md
