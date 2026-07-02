@@ -2,15 +2,10 @@
 
 require "test_helper"
 
+# MatchParticipant keeps only the DB-backed uniqueness validation.
 class MatchParticipantTest < ActiveSupport::TestCase
   test "valid participant" do
     assert match_participants(:alice_initiator).valid?
-  end
-
-  test "invalid without role" do
-    mp = match_participants(:alice_initiator)
-    mp.role = nil
-    assert_not mp.valid?
   end
 
   test "duplicate user in same match is invalid" do
@@ -21,5 +16,10 @@ class MatchParticipantTest < ActiveSupport::TestCase
     )
     assert_not mp.valid?
     assert mp.errors[:user_id].any?
+  end
+
+  test "role enum maps correctly" do
+    mp = match_participants(:alice_initiator)
+    assert mp.initiator?
   end
 end

@@ -2,21 +2,11 @@
 
 require "test_helper"
 
+# SparkReward model is intentionally thin: enums + associations + scope only.
+# Written exclusively by SparkScoringJob — no contract needed.
 class SparkRewardTest < ActiveSupport::TestCase
   test "valid reward" do
     assert spark_rewards(:alice_reward).valid?
-  end
-
-  test "invalid without reward_type" do
-    r = spark_rewards(:alice_reward)
-    r.reward_type = nil
-    assert_not r.valid?
-  end
-
-  test "invalid without valid_until" do
-    r = spark_rewards(:alice_reward)
-    r.valid_until = nil
-    assert_not r.valid?
   end
 
   test "active scope returns pending non-expired rewards" do
@@ -27,5 +17,10 @@ class SparkRewardTest < ActiveSupport::TestCase
     r = spark_rewards(:alice_reward)
     r.update_columns(valid_until: 1.day.ago)
     assert_not_includes SparkReward.active, r
+  end
+
+  test "reward_type enum maps correctly" do
+    r = spark_rewards(:alice_reward)
+    assert_includes SparkReward.reward_types.keys, r.reward_type
   end
 end

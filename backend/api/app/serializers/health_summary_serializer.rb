@@ -4,6 +4,9 @@ class HealthSummarySerializer
   include Alba::Resource
 
   attributes :chronotype,
+             :source,
+             :effective_from,
+             :effective_to,
              :sleep_start_local,
              :sleep_end_local,
              :avg_sleep_duration_minutes,
@@ -11,6 +14,5 @@ class HealthSummarySerializer
              :activity_level,
              :peak_energy_start_local,
              :peak_energy_end_local,
-             :recovery_score,
-             :source
+             :recovery_score
 end

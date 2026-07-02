@@ -2,6 +2,9 @@
 
 require "test_helper"
 
+# UpdateHealthSummaryService receives already-validated attrs from HealthSummaryContract.
+# Failure scenarios (invalid enum values, out-of-range numerics) are tested in
+# health_summary_contract_test.rb and health_summary_controller_test.rb.
 class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
   include Dry::Monads[:result]
 
@@ -11,17 +14,15 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
 
   def valid_attrs
     {
-      effective_from: Date.parse("2026-05-01"),
-      chronotype: "early_bird",
-      source: "apple_health",
+      effective_from:             Date.parse("2026-05-01"),
+      chronotype:                 "early_bird",
+      source:                     "apple_health",
       avg_sleep_duration_minutes: 450,
-      routine_stability_index: 0.82,
-      activity_level: "medium",
-      recovery_score: "medium"
+      routine_stability_index:    0.82,
+      activity_level:             "medium",
+      recovery_score:             "medium"
     }
   end
-
-  # --- Success path ---
 
   test "returns Success with the health_summary record on valid attrs" do
     result = UpdateHealthSummaryService.call(current_user: @user, attrs: valid_attrs)
@@ -44,9 +45,7 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
     )
 
     assert result.success?, "expected Success, got #{result.inspect}"
-
-    health_summary = result.value!
-    assert_equal "night_owl", health_summary.reload.chronotype
+    assert_equal "night_owl", result.value!.reload.chronotype
   end
 
   test "creates health_summary when user has none" do
@@ -54,34 +53,6 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
 
     result = UpdateHealthSummaryService.call(current_user: user_without_summary, attrs: valid_attrs)
     assert result.success?, "expected Success, got #{result.inspect}"
-
-    health_summary = result.value!
-    assert health_summary.persisted?
-  end
-
-  # --- Failure path ---
-
-  test "returns Failure(:validation_failed) when model validation fails" do
-    result = UpdateHealthSummaryService.call(
-      current_user: @user,
-      attrs: valid_attrs.merge(avg_sleep_duration_minutes: -1)
-    )
-
-    assert result.failure?, "expected Failure, got #{result.inspect}"
-
-    code, _message = result.failure
-    assert_equal :validation_failed, code
-  end
-
-  test "Failure carries a non-blank error message" do
-    result = UpdateHealthSummaryService.call(
-      current_user: @user,
-      attrs: valid_attrs.merge(avg_sleep_duration_minutes: -1)
-    )
-
-    assert result.failure?, "expected Failure, got #{result.inspect}"
-
-    _code, message = result.failure
-    assert message.present?
+    assert result.value!.persisted?
   end
 end
