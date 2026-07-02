@@ -23,3 +23,8 @@ Layout/IndentationStyle:
   Enabled: true
   EnforcedStyle: spaces
   AutoCorrect: true
+
+# omakase enforces spaces inside array brackets ([ 1, 2 ]) but local rubocop
+# does not. Disabled so CI and local behaviour match without autocorrect.
+Layout/SpaceInsideArrayLiteralBrackets:
+  Enabled: false
