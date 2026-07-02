@@ -122,3 +122,42 @@ decisions:
       ActiveStorage configured with service: yandex in storage.yml.
       Custom endpoint: https://storage.yandexcloud.net
       Bucket naming: synca-{env} (synca-production, synca-staging).
+
+  - id: dry_monads_over_interactor
+    date: 2026-07
+    decision: Replace interactor with dry-monads for service result types
+    reason: |
+      interactor was never actually used in practice — all services already used self.call
+      with plain Data.define or direct returns. dry-monads provides explicit Success/Failure
+      values with Ruby 3+ pattern matching (case/in) in controllers, replacing implicit
+      outcome.failure? boolean checks. Keeps the entire validation+service layer within
+      the dry-rb family (dry-types, dry-validation, dry-struct, dry-monads).
+    implementation: |
+      Remove interactor from Gemfile. Add dry-monads.
+      New services: include Dry::Monads[:result], return Success(value) or Failure([:code, message]).
+      Controllers: include Dry::Monads[:result], use case/in pattern matching on service result.
+      Pure calculation or side-effect services (CompatibilityService, RewardEngine) keep their
+        existing return types — do NOT wrap in Success/Failure unless they have failure paths.
+      Minitest assertions use assert_pattern { result => Success } instead of result.success?.
+    supersedes: interactor_service_pattern
+
+  - id: dry_transformer_deferred
+    date: 2026-07
+    decision: Defer dry-transformer — do NOT add to Gemfile until signal normalization pipeline exists
+    reason: |
+      dry-transformer provides declarative hash/data transformation pipelines.
+      No current use case justifies the dependency: dry-validation contracts handle
+      input coercion, Alba handles output serialization.
+      The gap will appear when ingesting raw signals from external providers
+      (Apple Health, Garmin, Google Fit) that have heterogeneous field names and units.
+    trigger: |
+      Add dry-transformer when implementing the signal normalization layer (phase 1).
+      Concrete trigger: first service that must rename/reshape fields from an external
+      health provider payload before persisting to health_summaries or signals tables.
+    example_future_use: |
+      # Normalizing Apple Health export into internal schema:
+      NormalizeAppleHealthSignal = Dry::Transformer::Pipe do |r|
+        r.rename_keys('HKQuantityTypeIdentifierStepCount' => :step_count)
+        r.map_value(:step_count, ->(v) { v.to_i })
+        r.add_key(:source, 'apple_health')
+      end

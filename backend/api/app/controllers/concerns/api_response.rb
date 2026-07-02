@@ -35,6 +35,20 @@ module ApiResponse
     )
   end
 
+  # Renders the first error from a dry-validation contract result.
+  # Extracts field name from the error path and message text.
+  # Usage: return render_contract_errors(result) if result.failure?
+  def render_contract_errors(result)
+    error = result.errors.first
+    field = error.path.reject { |k| k.is_a?(Integer) }.last&.to_s
+    render_error(
+      code: "validation_failed",
+      message: error.text,
+      field: field,
+      status: :unprocessable_entity
+    )
+  end
+
   # Returns a standard auth payload with access + refresh tokens and basic user info.
   # Used by RegistrationsController and SessionsController after successful auth.
   def auth_response(user)

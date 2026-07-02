@@ -41,6 +41,11 @@ gem "dry-validation"
 # Typed value objects for validated input structs
 gem "dry-struct"
 
+# Monadic result types for service objects (Success/Failure)
+# Replaces interactor — services return Success(value) or Failure([:code, message])
+# Controllers use case/in pattern matching on the result
+gem "dry-monads"
+
 # ─── Auth ─────────────────────────────────────────────
 
 # Password hashing via has_secure_password
@@ -75,9 +80,6 @@ gem "aws-sdk-s3", require: false
 
 # Role-based authorization (users can only modify their own resources)
 gem "pundit"
-
-# Clean service objects for matching and scoring logic
-gem "interactor"
 
 # ─── Error Tracking ───────────────────────────────────
 

@@ -26,6 +26,7 @@ api_response:
     render_unauthorized:      "render_unauthorized                     → 401 {error: {code: 'unauthorized', message: ...}}"
     render_not_found:         "render_not_found('SparkSession')        → 404 {error: {code: 'not_found', message: 'SparkSession not found'}}"
     render_validation_errors: "render_validation_errors(record)        → 422 using record.errors.first"
+    render_contract_errors:   "render_contract_errors(result)          → 422 using dry-validation result.errors"
     auth_response:            "auth_response(user)                     → {access_token:, refresh_token:, user: {id:, email:}}"
 
   json_shapes: |
@@ -57,11 +58,12 @@ controllers:
     - input validation via dry-validation contract
     - public methods map to standard REST actions only (index, show, create, update, destroy)
     - business logic delegated to service objects — never inline in controllers
+    - include Dry::Monads[:result] and use case/in pattern matching on service results
 
   migration_note: |
-    Some existing controllers (health_summary_controller.rb, me_controller.rb) still use
+    Some existing controllers (me_controller.rb, spark_sessions_controller.rb) still use
     params.require/permit and inline hashes — they predate the Alba + dry-validation decision.
-    NEW controllers MUST use the contract + serializer pattern.
+    NEW controllers MUST use the contract + serializer + service pattern.
     Do NOT copy the old params.require/permit pattern.
 
   canonical_pattern: |
@@ -70,19 +72,20 @@ controllers:
     module Api
       module V1
         class ExamplesController < ApplicationController
-          def index
-            examples = policy_scope(Example).active.order(created_at: :desc)
-            render_success ExampleSerializer.new(examples).serialize
-          end
+          include Dry::Monads[:result]
 
           def create
             result = ExampleContract.new.call(params.to_unsafe_h)
             return render_contract_errors(result) if result.failure?
 
-            outcome = ExampleService.call(current_user: current_user, attrs: result.to_h)
-            return render_error(code: outcome.error_code, message: outcome.error_message) if outcome.failure?
-
-            render_created ExampleSerializer.new(outcome.record).serialize
+            case ExampleService.call(current_user: current_user, attrs: result.to_h[:example])
+            in Success(record)
+              render_created({ example: ExampleSerializer.new(record).serialize })
+            in Failure[:validation_failed, message]
+              render_error(code: "validation_failed", message: message)
+            in Failure[:not_found, message]
+              render_not_found(message)
+            end
           end
         end
       end
@@ -124,15 +127,18 @@ contracts:
 
     class HealthSummaryContract < Dry::Validation::Contract
       params do
-        required(:chronotype).filled(:string)
-        required(:effective_from).filled(:date)
-        optional(:avg_sleep_duration_minutes).maybe(:integer)
-        optional(:routine_stability_index).maybe(:float)
+        required(:health_summary).hash do
+          required(:effective_from).filled(:date)
+          optional(:chronotype).maybe(:string)
+        end
       end
 
-      rule(:chronotype) do
+      VALID_CHRONOTYPES = %w[morning intermediate evening].freeze
+
+      rule(health_summary: :chronotype) do
+        next unless value
         key.failure("must be morning, intermediate or evening") unless
-          %w[morning intermediate evening].include?(value)
+          VALID_CHRONOTYPES.include?(value)
       end
     end
 
@@ -142,52 +148,63 @@ contracts:
     # result.to_h contains typed, validated attributes — pass directly to service
 
   rules:
-    - params block defines types and coercions (string → integer, date, etc.)
-    - rule blocks add domain-level validations beyond type coercion
-    - contract errors render as {error: {code: 'validation_failed', message: ..., field: ...}}
+    - params block always nests fields under the resource key (health_summary:, spark_session:, etc.)
+    - date fields declared as :date — dry-types handles string→date coercion automatically
+    - enum validations belong in rule blocks with a constant, not inline strings
     - params.require/permit is NOT used in controllers that have a contract
 
 # ─── SERVICE OBJECTS ────────────────────────────────────────────────────────────────────
 service_objects:
-  gem: interactor (no pinned version in Gemfile)
+  gem: dry-monads
   entry_point: "ServiceName.call(args) — always .call, never .new.call from outside"
-  result_pattern: "Result = Data.define(:field1, :field2) — immutable typed return value"
+  result_pattern: |
+    Success(value)                        — happy path, value is the primary record/result
+    Failure([:error_code, message])       — business failure, error_code is snake_case string
+    include Dry::Monads[:result] in the service class
+  controller_pattern: |
+    include Dry::Monads[:result] in the controller
+    case ServiceName.call(...)
+    in Success(record)                    then render_success / render_created
+    in Failure[:validation_failed, msg]   then render_error(code: "validation_failed", message: msg)
+    in Failure[:not_found, msg]           then render_not_found(msg)
+    end
+  pure_services_note: |
+    Services that never fail on business logic (e.g. CompatibilityService, RewardEngine)
+    keep plain Data.define return values — do NOT wrap in Success/Failure.
+    Reserve Success/Failure for services that have meaningful failure paths.
   location: app/services/
 
   canonical_pattern: |
     # frozen_string_literal: true
 
     class ExampleService
-      Result = Data.define(:record, :failure, :error_code, :error_message)
+      include Dry::Monads[:result]
 
-      def self.call(...) = new(...).call
+      def self.call(...) = new.call(...)
 
-      def initialize(current_user:, attrs:)
-        @current_user = current_user
-        @attrs        = attrs
-      end
+      def call(current_user:, attrs:)
+        record = current_user.examples.build(attrs)
 
-      def call
-        record = @current_user.examples.build(@attrs)
-        return failure("validation_failed", record.errors.full_messages.first) unless record.save
-
-        Result.new(record: record, failure: false, error_code: nil, error_message: nil)
-      end
-
-      private
-
-        def failure(code, message)
-          Result.new(record: nil, failure: true, error_code: code, error_message: message)
+        if record.save
+          Success(record)
+        else
+          Failure([:validation_failed, record.errors.full_messages.first])
         end
+      end
     end
 
   existing_services:
+    UpdateHealthSummaryService:
+      file: app/services/update_health_summary_service.rb
+      signature: "UpdateHealthSummaryService.call(current_user:, attrs:)"
+      returns: "Success(health_summary) | Failure([:validation_failed, message])"
+
     CompatibilityService:
       file: app/services/compatibility_service.rb
       signature: "CompatibilityService.call(first_health_summary, second_health_summary)"
       result: "Data.define(:total, :sleep, :activity, :lifestyle, :preferences)"
       constants: WEIGHT_SLEEP, WEIGHT_ACTIVITY, WEIGHT_LIFESTYLE, WEIGHT_PREFERENCES
-      note: NEVER call directly from a job — always go through MatchScoringFacade
+      note: Pure calculation service — returns Data.define, not Success/Failure. NEVER call directly from a job — always go through MatchScoringFacade
 
     JwtService:
       file: app/services/jwt_service.rb
@@ -199,7 +216,7 @@ service_objects:
 
     RewardEngine:
       file: app/services/reward_engine.rb
-      note: issues SparkReward records post SparkSession completion
+      note: Pure side-effect service — issues SparkReward records post SparkSession completion. Returns nil, not Success/Failure.
 
     MatchScoringFacade:
       status: NOT YET IMPLEMENTED (V2 — do not generate stubs or calls to it)
@@ -218,9 +235,9 @@ service_objects:
         When implemented, stub in tests via define_singleton_method on the instance.
 
   rules:
-    - stateless services use self.call only; stateful use initialize + call
-    - services never call render — always return a Result object
-    - weights and thresholds defined as constants inside the service
+    - always include Dry::Monads[:result] in service class
+    - services never call render — always return Success/Failure
+    - pure calculation or side-effect services may return plain Data.define or nil
     - never call CompatibilityService directly from a job — go through MatchScoringFacade when it exists
     - do NOT generate calls to MatchScoringFacade or MlEventLogger until they exist in app/services/
 
@@ -269,6 +286,15 @@ pagination_defaults:
   usage: |
     pagy, records = pagy(scope, items: params.fetch(:per_page, 20).to_i.clamp(1, 100))
     render_success({ resource_name => serialize(records), meta: { total_count: pagy.count } })
+
+# ─── TESTING ─────────────────────────────────────────────────────────────────────────
+testing:
+  monad_assertions: |
+    # Use assert_pattern for monad result matching in Minitest:
+    assert_pattern { result => Success }                                # any Success
+    assert_pattern { result => Success[health_summary] }               # Success with binding
+    assert_pattern { result => Failure[:validation_failed, _] }        # specific failure code
+    # Do NOT use result.success? / result.failure? booleans in tests
 
 # ─── DO NOT TOUCH ───────────────────────────────────────────────────────────────────────
 do_not_touch:

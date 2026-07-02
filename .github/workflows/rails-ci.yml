@@ -70,16 +70,8 @@ jobs:
           bundler-cache: true
           working-directory: backend/api
 
-      - name: Run RuboCop autocorrect
-        run: bin/rubocop -a --format github
-
-      - name: Fail if autocorrect left uncommitted changes
-        run: |
-          if [ -n "$(git diff --name-only)" ]; then
-            echo "::error::RuboCop autocorrect produced changes. Run 'bundle exec rubocop -a' locally and commit the result."
-            git diff --name-only
-            exit 1
-          fi
+      - name: Run RuboCop (no autocorrect)
+        run: bin/rubocop --format github
 
   test:
     name: Tests + Coverage (Minitest)
