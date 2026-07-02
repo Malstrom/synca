@@ -10,12 +10,26 @@ permissions:
   pull-requests: write
 
 jobs:
-  calvin:
+  # ── Modalità commento (label: agent) ────────────────────────────────────────
+  calvin-comment:
     if: github.event.label.name == 'agent'
     uses: malstrom/zeroth/.github/workflows/calvin-engine.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
       target_repo: malstrom/synca
+      aider_mode: false
     secrets:
       SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
       MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+
+  # ── Modalità aider (label: agent-aider) ─────────────────────────────────────
+  calvin-aider:
+    if: github.event.label.name == 'agent-aider'
+    uses: malstrom/zeroth/.github/workflows/calvin-engine.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      target_repo: malstrom/synca
+      aider_mode: true
+    secrets:
+      SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
+      CODESTRAL_API_KEY: ${{ secrets.CODESTRAL_API_KEY }}
