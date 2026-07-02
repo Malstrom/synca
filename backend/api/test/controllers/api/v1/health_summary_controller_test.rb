@@ -4,22 +4,22 @@ require "test_helper"
 
 class Api::V1::HealthSummaryControllerTest < ApiTestCase
   setup do
-    @user    = users(:alice)
+    @user = users(:alice)
     @headers = auth_headers(@user)
 
     @valid_params = {
       health_summary: {
-        effective_from:             "2026-05-01",
-        chronotype:                 "early_bird",
-        source:                     "apple_health",
+        effective_from: "2026-05-01",
+        chronotype: "early_bird",
+        source: "apple_health",
         avg_sleep_duration_minutes: 450,
-        routine_stability_index:    0.82,
-        activity_level:             "medium",
-        recovery_score:             "medium",
-        sleep_start_local:          "23:00",
-        sleep_end_local:            "07:00",
-        peak_energy_start_local:    "09:00",
-        peak_energy_end_local:      "12:00"
+        routine_stability_index: 0.82,
+        activity_level: "medium",
+        recovery_score: "medium",
+        sleep_start_local: "23:00",
+        sleep_end_local: "07:00",
+        peak_energy_start_local: "09:00",
+        peak_energy_end_local: "12:00"
       }
     }
   end
@@ -28,30 +28,30 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
 
   test "PUT /me/health_summary returns 200 with health_summary payload" do
     put_json "/api/v1/me/health_summary",
-      params:  @valid_params,
+      params: @valid_params,
       headers: @headers
 
     assert_response :ok
     assert_equal "early_bird", json.dig(:health_summary, :chronotype)
-    assert_equal 450,          json.dig(:health_summary, :avg_sleep_duration_minutes)
-    assert_in_delta 0.82,      json.dig(:health_summary, :routine_stability_index), 0.001
+    assert_equal 450, json.dig(:health_summary, :avg_sleep_duration_minutes)
+    assert_in_delta 0.82, json.dig(:health_summary, :routine_stability_index), 0.001
   end
 
   test "PUT /me/health_summary creates record when user has none" do
     @user.health_summary.destroy
 
     put_json "/api/v1/me/health_summary",
-      params:  @valid_params,
+      params: @valid_params,
       headers: @headers
 
     assert_response :ok
-    assert_equal "early_bird",     json.dig(:health_summary, :chronotype)
-    assert_equal "apple_health",   json.dig(:health_summary, :source)
+    assert_equal "early_bird", json.dig(:health_summary, :chronotype)
+    assert_equal "apple_health", json.dig(:health_summary, :source)
   end
 
   test "PUT /me/health_summary persists updated values in db" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: @valid_params[:health_summary].merge(chronotype: "night_owl") },
+      params: { health_summary: @valid_params[:health_summary].merge(chronotype: "night_owl") },
       headers: @headers
 
     assert_response :ok
@@ -60,7 +60,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
 
   test "PUT /me/health_summary response contains all expected keys" do
     put_json "/api/v1/me/health_summary",
-      params:  @valid_params,
+      params: @valid_params,
       headers: @headers
 
     payload = json[:health_summary]
@@ -75,7 +75,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
 
   test "PUT /me/health_summary with only required field returns 200" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: { effective_from: "2026-06-01" } },
+      params: { health_summary: { effective_from: "2026-06-01" } },
       headers: @headers
 
     assert_response :ok
@@ -88,7 +88,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
     params[:health_summary].delete(:effective_from)
 
     put_json "/api/v1/me/health_summary",
-      params:  params,
+      params: params,
       headers: @headers
 
     assert_response :unprocessable_entity
@@ -97,7 +97,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
 
   test "PUT /me/health_summary with invalid chronotype returns 422" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: @valid_params[:health_summary].merge(chronotype: "invalid") },
+      params: { health_summary: @valid_params[:health_summary].merge(chronotype: "invalid") },
       headers: @headers
 
     assert_response :unprocessable_entity
@@ -107,7 +107,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
 
   test "PUT /me/health_summary with invalid activity_level returns 422" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: @valid_params[:health_summary].merge(activity_level: "extreme") },
+      params: { health_summary: @valid_params[:health_summary].merge(activity_level: "extreme") },
       headers: @headers
 
     assert_response :unprocessable_entity
@@ -118,7 +118,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
 
   test "PUT /me/health_summary with negative avg_sleep_duration_minutes returns 422" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: @valid_params[:health_summary].merge(avg_sleep_duration_minutes: -10) },
+      params: { health_summary: @valid_params[:health_summary].merge(avg_sleep_duration_minutes: -10) },
       headers: @headers
 
     assert_response :unprocessable_entity
@@ -127,16 +127,16 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
 
   test "PUT /me/health_summary with routine_stability_index above 1 returns 422" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: @valid_params[:health_summary].merge(routine_stability_index: 1.5) },
+      params: { health_summary: @valid_params[:health_summary].merge(routine_stability_index: 1.5) },
       headers: @headers
 
     assert_response :unprocessable_entity
     assert_equal "validation_failed", json.dig(:error, :code)
   end
 
-  test "PUT /me/health_summary with routine_stability_index_below_0_returns_422" do
+  test "PUT /me/health_summary with routine_stability_index below 0 returns 422" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: @valid_params[:health_summary].merge(routine_stability_index: -0.1) },
+      params: { health_summary: @valid_params[:health_summary].merge(routine_stability_index: -0.1) },
       headers: @headers
 
     assert_response :unprocessable_entity

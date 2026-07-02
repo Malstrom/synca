@@ -10,17 +10,17 @@ class HealthSummaryContractTest < ActiveSupport::TestCase
   def valid_params
     {
       health_summary: {
-        effective_from:             "2026-05-01",
-        chronotype:                 "early_bird",
-        source:                     "apple_health",
+        effective_from: "2026-05-01",
+        chronotype: "early_bird",
+        source: "apple_health",
         avg_sleep_duration_minutes: 450,
-        routine_stability_index:    0.82,
-        activity_level:             "medium",
-        recovery_score:             "medium",
-        sleep_start_local:          "23:00",
-        sleep_end_local:            "07:00",
-        peak_energy_start_local:    "09:00",
-        peak_energy_end_local:      "12:00"
+        routine_stability_index: 0.82,
+        activity_level: "medium",
+        recovery_score: "medium",
+        sleep_start_local: "23:00",
+        sleep_end_local: "07:00",
+        peak_energy_start_local: "09:00",
+        peak_energy_end_local: "12:00"
       }
     }
   end

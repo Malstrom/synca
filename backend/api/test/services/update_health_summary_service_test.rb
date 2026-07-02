@@ -11,13 +11,13 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
 
   def valid_attrs
     {
-      effective_from:             Date.parse("2026-05-01"),
-      chronotype:                 "early_bird",
-      source:                     "apple_health",
+      effective_from: Date.parse("2026-05-01"),
+      chronotype: "early_bird",
+      source: "apple_health",
       avg_sleep_duration_minutes: 450,
-      routine_stability_index:    0.82,
-      activity_level:             "medium",
-      recovery_score:             "medium"
+      routine_stability_index: 0.82,
+      activity_level: "medium",
+      recovery_score: "medium"
     }
   end
 
