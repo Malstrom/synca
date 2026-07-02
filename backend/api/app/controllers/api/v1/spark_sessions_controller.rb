@@ -19,57 +19,47 @@ module Api
         case CreateSparkSessionService.call(current_user: current_user, attrs: contract_result.to_h.fetch(:spark_session, {}))
         in Success(spark_session)
           render_created(SparkSessionSerializer.new(spark_session).serialize)
-        in Failure[ :validation_failed, message ]
+        in Failure[:validation_failed, message]
           render_error(code: "validation_failed", message: message)
         end
       end
 
       # POST /api/v1/spark_sessions/:id/join
       def join
-        if @spark_session.initiator_id == current_user.id
-          return render_error(code: "cannot_join_own_session", message: "You cannot join your own session", status: :unprocessable_entity)
-        end
+        contract_result = JoinSparkSessionContract.new.call(params.to_unsafe_h)
+        return render_contract_errors(contract_result) if contract_result.failure?
 
-        unless @spark_session.pending?
-          return render_error(code: "session_not_joinable", message: "Session is no longer joinable", status: :unprocessable_entity)
-        end
-
-        provided_code  = params.dig(:spark_session, :session_code)
-        provided_token = params.dig(:spark_session, :qr_token)
-
-        valid_code  = provided_code.present?  && provided_code  == @spark_session.session_code
-        valid_token = provided_token.present? && provided_token == @spark_session.qr_token
-
-        unless valid_code || valid_token
-          return render_error(code: "invalid_code", message: "Invalid session code or QR token", status: :unprocessable_entity)
-        end
-
-        @spark_session.update!(
-          partner_id: current_user.id,
-          status:     :active,
-          started_at: Time.current
+        case JoinSparkSessionService.call(
+          current_user: current_user,
+          spark_session: @spark_session,
+          attrs: contract_result.to_h[:spark_session]
         )
-
-        render_success(SparkSessionSerializer.new(@spark_session).serialize)
+        in Success(spark_session)
+          render_success(SparkSessionSerializer.new(spark_session).serialize)
+        in Failure[:cannot_join_own_session, message]
+          render_error(code: "cannot_join_own_session", message: message, status: :unprocessable_entity)
+        in Failure[:session_not_joinable, message]
+          render_error(code: "session_not_joinable", message: message, status: :unprocessable_entity)
+        in Failure[:invalid_code, message]
+          render_error(code: "invalid_code", message: message, status: :unprocessable_entity)
+        end
       end
 
       # POST /api/v1/spark_sessions/:id/submit_answers
       def submit_answers
-        unless @spark_session.active?
-          return render_error(code: "session_not_active", message: "Session is not active", status: :unprocessable_entity)
-        end
+        contract_result = SubmitSparkAnswersContract.new.call(params.to_unsafe_h)
+        return render_contract_errors(contract_result) if contract_result.failure?
 
-        if current_user.id == @spark_session.initiator_id
-          @spark_session.update!(initiator_answers: answers_param)
-        else
-          @spark_session.update!(partner_answers: answers_param)
+        case SubmitSparkAnswersService.call(
+          current_user: current_user,
+          spark_session: @spark_session,
+          answers: contract_result.to_h[:spark_session][:answers]
+        )
+        in Success(spark_session)
+          render_success({ status: spark_session.status })
+        in Failure[:session_not_active, message]
+          render_error(code: "session_not_active", message: message, status: :unprocessable_entity)
         end
-
-        if @spark_session.reload.both_answered?
-          SparkScoringJob.perform_later(@spark_session.id)
-        end
-
-        render_success({ status: @spark_session.status })
       end
 
       # GET /api/v1/spark_sessions/:id/result
@@ -99,10 +89,6 @@ module Api
                  @spark_session.partner_id   == current_user.id
             render_error(code: "forbidden", message: "You are not a participant of this session", status: :forbidden)
           end
-        end
-
-        def answers_param
-          params.require(:spark_session).require(:answers)
         end
 
         # Recomputes dimensions live from health summaries when both are available.
