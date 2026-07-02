@@ -3,49 +3,26 @@
 module Api
   module V1
     class MatchesController < ApplicationController
+      include Dry::Monads[:result]
+
       # POST /api/v1/matches/simulate
       def simulate
-        user_id       = params[:user_id]
-        other_user_id = params[:other_user_id]
+        contract_result = SimulateMatchContract.new.call(params.to_unsafe_h)
 
-        unless user_id.present? && other_user_id.present?
-          return render_error(code: "missing_params", message: "user_id and other_user_id are required", status: :unprocessable_entity)
-        end
-
-        if user_id.to_s == other_user_id.to_s
-          return render_error(code: "same_user", message: "user_id and other_user_id must be different", status: :unprocessable_entity)
-        end
-
-        first_user  = User.find_by(id: user_id)
-        second_user = User.find_by(id: other_user_id)
-
-        unless first_user && second_user
-          return render_error(code: "not_found", message: "One or both users not found", status: :not_found)
-        end
-
-        first_health  = first_user.health_summary
-        second_health = second_user.health_summary
-
-        result = if first_health && second_health
-          CompatibilityService.call(first_health, second_health)
-        else
-          CompatibilityService::Result.new(
-            total:       0.0,
-            sleep:       0.0,
-            activity:    0.0,
-            lifestyle:   0.0,
-            preferences: 0.0
+        if contract_result.failure?
+          return render_error(
+            code: "missing_params",
+            message: "user_id and other_user_id are required",
+            status: :unprocessable_entity
           )
         end
 
-        render json: {
-          compatibility_score: result.total,
-          dimensions: {
-            sleep_rhythm:   result.sleep,
-            energy_overlap: result.activity,
-            lifestyle:      result.lifestyle
-          }
-        }
+        case SimulateMatchService.call(**contract_result.to_h.symbolize_keys)
+        in Success(result)
+          render_success(MatchSimulationSerializer.new(result).serialize)
+        in Failure[ :not_found, message ]
+          render_error(code: "not_found", message: message, status: :not_found)
+        end
       end
 
       # GET /api/v1/matches
@@ -54,9 +31,9 @@ module Api
           .includes(match_participants: { user: :profile })
           .order(created_at: :desc)
 
-        render json: {
+        render_success({
           matches: matches.map { |match| serialize_match(match) }
-        }
+        })
       end
 
       private

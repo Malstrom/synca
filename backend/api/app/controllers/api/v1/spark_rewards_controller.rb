@@ -7,16 +7,9 @@ module Api
       def index
         rewards = current_user.spark_rewards.order(created_at: :desc)
 
-        render json: {
-          rewards: rewards.map { |reward|
-            {
-              id:           reward.id,
-              reward_type:  reward.reward_type,
-              status:       reward.status,
-              valid_until:  reward.valid_until
-            }
-          }
-        }
+        render_success({
+          rewards: rewards.map { |reward| SparkRewardSerializer.new(reward).serialize }
+        })
       end
     end
   end

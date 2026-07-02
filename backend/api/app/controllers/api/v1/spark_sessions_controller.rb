@@ -3,66 +3,63 @@
 module Api
   module V1
     class SparkSessionsController < ApplicationController
+      include Dry::Monads[:result]
+
       before_action :set_spark_session, only: [ :join, :submit_answers, :result ]
       before_action :authorize_participant!, only: [ :result ]
 
       # POST /api/v1/spark_sessions
       def create
-        spark_session = current_user.initiated_spark_sessions.build(create_params)
+        contract_result = CreateSparkSessionContract.new.call(params.to_unsafe_h)
 
-        unless spark_session.save
-          return render_validation_errors(spark_session)
+        if contract_result.failure?
+          return render_contract_errors(contract_result)
         end
 
-        render json: spark_session_payload(spark_session), status: :created
+        case CreateSparkSessionService.call(current_user: current_user, attrs: contract_result.to_h.fetch(:spark_session, {}))
+        in Success(spark_session)
+          render_created(SparkSessionSerializer.new(spark_session).serialize)
+        in Failure[ :validation_failed, message ]
+          render_error(code: "validation_failed", message: message)
+        end
       end
 
       # POST /api/v1/spark_sessions/:id/join
       def join
-        if @spark_session.initiator_id == current_user.id
-          return render_error(code: "cannot_join_own_session", message: "You cannot join your own session", status: :unprocessable_entity)
-        end
+        contract_result = JoinSparkSessionContract.new.call(params.to_unsafe_h)
+        return render_contract_errors(contract_result) if contract_result.failure?
 
-        unless @spark_session.pending?
-          return render_error(code: "session_not_joinable", message: "Session is no longer joinable", status: :unprocessable_entity)
-        end
-
-        provided_code  = params.dig(:spark_session, :session_code)
-        provided_token = params.dig(:spark_session, :qr_token)
-
-        valid_code  = provided_code.present?  && provided_code  == @spark_session.session_code
-        valid_token = provided_token.present? && provided_token == @spark_session.qr_token
-
-        unless valid_code || valid_token
-          return render_error(code: "invalid_code", message: "Invalid session code or QR token", status: :unprocessable_entity)
-        end
-
-        @spark_session.update!(
-          partner_id: current_user.id,
-          status:     :active,
-          started_at: Time.current
+        case JoinSparkSessionService.call(
+          current_user: current_user,
+          spark_session: @spark_session,
+          attrs: contract_result.to_h[:spark_session]
         )
-
-        render json: spark_session_payload(@spark_session)
+        in Success(spark_session)
+          render_success(SparkSessionSerializer.new(spark_session).serialize)
+        in Failure[ :cannot_join_own_session, message ]
+          render_error(code: "cannot_join_own_session", message: message, status: :unprocessable_entity)
+        in Failure[ :session_not_joinable, message ]
+          render_error(code: "session_not_joinable", message: message, status: :unprocessable_entity)
+        in Failure[ :invalid_code, message ]
+          render_error(code: "invalid_code", message: message, status: :unprocessable_entity)
+        end
       end
 
       # POST /api/v1/spark_sessions/:id/submit_answers
       def submit_answers
-        unless @spark_session.active?
-          return render_error(code: "session_not_active", message: "Session is not active", status: :unprocessable_entity)
-        end
+        contract_result = SubmitSparkAnswersContract.new.call(params.to_unsafe_h)
+        return render_contract_errors(contract_result) if contract_result.failure?
 
-        if current_user.id == @spark_session.initiator_id
-          @spark_session.update!(initiator_answers: answers_param)
-        else
-          @spark_session.update!(partner_answers: answers_param)
+        case SubmitSparkAnswersService.call(
+          current_user: current_user,
+          spark_session: @spark_session,
+          answers: contract_result.to_h[:spark_session][:answers]
+        )
+        in Success(spark_session)
+          render_success({ status: spark_session.status })
+        in Failure[ :session_not_active, message ]
+          render_error(code: "session_not_active", message: message, status: :unprocessable_entity)
         end
-
-        if @spark_session.reload.both_answered?
-          SparkScoringJob.perform_later(@spark_session.id)
-        end
-
-        render json: { status: @spark_session.status }
       end
 
       # GET /api/v1/spark_sessions/:id/result
@@ -74,11 +71,11 @@ module Api
         rewards = SparkReward.where(spark_session: @spark_session)
         dimensions = build_dimensions
 
-        render json: {
+        render_success({
           compatibility_score: @spark_session.compatibility_score,
           dimensions:          dimensions,
           rewards:             rewards.map { |reward| { type: reward.reward_type, status: reward.status } }
-        }
+        })
       end
 
       private
@@ -94,22 +91,6 @@ module Api
           end
         end
 
-        def create_params
-          params.fetch(:spark_session, {}).permit(:lat, :lng)
-            .then { |permitted| map_location_params(permitted) }
-        end
-
-        def map_location_params(permitted)
-          result = {}
-          result[:location_lat] = permitted[:lat] if permitted.key?(:lat)
-          result[:location_lng] = permitted[:lng] if permitted.key?(:lng)
-          result
-        end
-
-        def answers_param
-          params.require(:spark_session).require(:answers)
-        end
-
         # Recomputes dimensions live from health summaries when both are available.
         # Falls back to an empty hash if health data is missing for either participant.
         def build_dimensions
@@ -123,18 +104,6 @@ module Api
             sleep_rhythm:    result.sleep,
             energy_overlap:  result.activity,
             lifestyle:       result.lifestyle
-          }
-        end
-
-        def spark_session_payload(spark_session)
-          {
-            id:           spark_session.id,
-            session_code: spark_session.session_code,
-            qr_token:     spark_session.qr_token,
-            status:       spark_session.status,
-            started_at:   spark_session.started_at,
-            location_lat: spark_session.location_lat,
-            location_lng: spark_session.location_lng
           }
         end
     end

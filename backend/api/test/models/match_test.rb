@@ -2,24 +2,11 @@
 
 require "test_helper"
 
+# Match model is intentionally thin: enum + associations + helpers only.
+# Validation rules live at the service layer.
 class MatchTest < ActiveSupport::TestCase
   test "valid match" do
     assert matches(:alice_bob_match).valid?
-  end
-
-  test "invalid without compatibility_score" do
-    m = matches(:alice_bob_match)
-    m.compatibility_score = nil
-    assert_not m.valid?
-  end
-
-  test "compatibility_score out of range" do
-    m = matches(:alice_bob_match)
-    m.compatibility_score = 101
-    assert_not m.valid?
-
-    m.compatibility_score = -1
-    assert_not m.valid?
   end
 
   test "has participants" do
@@ -44,10 +31,4 @@ class MatchTest < ActiveSupport::TestCase
     m.accepted!
     assert m.accepted?
   end
-
-  test "at_least_two_participants stub returns true" do
-  match = Match.new(compatibility_score: 80, status: :proposed)
-  # validation on: :create skips the stub in isolation; call directly
-  assert match.send(:at_least_two_participants)
-end
 end

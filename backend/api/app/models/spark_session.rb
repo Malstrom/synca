@@ -10,9 +10,8 @@ class SparkSession < ApplicationRecord
 
   enum :status, { pending: 0, active: 1, completed: 2, expired: 3 }
 
-  validates :session_code, presence: true, uniqueness: true, length: { is: 6 }
-  validates :qr_token,     presence: true, uniqueness: true
-  validates :status,       presence: true
+  validates :session_code, uniqueness: true
+  validates :qr_token,     uniqueness: true
   validate  :one_active_session_per_initiator, on: :create
 
   before_validation :generate_tokens, on: :create
@@ -30,8 +29,6 @@ class SparkSession < ApplicationRecord
     initiator_answers.present? && partner_answers.present?
   end
 
-  # Returns per-dimension breakdown stored from the last CompatibilityService result.
-  # Returns empty hash for MVP since dimensions are not yet persisted on the model.
   def dimensions
     {}
   end

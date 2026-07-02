@@ -13,9 +13,12 @@ end
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require "active_job/test_helper"
 
 module ActiveSupport
   class TestCase
+    include ActiveJob::TestHelper
+
     # Parallelism disabled: SimpleCov cannot aggregate coverage across forked workers
     parallelize(workers: 1)
     fixtures :all
@@ -36,6 +39,8 @@ end
 
 # Shared helpers for API integration tests
 class ApiTestCase < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   private
 
     def json
