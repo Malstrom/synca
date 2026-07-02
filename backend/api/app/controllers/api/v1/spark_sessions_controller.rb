@@ -19,7 +19,7 @@ module Api
         case CreateSparkSessionService.call(current_user: current_user, attrs: contract_result.to_h.fetch(:spark_session, {}))
         in Success(spark_session)
           render_created(SparkSessionSerializer.new(spark_session).serialize)
-        in Failure[:validation_failed, message]
+        in Failure[ :validation_failed, message ]
           render_error(code: "validation_failed", message: message)
         end
       end
@@ -36,11 +36,11 @@ module Api
         )
         in Success(spark_session)
           render_success(SparkSessionSerializer.new(spark_session).serialize)
-        in Failure[:cannot_join_own_session, message]
+        in Failure[ :cannot_join_own_session, message ]
           render_error(code: "cannot_join_own_session", message: message, status: :unprocessable_entity)
-        in Failure[:session_not_joinable, message]
+        in Failure[ :session_not_joinable, message ]
           render_error(code: "session_not_joinable", message: message, status: :unprocessable_entity)
-        in Failure[:invalid_code, message]
+        in Failure[ :invalid_code, message ]
           render_error(code: "invalid_code", message: message, status: :unprocessable_entity)
         end
       end
@@ -57,7 +57,7 @@ module Api
         )
         in Success(spark_session)
           render_success({ status: spark_session.status })
-        in Failure[:session_not_active, message]
+        in Failure[ :session_not_active, message ]
           render_error(code: "session_not_active", message: message, status: :unprocessable_entity)
         end
       end

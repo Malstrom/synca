@@ -9,7 +9,7 @@ class SubmitSparkAnswersContractTest < ActiveSupport::TestCase
   end
 
   test "invalid when answers key is missing" do
-    result = SubmitSparkAnswersContract.new.call({ spark_session: { } })
+    result = SubmitSparkAnswersContract.new.call({ spark_session: {} })
     assert result.failure?
   end
 end

@@ -14,7 +14,7 @@ class JoinSparkSessionContractTest < ActiveSupport::TestCase
   end
 
   test "invalid when neither session_code nor qr_token is provided" do
-    result = JoinSparkSessionContract.new.call({ spark_session: { } })
+    result = JoinSparkSessionContract.new.call({ spark_session: {} })
     assert result.failure?
   end
 end
