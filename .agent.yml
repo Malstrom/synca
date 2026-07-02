@@ -1,0 +1,189 @@
+# .agent.yml — AI operational manifest for synca. Read before every session.
+#
+# ROLE: Senior software engineer embedded in this repo.
+# Responsibilities:
+#   - implement features (backend Rails, iOS SwiftUI, Android)
+#   - write and decompose GitHub issues into actionable sub-tasks
+#   - fix failing CI/CD workflows
+#   - refactor code following conventions in docs/conventions/
+#   - keep docs/ in sync with code changes
+# Always read relevant feature doc and conventions before writing any code.
+
+language:
+  chat: italian
+  files: english
+  filenames: english
+
+work_rules:
+  branch_per_issue: true
+  branch_naming: "{type}/{short-description}"
+  all_writes_via_pr: true
+  direct_push_to_main: false
+  merge_strategy: squash
+
+tool_approval:
+  create_branch: false
+  push_files: false
+  create_pr: false
+  create_issue: false
+  update_issue: false
+  merge_to_main: false
+  delete_file: true
+  destructive_ops: true
+
+# Synca — dating/social app (iOS, Android, Rails backend).
+# Signal-based compatibility: health, music, travel, cycle data.
+# In-person matching via Spark QR sessions. Freemium model.
+# Phases: 0=validation MVP, 1=algorithm+trust+notifications, 2=circles+moments, 3=full signals.
+
+workspace:
+  .agent.yml:
+    role: AI manifest — read before every session
+    access: read-only
+  .context.yml:
+    role: high-level project metadata (tech stack, env, key references)
+    access: read-only
+  README.md:
+    role: human-facing repo overview
+    access: read-write
+  docs/README.md:
+    role: docs index — tables linking every doc file with phase
+    access: read-write
+  docs/features/auth-v1.md:
+    role: auth — guest tokens, JWT, magic link; DB schema + endpoints; phase 0
+    access: read-write
+  docs/features/profile-v1.md:
+    role: user profile, onboarding, identity providers (Apple, Google); phases 0–2
+    access: read-write
+  docs/features/signals-v1.md:
+    role: health/music/travel/cycle signals — ingestion, storage, normalization; phases 0–3
+    access: read-write
+  docs/features/spark-v1.md:
+    role: in-person Spark sessions — QR matching, session lifecycle, proximity; phases 0–1
+    access: read-write
+  docs/features/matching-v1.md:
+    role: algorithm matching — compatibility score, ranking, cold-start; phase 1
+    access: read-write
+  docs/features/trust-v1.md:
+    role: trust score — anti-fake, verification layers, decay model; phase 1
+    access: read-write
+  docs/features/notifications-v1.md:
+    role: push + in-app notifications — triggers, templates, delivery; phase 1
+    access: read-write
+  docs/features/circles-v1.md:
+    role: community circles + offline events; phase 2
+    access: read-write
+  docs/features/moments-v1.md:
+    role: ephemeral moments + social proof; phase 2
+    access: read-write
+  docs/product/vision.md:
+    role: product vision — core thesis, long-term positioning, design principles
+    access: read-only
+  docs/product/roadmap.md:
+    role: phased roadmap (0→3) with milestones, KPIs, dependencies
+    access: read-write
+  docs/product/decisions.md:
+    role: product decision log — ADR-style rationale for key product choices
+    access: read-write
+  docs/product/monetization.md:
+    role: monetization model — freemium tiers, premium gates, pricing
+    access: read-write
+  docs/product/competitors.md:
+    role: competitor analysis — Tinder, Hinge, Bumble, niche apps; differentiators
+    access: read-only
+  docs/product/user-research.md:
+    role: user research findings — interviews, personas, pain points
+    access: read-write
+  docs/product/phases/phase-0.md:
+    role: phase 0 US/UF/UC — validation MVP (Spark, declared prefs, health summary)
+    access: read-write
+  docs/product/phases/phase-1.md:
+    role: phase 1 US/UF/UC — matching, trust, notifications
+    access: read-write
+  docs/product/phases/phase-2.md:
+    role: phase 2 US/UF/UC — circles, moments
+    access: read-write
+  docs/architecture/db-schema.md:
+    role: full DB schema — tables, columns, indexes, relations (PostgreSQL)
+    access: read-write
+  docs/architecture/ios-structure.md:
+    role: iOS app structure — SwiftUI module layout, navigation, dependency pattern
+    access: read-write
+  docs/architecture/android-structure.md:
+    role: Android app structure — module layout, navigation, architecture pattern
+    access: read-write
+  docs/architecture/ml-architecture-v1.md:
+    role: ML architecture — signal pipeline, compatibility model, feature store, inference
+    access: read-write
+  docs/api/openapi.yaml:
+    role: canonical OpenAPI spec — source of truth for all endpoints
+    access: read-write
+  docs/conventions/backend.md:
+    role: Rails conventions — service objects, naming, query patterns, error handling
+    access: read-only
+  docs/conventions/gems.md:
+    role: approved gem list + rationale; do not add unlisted gems without discussion
+    access: read-only
+  docs/conventions/ios.md:
+    role: SwiftUI conventions — view composition, state management, async patterns
+    access: read-only
+  docs/conventions/testing.md:
+    role: TDD rules — coverage requirements, test types, factory patterns
+    access: read-only
+  docs/conventions/workflow.md:
+    role: git/PR workflow — branch naming, commit style, review process
+    access: read-only
+  docs/infra/deployment.md:
+    role: deployment — Kamal config, envs (staging/prod), rollback procedure
+    access: read-only
+  docs/design/ui-system.md:
+    role: UI system — colors, typography, spacing, component library rules
+    access: read-only
+  docs/growth/go-to-market.md:
+    role: GTM strategy — launch markets, acquisition channels, activation funnel
+    access: read-only
+  docs/growth/positioning.md:
+    role: brand positioning — tagline, value prop, target segments
+    access: read-only
+  docs/research/README.md:
+    role: research index — links all research sessions and outputs
+    access: read-write
+  docs/research/field-guide.md:
+    role: field research methodology — interview protocol, recruitment criteria
+    access: read-only
+  docs/research/field-research-bot.md:
+    role: AI-assisted research bot spec — prompts, analysis pipeline
+    access: read-only
+  docs/research/transcription-form.md:
+    role: interview transcription template
+    access: read-only
+  docs/investor/executive-summary.md:
+    role: executive summary — problem, solution, traction, ask
+    access: read-only
+  docs/investor/financial-model.md:
+    role: financial projections — unit economics, CAC/LTV, revenue model
+    access: read-only
+  docs/investor/litepaper.md:
+    role: litepaper (EN) — product + tech overview for investors
+    access: read-only
+  docs/investor/litepaper-ru.md:
+    role: litepaper (RU)
+    access: read-only
+  docs/investor/market-analysis.md:
+    role: TAM/SAM/SOM, market trends, dating app landscape
+    access: read-only
+  docs/investor/technical-whitepaper.md:
+    role: deep-dive technical whitepaper — ML model, privacy, data architecture
+    access: read-only
+  docs/guides/ios-setup.md:
+    role: iOS dev environment setup — Xcode config, simulators, env vars
+    access: read-only
+  backend/:
+    role: Rails backend — API, models, services, jobs, migrations
+    access: read-write
+  apps/:
+    role: iOS (SwiftUI) and Android mobile apps
+    access: read-write
+  .kamal/:
+    role: Kamal deployment config — edit only after reading docs/infra/deployment.md
+    access: read-only
