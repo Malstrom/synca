@@ -25,7 +25,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
   end
 
   def parsed_health_summary
-    JSON.parse(json[:health_summary], symbolize_names: true)
+    json[:health_summary]
   end
 
   # --- happy path ---
