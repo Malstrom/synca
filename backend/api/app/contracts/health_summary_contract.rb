@@ -21,6 +21,7 @@ class HealthSummaryContract < Dry::Validation::Contract
   VALID_CHRONOTYPES     = %w[early_bird intermediate night_owl].freeze
   VALID_ACTIVITY_LEVELS = %w[low medium high].freeze
   VALID_RECOVERY_SCORES = %w[low medium high].freeze
+  VALID_SOURCES         = %w[apple_health health_connect].freeze
 
   rule(health_summary: :chronotype) do
     next unless value
@@ -38,5 +39,29 @@ class HealthSummaryContract < Dry::Validation::Contract
     next unless value
     key.failure("must be low, medium or high") unless
       VALID_RECOVERY_SCORES.include?(value)
+  end
+
+  rule(health_summary: :source) do
+    next unless value
+    key.failure("must be apple_health or health_connect") unless
+      VALID_SOURCES.include?(value)
+  end
+
+  rule(health_summary: :routine_stability_index) do
+    next unless value
+    key.failure("must be between 0 and 1") unless value >= 0.0 && value <= 1.0
+  end
+
+  rule(health_summary: :avg_sleep_duration_minutes) do
+    next unless value
+    key.failure("must be greater than 0") unless value > 0
+  end
+
+  rule(:health_summary) do
+    hs = value
+    next unless hs[:effective_to] && hs[:effective_from]
+    if hs[:effective_to] < hs[:effective_from]
+      key([:health_summary, :effective_to]).failure("must be after effective_from")
+    end
   end
 end
