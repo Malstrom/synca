@@ -25,7 +25,7 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
 
   test "returns Success with the health_summary record on valid attrs" do
     result = UpdateHealthSummaryService.call(current_user: @user, attrs: valid_attrs)
-    assert_pattern { result => Success }
+    assert_pattern { result => Success(_hs) }
   end
 
   test "Success wraps the persisted HealthSummary" do
