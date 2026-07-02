@@ -80,7 +80,7 @@ preference_profiles:
     - "[user_id] UNIQUE"
   notes:
     - visual_embedding is a float vector array; cosine similarity computed in app layer
-    - music_profile JSON structure: { genres: [], artists: [], energy_level: integer }
+    - "music_profile JSON structure: { genres: [], artists: [], energy_level: integer }"
 
 health_summaries:
   pk: id (bigserial)
@@ -110,7 +110,7 @@ health_summaries:
     - "[user_id]"
   notes:
     - SCD Type 2 pattern: effective_to IS NULL = current active record
-    - canonical current record query: where(effective_to: nil).order(effective_from: :desc).first
+    - "canonical current record query: where(effective_to: nil).order(effective_from: :desc).first"
     - used by CompatibilityService and MatchScoringFacade for chronotype/activity scoring
     - minimum 7 days of signals required before user enters match algorithm pool
 
@@ -118,7 +118,7 @@ spark_sessions:
   pk: id (bigserial)
   fk:
     initiator_id: users.id NOT NULL
-    partner_id:   users.id nullable — null until partner scans QR
+    partner_id:   "users.id nullable — null until partner scans QR"
   columns:
     initiator_id:            bigint NOT NULL
     partner_id:              bigint nullable
@@ -187,7 +187,7 @@ matches:
     status: { pending: 0, active: 1, rejected: 2, unmatched: 3, blocked: 4 }
   notes:
     - NO direct user_id FK on matches — user association always goes through match_participants
-    - canonical query: Match.joins(:match_participants).where(match_participants: { user_id: id }).where(status: :active)
+    - "canonical query: Match.joins(:match_participants).where(match_participants: { user_id: id }).where(status: :active)"
 
 match_participants:
   pk: id (bigserial)
