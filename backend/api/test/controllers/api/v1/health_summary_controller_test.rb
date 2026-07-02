@@ -24,6 +24,10 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
     }
   end
 
+  def parsed_health_summary
+    JSON.parse(json[:health_summary], symbolize_names: true)
+  end
+
   # --- happy path ---
 
   test "PUT /me/health_summary returns 200 with health_summary payload" do
@@ -32,9 +36,10 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
       headers: @headers
 
     assert_response :ok
-    assert_equal "early_bird", json.dig(:health_summary, :chronotype)
-    assert_equal 450, json.dig(:health_summary, :avg_sleep_duration_minutes)
-    assert_in_delta 0.82, json.dig(:health_summary, :routine_stability_index), 0.001
+    payload = parsed_health_summary
+    assert_equal "early_bird", payload[:chronotype]
+    assert_equal 450, payload[:avg_sleep_duration_minutes]
+    assert_in_delta 0.82, payload[:routine_stability_index], 0.001
   end
 
   test "PUT /me/health_summary creates record when user has none" do
@@ -45,8 +50,9 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
       headers: @headers
 
     assert_response :ok
-    assert_equal "early_bird", json.dig(:health_summary, :chronotype)
-    assert_equal "apple_health", json.dig(:health_summary, :source)
+    payload = parsed_health_summary
+    assert_equal "early_bird", payload[:chronotype]
+    assert_equal "apple_health", payload[:source]
   end
 
   test "PUT /me/health_summary persists updated values in db" do
@@ -63,7 +69,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
       params: @valid_params,
       headers: @headers
 
-    payload = json[:health_summary]
+    payload = parsed_health_summary
     %i[
       chronotype source effective_from effective_to
       avg_sleep_duration_minutes routine_stability_index

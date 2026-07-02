@@ -30,9 +30,9 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
 
   test "Success wraps the persisted HealthSummary" do
     result = UpdateHealthSummaryService.call(current_user: @user, attrs: valid_attrs)
-    assert_pattern { result => Success[health_summary] }
-    assert_instance_of HealthSummary, health_summary
-    assert health_summary.persisted?
+    assert_pattern { result => Success[hs] }
+    assert_instance_of HealthSummary, hs
+    assert hs.persisted?
   end
 
   test "updates an existing health_summary" do
@@ -40,15 +40,15 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
       current_user: @user,
       attrs: valid_attrs.merge(chronotype: "night_owl")
     )
-    assert_pattern { result => Success[health_summary] }
-    assert_equal "night_owl", health_summary.reload.chronotype
+    assert_pattern { result => Success[hs] }
+    assert_equal "night_owl", hs.reload.chronotype
   end
 
   test "creates health_summary when user has none" do
     @user.health_summary.destroy
     result = UpdateHealthSummaryService.call(current_user: @user, attrs: valid_attrs)
-    assert_pattern { result => Success[health_summary] }
-    assert health_summary.persisted?
+    assert_pattern { result => Success[hs] }
+    assert hs.persisted?
   end
 
   # --- Failure path ---
