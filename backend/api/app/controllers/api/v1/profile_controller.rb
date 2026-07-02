@@ -9,22 +9,15 @@ module Api
       def update
         contract_result = ProfileContract.new.call(profile: params[:profile]&.to_unsafe_h || {})
 
-        if contract_result.failure?
-          first_error = contract_result.errors.to_h.values.flatten.first
-          return render json: {
-            error: { code: "validation_failed", message: first_error }
-          }, status: :unprocessable_entity
-        end
+        return render_contract_errors(contract_result) if contract_result.failure?
 
         profile = current_user.profile || current_user.build_profile
 
         unless profile.update(contract_result.to_h[:profile])
-          return render json: {
-            error: { code: "validation_failed", message: profile.errors.full_messages.first }
-          }, status: :unprocessable_entity
+          return render_validation_errors(profile)
         end
 
-        render_success({ profile: ProfileSerializer.new(profile).serialize })
+        render_success({ profile: ProfileSerializer.new(profile).serializable_hash })
       end
     end
   end

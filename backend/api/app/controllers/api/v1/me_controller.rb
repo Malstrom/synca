@@ -12,7 +12,7 @@ module Api
 
         def me_response
           {
-            user:           UserSerializer.new(current_user).serialize,
+            user:           UserSerializer.new(current_user).serializable_hash,
             profile:        profile_payload,
             health_summary: health_summary_payload
           }
@@ -22,14 +22,14 @@ module Api
           profile = current_user.profile
           return nil unless profile
 
-          ProfileSerializer.new(profile).serialize
+          ProfileSerializer.new(profile).serializable_hash
         end
 
         def health_summary_payload
           health_summary = current_user.health_summary
           return nil unless health_summary
 
-          HealthSummarySerializer.new(health_summary).serialize
+          HealthSummarySerializer.new(health_summary).serializable_hash
         end
     end
   end
