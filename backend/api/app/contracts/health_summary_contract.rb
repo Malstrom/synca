@@ -61,7 +61,7 @@ class HealthSummaryContract < Dry::Validation::Contract
     hs = value
     next unless hs[:effective_to] && hs[:effective_from]
     if hs[:effective_to] < hs[:effective_from]
-      key([:health_summary, :effective_to]).failure("must be after effective_from")
+      key([ :health_summary, :effective_to ]).failure("must be after effective_from")
     end
   end
 end

@@ -20,7 +20,7 @@ module Api
         case SimulateMatchService.call(**contract_result.to_h.symbolize_keys)
         in Success(result)
           render_success(MatchSimulationSerializer.new(result).serialize)
-        in Failure[:not_found, message]
+        in Failure[ :not_found, message ]
           render_error(code: "not_found", message: message, status: :not_found)
         end
       end

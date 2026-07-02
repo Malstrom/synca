@@ -17,9 +17,9 @@ module Api
         )
 
         case result
-        in Success[health_summary]
+        in Success[ health_summary ]
           render_success({ health_summary: HealthSummarySerializer.new(health_summary).serializable_hash })
-        in Failure[:validation_failed, message]
+        in Failure[ :validation_failed, message ]
           render_error(code: "validation_failed", message: message)
         end
       end
