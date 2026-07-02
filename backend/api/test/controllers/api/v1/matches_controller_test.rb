@@ -57,7 +57,7 @@ class Api::V1::MatchesControllerTest < ApiTestCase
       headers: @alice_headers
 
     assert_response :unprocessable_entity
-    assert_equal "same_user", json.dig(:error, :code)
+    assert_equal "missing_params", json.dig(:error, :code)
   end
 
   test "simulate returns score of 0 dimensions when health data is missing" do
