@@ -10,6 +10,11 @@ class User < ApplicationRecord
     telegram: 3
   }
 
+  enum :account_type, {
+    guest: 0,
+    active: 1
+  }
+
   has_one  :profile,            dependent: :destroy
   has_one  :health_summary,     dependent: :destroy
   has_one  :preference_profile, dependent: :destroy
