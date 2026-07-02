@@ -19,7 +19,7 @@ module Api
         case CreateSparkSessionService.call(current_user: current_user, attrs: contract_result.to_h.fetch(:spark_session, {}))
         in Success(spark_session)
           render_created(SparkSessionSerializer.new(spark_session).serialize)
-        in Failure[:validation_failed, message]
+        in Failure[ :validation_failed, message ]
           render_error(code: "validation_failed", message: message)
         end
       end

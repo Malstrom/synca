@@ -11,7 +11,7 @@ class CreateSparkSessionService
     if spark_session.save
       Success(spark_session)
     else
-      Failure([:validation_failed, spark_session.errors.full_messages.first])
+      Failure([ :validation_failed, spark_session.errors.full_messages.first ])
     end
   end
 
