@@ -16,6 +16,39 @@ folder_structure:
   models: app/models/
   tests: test/
 
+# ─── MIGRATIONS ──────────────────────────────────────────────────────────────────────────
+migrations:
+  rule: |
+    Generate a migration if and only if the issue contains a "## DB Changes" section.
+    When that section is present, a migration is MANDATORY — do not skip it.
+    When that section is absent, do NOT generate any migration.
+
+  triggers:
+    - "## DB Changes" section in the issue body
+
+  required_when:
+    - adding a new column to an existing table
+    - adding a new table
+    - adding or changing an index
+    - adding an enum column to a model (enum in model + migration are always a pair)
+
+  forbidden_when:
+    - issue has no "## DB Changes" section
+    - issue only touches controllers, services, contracts, serializers, or tests
+
+  enum_rule: |
+    NEVER add an enum to a model without its migration.
+    The model enum declaration and the migration that adds the column are always generated together.
+    A model with enum :field that has no corresponding migration will crash at boot.
+
+  format: |
+    class AddExampleColumnToUsers < ActiveRecord::Migration[8.0]
+      def change
+        add_column :users, :example, :integer, null: false, default: 0
+        add_index  :users, :example
+      end
+    end
+
 # ─── API RESPONSE ───────────────────────────────────────────────────────────────────────
 api_response:
   concern: app/controllers/concerns/api_response.rb
@@ -116,6 +149,7 @@ serializers:
     - nested associations use dedicated serializers
     - nil associations return nil, never raise
     - no inline hashes in controllers
+    - only generate a serializer if the controller actually instantiates it
 
 # ─── CONTRACTS ───────────────────────────────────────────────────────────────────────
 contracts:
