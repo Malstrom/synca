@@ -45,8 +45,8 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
   end
 
   test "creates health_summary when user has none" do
-    @user.health_summary.destroy
-    result = UpdateHealthSummaryService.call(current_user: @user, attrs: valid_attrs)
+    user_without_summary = users(:charlie)
+    result = UpdateHealthSummaryService.call(current_user: user_without_summary, attrs: valid_attrs)
     assert_pattern { result => Success[hs] }
     assert hs.persisted?
   end
