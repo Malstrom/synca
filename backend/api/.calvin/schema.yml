@@ -34,8 +34,7 @@ users:
     - [phone] UNIQUE where phone IS NOT NULL
   associations:
     has_one:  [profile, preference_profile]
-    has_many: [health_summaries, spark_rewards, match_participants]
-    has_many: [spark_sessions (as initiator via initiator_id), spark_sessions (as partner via partner_id)]
+    has_many: [health_summaries, spark_rewards, match_participants, spark_sessions (as initiator via initiator_id), spark_sessions (as partner via partner_id)]
   notes:
     - email OR phone must be present — validated at model level, not DB constraint
     - provider_uid + auth_provider = compound OAuth identity
