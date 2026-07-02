@@ -13,7 +13,7 @@ module Api
         case UpdateHealthSummaryService.call(current_user: current_user, attrs: result.to_h[:health_summary])
         in Success(health_summary)
           render_success({ health_summary: HealthSummarySerializer.new(health_summary).serialize })
-        in Failure[:validation_failed, message]
+        in Failure[ :validation_failed, message ]
           render_error(code: "validation_failed", message: message)
         end
       end

@@ -13,7 +13,7 @@ class UpdateHealthSummaryService
     if health_summary.update(attrs)
       Success(health_summary)
     else
-      Failure([:validation_failed, health_summary.errors.full_messages.first])
+      Failure([ :validation_failed, health_summary.errors.full_messages.first ])
     end
   end
 end
