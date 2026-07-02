@@ -3,6 +3,8 @@
 module Api
   module V1
     class HealthSummaryController < ApplicationController
+      include Dry::Monads[:result]
+
       # PUT /api/v1/me/health_summary
       def update
         contract_result = HealthSummaryContract.new.call(health_summary: params[:health_summary]&.to_unsafe_h || {})
