@@ -25,14 +25,12 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
 
   test "returns Success with the health_summary record on valid attrs" do
     result = UpdateHealthSummaryService.call(current_user: @user, attrs: valid_attrs)
-    assert result.success?, "expected Success, got #{result.inspect}"
+    assert_pattern { result => Success }
   end
 
   test "Success wraps the persisted HealthSummary" do
     result = UpdateHealthSummaryService.call(current_user: @user, attrs: valid_attrs)
-    assert result.success?, "expected Success, got #{result.inspect}"
-
-    health_summary = result.value!
+    assert_pattern { result => Success(health_summary) }
     assert_instance_of HealthSummary, health_summary
     assert health_summary.persisted?
   end
@@ -42,10 +40,7 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
       current_user: @user,
       attrs: valid_attrs.merge(chronotype: "night_owl")
     )
-
-    assert result.success?, "expected Success, got #{result.inspect}"
-
-    health_summary = result.value!
+    assert_pattern { result => Success(health_summary) }
     assert_equal "night_owl", health_summary.reload.chronotype
   end
 
@@ -53,9 +48,7 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
     user_without_summary = users(:charlie)
 
     result = UpdateHealthSummaryService.call(current_user: user_without_summary, attrs: valid_attrs)
-    assert result.success?, "expected Success, got #{result.inspect}"
-
-    health_summary = result.value!
+    assert_pattern { result => Success(health_summary) }
     assert health_summary.persisted?
   end
 
@@ -67,10 +60,7 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
       attrs: valid_attrs.merge(avg_sleep_duration_minutes: -1)
     )
 
-    assert result.failure?, "expected Failure, got #{result.inspect}"
-
-    code, _message = result.failure
-    assert_equal :validation_failed, code
+    assert_pattern { result => Failure[:validation_failed, _] }
   end
 
   test "Failure carries a non-blank error message" do
@@ -79,9 +69,7 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
       attrs: valid_attrs.merge(avg_sleep_duration_minutes: -1)
     )
 
-    assert result.failure?, "expected Failure, got #{result.inspect}"
-
-    _code, message = result.failure
+    assert_pattern { result => Failure[:validation_failed, message] }
     assert message.present?
   end
 end

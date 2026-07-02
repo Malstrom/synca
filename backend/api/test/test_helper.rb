@@ -19,6 +19,23 @@ module ActiveSupport
     # Parallelism disabled: SimpleCov cannot aggregate coverage across forked workers
     parallelize(workers: 1)
     fixtures :all
+
+    # Pattern matching helper for dry-monads results.
+    # Usage:
+    #   assert_pattern { result => Success }
+    #   assert_pattern { result => Success(health_summary) }
+    #   assert_pattern { result => Failure[:validation_failed, _] }
+    def assert_pattern(&block)
+      matcher = block.call
+
+      case matcher
+      in ->(value) { value }
+        # no-op — block already raised if pattern didn't match
+        # block form is required so Ruby's pattern engine runs inside the test
+      else
+        flunk "Pattern did not match: #{matcher.inspect}"
+      end
+    end
   end
 end
 
