@@ -26,8 +26,14 @@ class Api::V1::Auth::GuestRegistrationsControllerTest < ApiTestCase
   end
 
   test "POST /api/v1/auth/guest returns 422 for active account email" do
+    active_user = User.create!(
+      email: "active_user@example.com",
+      auth_provider: :email,
+      account_type: :active
+    )
+
     post api_v1_auth_guest_path,
-         params: { auth: { email: users(:alice).email } },
+         params: { auth: { email: active_user.email } },
          as: :json
     assert_response :unprocessable_entity
     body = response.parsed_body
