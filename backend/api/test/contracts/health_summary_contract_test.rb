@@ -11,12 +11,12 @@ class HealthSummaryContractTest < ActiveSupport::TestCase
     {
       health_summary: {
         effective_from:             "2026-05-01",
-        chronotype:                 "morning",
+        chronotype:                 "early_bird",
         source:                     "apple_health",
         avg_sleep_duration_minutes: 450,
         routine_stability_index:    0.82,
         activity_level:             "medium",
-        recovery_score:             75,
+        recovery_score:             "medium",
         sleep_start_local:          "23:00",
         sleep_end_local:            "07:00",
         peak_energy_start_local:    "09:00",
@@ -51,7 +51,7 @@ class HealthSummaryContractTest < ActiveSupport::TestCase
   end
 
   test "optional fields may be nil" do
-    params = { health_summary: { effective_from: "2026-06-01", chronotype: nil, activity_level: nil } }
+    params = { health_summary: { effective_from: "2026-06-01", chronotype: nil, activity_level: nil, recovery_score: nil } }
     result = contract.call(params)
     assert result.success?
   end
@@ -76,15 +76,15 @@ class HealthSummaryContractTest < ActiveSupport::TestCase
 
   test "invalid chronotype returns failure with descriptive message" do
     params = valid_params.deep_dup
-    params[:health_summary][:chronotype] = "early_bird"
+    params[:health_summary][:chronotype] = "morning"
     result = contract.call(params)
     assert result.failure?
-    assert_match(/morning, intermediate or evening/, result.errors.first.text)
+    assert_match(/early_bird, intermediate or night_owl/, result.errors.first.text)
   end
 
-  test "chronotype morning is valid" do
+  test "chronotype early_bird is valid" do
     params = valid_params.deep_dup
-    params[:health_summary][:chronotype] = "morning"
+    params[:health_summary][:chronotype] = "early_bird"
     assert contract.call(params).success?
   end
 
@@ -94,9 +94,9 @@ class HealthSummaryContractTest < ActiveSupport::TestCase
     assert contract.call(params).success?
   end
 
-  test "chronotype evening is valid" do
+  test "chronotype night_owl is valid" do
     params = valid_params.deep_dup
-    params[:health_summary][:chronotype] = "evening"
+    params[:health_summary][:chronotype] = "night_owl"
     assert contract.call(params).success?
   end
 
@@ -119,6 +119,22 @@ class HealthSummaryContractTest < ActiveSupport::TestCase
   test "activity_level high is valid" do
     params = valid_params.deep_dup
     params[:health_summary][:activity_level] = "high"
+    assert contract.call(params).success?
+  end
+
+  # --- recovery_score validation ---
+
+  test "invalid recovery_score returns failure" do
+    params = valid_params.deep_dup
+    params[:health_summary][:recovery_score] = "extreme"
+    result = contract.call(params)
+    assert result.failure?
+    assert_match(/low, medium or high/, result.errors.first.text)
+  end
+
+  test "recovery_score medium is valid" do
+    params = valid_params.deep_dup
+    params[:health_summary][:recovery_score] = "medium"
     assert contract.call(params).success?
   end
 end

@@ -10,12 +10,12 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
     @valid_params = {
       health_summary: {
         effective_from:             "2026-05-01",
-        chronotype:                 "morning",
+        chronotype:                 "early_bird",
         source:                     "apple_health",
         avg_sleep_duration_minutes: 450,
         routine_stability_index:    0.82,
         activity_level:             "medium",
-        recovery_score:             75,
+        recovery_score:             "medium",
         sleep_start_local:          "23:00",
         sleep_end_local:            "07:00",
         peak_energy_start_local:    "09:00",
@@ -32,9 +32,9 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
       headers: @headers
 
     assert_response :ok
-    assert_equal "morning", json.dig(:health_summary, :chronotype)
-    assert_equal 450,       json.dig(:health_summary, :avg_sleep_duration_minutes)
-    assert_in_delta 0.82,   json.dig(:health_summary, :routine_stability_index), 0.001
+    assert_equal "early_bird", json.dig(:health_summary, :chronotype)
+    assert_equal 450,          json.dig(:health_summary, :avg_sleep_duration_minutes)
+    assert_in_delta 0.82,      json.dig(:health_summary, :routine_stability_index), 0.001
   end
 
   test "PUT /me/health_summary creates record when user has none" do
@@ -45,17 +45,17 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
       headers: @headers
 
     assert_response :ok
-    assert_equal "morning",      json.dig(:health_summary, :chronotype)
-    assert_equal "apple_health", json.dig(:health_summary, :source)
+    assert_equal "early_bird",     json.dig(:health_summary, :chronotype)
+    assert_equal "apple_health",   json.dig(:health_summary, :source)
   end
 
   test "PUT /me/health_summary persists updated values in db" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: @valid_params[:health_summary].merge(chronotype: "evening") },
+      params:  { health_summary: @valid_params[:health_summary].merge(chronotype: "night_owl") },
       headers: @headers
 
     assert_response :ok
-    assert_equal "evening", @user.health_summary.reload.chronotype
+    assert_equal "night_owl", @user.health_summary.reload.chronotype
   end
 
   test "PUT /me/health_summary response contains all expected keys" do
@@ -97,7 +97,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
 
   test "PUT /me/health_summary with invalid chronotype returns 422" do
     put_json "/api/v1/me/health_summary",
-      params:  { health_summary: @valid_params[:health_summary].merge(chronotype: "early_bird") },
+      params:  { health_summary: @valid_params[:health_summary].merge(chronotype: "invalid") },
       headers: @headers
 
     assert_response :unprocessable_entity
@@ -134,7 +134,7 @@ class Api::V1::HealthSummaryControllerTest < ApiTestCase
     assert_equal "validation_failed", json.dig(:error, :code)
   end
 
-  test "PUT /me/health_summary with routine_stability_index below 0 returns 422" do
+  test "PUT /me/health_summary with routine_stability_index_below_0_returns_422" do
     put_json "/api/v1/me/health_summary",
       params:  { health_summary: @valid_params[:health_summary].merge(routine_stability_index: -0.1) },
       headers: @headers

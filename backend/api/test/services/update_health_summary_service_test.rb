@@ -12,11 +12,12 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
   def valid_attrs
     {
       effective_from:             Date.parse("2026-05-01"),
-      chronotype:                 "morning",
+      chronotype:                 "early_bird",
       source:                     "apple_health",
       avg_sleep_duration_minutes: 450,
       routine_stability_index:    0.82,
-      activity_level:             "medium"
+      activity_level:             "medium",
+      recovery_score:             "medium"
     }
   end
 
@@ -37,10 +38,10 @@ class UpdateHealthSummaryServiceTest < ActiveSupport::TestCase
   test "updates an existing health_summary" do
     result = UpdateHealthSummaryService.call(
       current_user: @user,
-      attrs: valid_attrs.merge(chronotype: "evening")
+      attrs: valid_attrs.merge(chronotype: "night_owl")
     )
     assert_pattern { result => Success[health_summary] }
-    assert_equal "evening", health_summary.reload.chronotype
+    assert_equal "night_owl", health_summary.reload.chronotype
   end
 
   test "creates health_summary when user has none" do
