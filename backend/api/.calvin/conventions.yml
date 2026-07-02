@@ -16,7 +16,7 @@ folder_structure:
   models: app/models/
   tests: test/
 
-# ─── MIGRATIONS ──────────────────────────────────────────────────────────────────────────
+# ─── MIGRATIONS ──────────────────────────────────────────────────────────────────────
 migrations:
   rule: |
     Generate a migration if and only if the issue contains a "## DB Changes" section.
@@ -41,6 +41,14 @@ migrations:
     The model enum declaration and the migration that adds the column are always generated together.
     A model with enum :field that has no corresponding migration will crash at boot.
 
+  filename_rule: |
+    Migration filenames MUST use a real numeric timestamp in the format YYYYMMDDHHmmSS.
+    Use the current UTC time when generating the file.
+    CORRECT:   db/migrate/20260702154200_add_account_type_to_users.rb
+    WRONG:     db/migrate/[timestamp]_add_account_type_to_users.rb
+    WRONG:     db/migrate/TIMESTAMP_add_account_type_to_users.rb
+    "[timestamp]" is a placeholder — it is NOT a valid filename and Rails will ignore the migration.
+
   format: |
     class AddExampleColumnToUsers < ActiveRecord::Migration[8.0]
       def change
@@ -49,7 +57,38 @@ migrations:
       end
     end
 
-# ─── API RESPONSE ───────────────────────────────────────────────────────────────────────
+# ─── TESTING MANDATE ─────────────────────────────────────────────────────────────────
+testing_mandate: |
+  EVERY file of production code you create or modify MUST have a corresponding test file
+  in the same commit. No exceptions.
+
+  Mapping rules:
+    app/controllers/api/v1/auth/guest_registrations_controller.rb
+      → test/controllers/api/v1/auth/guest_registrations_controller_test.rb
+
+    app/services/example_service.rb
+      → test/services/example_service_test.rb
+
+    app/models/user.rb (if modified)
+      → test/models/user_test.rb (add new test cases — do not delete existing ones)
+
+    app/contracts/example_contract.rb
+      → test/contracts/example_contract_test.rb
+
+    app/serializers/example_serializer.rb
+      → test/serializers/example_serializer_test.rb
+
+  What to test per layer is defined in testing.yml → always_test.
+  Use fixtures from testing.yml → fixture_catalogue. Never invent new fixture names.
+  Test class inherits from ApiTestCase for controllers, ActiveSupport::TestCase for everything else.
+  Never require 'minitest/mock' — see testing.yml → forbidden.
+
+  If you create a controller, you MUST test:
+    - the happy path (correct status + response shape)
+    - 401 on missing Authorization header (unless skip_before_action is used — then omit 401 tests)
+    - 422 on missing or invalid params
+
+# ─── API RESPONSE ───────────────────────────────────────────────────────────────────
 api_response:
   concern: app/controllers/concerns/api_response.rb
   helpers:
@@ -82,7 +121,7 @@ api_response:
     - field: in errors identifies the offending parameter name as a string
     - never call render json: directly — always go through ApiResponse helpers
 
-# ─── CONTROLLERS ───────────────────────────────────────────────────────────────────────
+# ─── CONTROLLERS ───────────────────────────────────────────────────────────────────
 controllers:
   rules:
     - all under Api::V1, mounted at /api/v1/
@@ -124,7 +163,7 @@ controllers:
       end
     end
 
-# ─── SERIALIZERS ───────────────────────────────────────────────────────────────────────
+# ─── SERIALIZERS ───────────────────────────────────────────────────────────────────
 serializers:
   location: app/serializers/
   naming: ResourceSerializer (e.g. UserSerializer, MatchSerializer)
@@ -151,7 +190,7 @@ serializers:
     - no inline hashes in controllers
     - only generate a serializer if the controller actually instantiates it
 
-# ─── CONTRACTS ───────────────────────────────────────────────────────────────────────
+# ─── CONTRACTS ───────────────────────────────────────────────────────────────────
 contracts:
   location: app/contracts/
   naming: OperationContract (e.g. CreateSparkSessionContract, RegisterUserContract)
@@ -187,7 +226,7 @@ contracts:
     - enum validations belong in rule blocks with a constant, not inline strings
     - params.require/permit is NOT used in controllers that have a contract
 
-# ─── SERVICE OBJECTS ────────────────────────────────────────────────────────────────────
+# ─── SERVICE OBJECTS ────────────────────────────────────────────────────────────────
 service_objects:
   gem: dry-monads
   entry_point: "ServiceName.call(args) — always .call, never .new.call from outside"
@@ -275,7 +314,7 @@ service_objects:
     - never call CompatibilityService directly from a job — go through MatchScoringFacade when it exists
     - do NOT generate calls to MatchScoringFacade or MlEventLogger until they exist in app/services/
 
-# ─── MODELS ───────────────────────────────────────────────────────────────────────
+# ─── MODELS ───────────────────────────────────────────────────────────────────
 models:
   rules:
     - all inherit from ApplicationRecord
