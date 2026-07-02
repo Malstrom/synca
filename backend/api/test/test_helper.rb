@@ -25,16 +25,11 @@ module ActiveSupport
     #   assert_pattern { result => Success }
     #   assert_pattern { result => Success(health_summary) }
     #   assert_pattern { result => Failure[:validation_failed, _] }
+    #   assert_pattern { result => Failure[:validation_failed, message] }
     def assert_pattern(&block)
-      matcher = block.call
-
-      case matcher
-      in ->(value) { value }
-        # no-op — block already raised if pattern didn't match
-        # block form is required so Ruby's pattern engine runs inside the test
-      else
-        flunk "Pattern did not match: #{matcher.inspect}"
-      end
+      block.call
+    rescue NoMatchingPatternError => e
+      flunk "Pattern did not match: #{e.message}"
     end
   end
 end
