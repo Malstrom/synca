@@ -7,23 +7,17 @@ module Api
         skip_before_action :authenticate_user!
 
         def create
-          contract_result = GuestRegistrationContract.new.call(params.to_unsafe_h)
+          result = GuestRegistrationContract.new.call(params.to_unsafe_h)
+          return render_contract_errors(result) if result.failure?
 
-          if contract_result.failure?
-            return render_error(
-              code: "missing_params",
-              message: contract_result.errors.to_h
-            )
-          end
+          email = result[:auth][:email].downcase
 
-          email = contract_result[:auth][:email]
-          user = User.find_by(email: email, account_type: :guest) ||
-                 User.find_by(email: email, account_type: :active)
+          user = User.find_by(email: email)
 
           if user&.active?
             return render_error(
               code: "email_already_active",
-              message: "Email is already associated with an active account"
+              message: "An active account with this email already exists"
             )
           end
 
@@ -33,14 +27,12 @@ module Api
             account_type: :guest
           )
 
-          token = JwtService.access_token(user)
-
-          render json: {
-            access_token: token,
+          render_created({
+            access_token: JwtService.access_token(user),
             token_type: "Bearer",
             expires_in: 2592000,
             account_type: user.account_type
-          }, status: user.new_record? ? :created : :ok
+          })
         end
       end
     end
