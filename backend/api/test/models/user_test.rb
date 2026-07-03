@@ -38,4 +38,13 @@ class UserTest < ActiveSupport::TestCase
     assert_respond_to alice, :matches
     assert_respond_to alice, :spark_rewards
   end
+
+  test "account_type enum has correct integer mapping for guest and active" do
+    assert_equal 0, User.account_types[:guest]
+    assert_equal 1, User.account_types[:active]
+  end
+
+  test "alice fixture has account_type active" do
+    assert_equal "active", users(:alice).account_type
+  end
 end
