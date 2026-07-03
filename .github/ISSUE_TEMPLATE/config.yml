@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Calvin docs
+    url: https://github.com/Malstrom/calvin
+    about: Framework docs, scenarios and templates.
