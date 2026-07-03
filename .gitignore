@@ -69,3 +69,5 @@ fastlane/test_output/
 .direnv/
 .tool-versions
 .rubymate/
+.aider*
+.calvin

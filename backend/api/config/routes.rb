@@ -17,6 +17,7 @@ Rails.application.routes.draw do
         post "register", to: "registrations#create"
         post "login",    to: "sessions#create"
         post "refresh",  to: "tokens#create"
+        post "guest",    to: "guest_registrations#create"
       end
 
       resources :spark_sessions, only: [ :create ] do
