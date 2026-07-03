@@ -10,10 +10,10 @@ permissions:
   pull-requests: write
 
 jobs:
-  # ── Modalità commento (label: agent) ──────────────────────────────────────
+  # ── Modalità commento (label: agent) ────────────────────────────────────────────────
   calvin-comment:
     if: github.event.label.name == 'agent'
-    uses: malstrom/zeroth/.github/workflows/calvin-engine.yml@main
+    uses: malstrom/calvin/.github/workflows/calvin-engine.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
       target_repo: malstrom/synca
@@ -22,10 +22,10 @@ jobs:
       SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
       MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
 
-  # ── Modalità aider (label: agent-aider) ───────────────────────────────────
+  # ── Modalità aider (label: agent-aider) ─────────────────────────────────────────────
   calvin-aider:
     if: github.event.label.name == 'agent-aider'
-    uses: malstrom/zeroth/.github/workflows/calvin-engine.yml@main
+    uses: malstrom/calvin/.github/workflows/calvin-engine.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
       target_repo: malstrom/synca
