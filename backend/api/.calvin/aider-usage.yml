@@ -1,0 +1,14 @@
+---
+config:
+  usd_to_eur_rate: 0.93
+totals:
+  runs: 0
+  sent_tokens: 0
+  received_tokens: 0
+  total_tokens: 0
+  total_cost_usd: 0.0
+  total_cost_eur: 0.0
+  avg_cost_eur: 0.0
+  most_expensive_issue:
+  last_updated_at:
+runs: []
