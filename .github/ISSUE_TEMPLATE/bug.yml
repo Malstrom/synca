@@ -1,0 +1,74 @@
+name: Bug report
+description: Trace and fix an existing bug. Use the report_bug Calvin scenario for AI-assisted creation.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to report a bug. For AI-assisted creation use the `report_bug` Calvin scenario.
+        After creation, apply the `refine_task` scenario to complete Root cause, Files to touch and Acceptance criteria.
+
+  - type: textarea
+    id: bug_description
+    attributes:
+      label: Bug description
+      description: What the system does wrong — concrete, observable, no speculation.
+      placeholder: "e.g. users(:alice) has account_type: 0 (guest) in fixtures even though tests expect active users."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: What it should do instead.
+      placeholder: "e.g. Fixture users should have account_type: 1 (active) explicitly set so controller tests behave correctly."
+    validations:
+      required: true
+
+  - type: textarea
+    id: how_to_reproduce
+    attributes:
+      label: How to reproduce
+      description: Minimal steps or failing test name.
+      placeholder: |
+        1. Run bin/rails test test/controllers/api/v1/...
+        2. Observe wrong HTTP status due to guest account_type default
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: stack
+    attributes:
+      label: Stack
+      options:
+        - label: backend
+        - label: ios
+        - label: frontend
+
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Root cause
+      description: "Leave as TBD — filled by refine_task scenario."
+      placeholder: "TBD"
+
+  - type: textarea
+    id: files_to_touch
+    attributes:
+      label: Files to touch
+      description: "Leave as TBD — filled by refine_task scenario."
+      placeholder: "TBD"
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: "Leave as TBD — filled by refine_task scenario."
+      placeholder: "TBD"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Edge cases, do-not-touch rules, related decisions — optional.
