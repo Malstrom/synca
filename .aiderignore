@@ -1,0 +1,9 @@
+# .aiderignore — limita la repo-map di Aider a backend/api/
+# Tutto quello che non è Rails viene escluso dalla scansione.
+
+apps/
+docs/
+vendor/
+.github/
+.kamal/
+*.md
