@@ -20,10 +20,26 @@ fixture_catalogue:
   # Source of truth: test/fixtures/*.yml
   # Named rows available as helpers: users(:alice), spark_sessions(:alice_spark), etc.
   users:
-    alice:   email auth, alice@example.com, password: 'password'
-    bob:     email auth, bob@example.com,   password: 'password'
-    charlie: email auth, charlie@example.com — used as spark initiator in model tests only
-    dave:    email auth, dave@example.com
+    alice:
+      auth: email
+      email: alice@example.com
+      password: password
+      account_type: 1  # active
+    bob:
+      auth: email
+      email: bob@example.com
+      password: password
+      account_type: 1  # active
+    charlie:
+      auth: email
+      email: charlie@example.com
+      password: password
+      account_type: 1  # active — used as spark initiator in model tests only
+    dave:
+      auth: email
+      email: dave@example.com
+      password: password
+      account_type: 1  # active
   spark_sessions:
     alice_spark:   completed, alice→bob, score 75.0, rewards issued
     pending_spark: pending,   charlie initiated, 15min old (stale scope test)
@@ -43,12 +59,19 @@ fixture_catalogue:
     alice_reward (alice_spark, boost, active)
     bob_reward   (alice_spark, boost, active)
 
+fixture_enum_rule: |
+  ALWAYS set enum columns explicitly in fixtures — never rely on database defaults.
+  A missing enum column silently uses the default value (usually 0), which may not
+  match what the test expects and causes wrong status codes with no obvious error.
+  Example: account_type missing → default 0 (guest) → endpoint returns 201 instead of 422.
+
 fixture_antipatterns:
   - Hardcode BCrypt digests — use <%= BCrypt::Password.create('password') %>
   - Invent fixture names not in the catalogue above — risk of nil reference
   - Add a fixture row that duplicates an existing one with only a renamed key
   - Use fixture rows from a different test's exclusive domain
     (e.g. charlie is reserved for model/scope tests; do not use as controller actor)
+  - Omit enum columns — always set them explicitly (see fixture_enum_rule above)
 
 # ─── Coverage ─────────────────────────────────────────────────────────────────
 coverage:

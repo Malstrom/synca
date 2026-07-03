@@ -16,6 +16,29 @@ folder_structure:
   models: app/models/
   tests: test/
 
+# ─── ZEITWERK ────────────────────────────────────────────────────────────────────────
+zeitwerk:
+  autoload_roots:
+    - path: app/contracts
+      rule: |
+        Top-level constant only.
+        File app/contracts/foo_contract.rb → class FooContract.
+        NEVER wrap in a module namespace (Api::, V1::, etc.).
+    - path: app/services
+      rule: |
+        Top-level constant only.
+        File app/services/foo_service.rb → class FooService.
+        NEVER wrap in a module namespace.
+    - path: app/serializers
+      rule: |
+        Top-level constant only.
+        File app/serializers/foo_serializer.rb → class FooSerializer.
+        NEVER wrap in a module namespace.
+  note: |
+    Only app/controllers/ and app/models/ respect namespace via directory structure.
+    Every other autoload root in this app is flat — the class name is derived from
+    the filename alone, not from the folder path.
+
 # ─── MIGRATIONS ──────────────────────────────────────────────────────────────────────
 migrations:
   rule: |
