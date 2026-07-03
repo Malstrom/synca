@@ -1,0 +1,104 @@
+name: Task
+description: Atomic executable sub-issue. Fill all relevant sections before adding label:agent.
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for atomic tasks. Refine with the `refine_task` Calvin scenario,
+        then write the agent prompt with the `agent_prompt` scenario before adding `agent` label.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One sentence — what this task does, concrete and verifiable.
+      placeholder: "e.g. Implement POST /api/v1/auth/guest returning a JWT for unauthenticated users."
+    validations:
+      required: true
+
+  - type: input
+    id: parent
+    attributes:
+      label: Parent
+      description: Epic issue number this task belongs to.
+      placeholder: "#42"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: stack
+    attributes:
+      label: Stack
+      options:
+        - label: backend
+        - label: ios
+        - label: frontend
+
+  - type: textarea
+    id: db_changes
+    attributes:
+      label: DB Changes
+      description: Migration and model changes. Omit if none.
+      placeholder: |
+        Migration: add account_type column to users
+        Model: add enum account_type: { guest: 0, active: 1 }
+
+  - type: textarea
+    id: endpoint
+    attributes:
+      label: Endpoint
+      description: Fill if this task creates or modifies an HTTP endpoint. Omit if none.
+      placeholder: |
+        Method: POST
+        Path: /api/v1/auth/guest
+        Auth required: no
+        Request body: { auth: { email: string } }
+        Response 201: { access_token, token_type, expires_in, account_type }
+        Response 422: { error: { code, message } }
+
+  - type: textarea
+    id: entry_points
+    attributes:
+      label: Entry points
+      description: Files, classes or routes that are the starting point for implementation.
+      placeholder: |
+        - app/controllers/api/v1/auth/sessions_controller.rb — controller
+        - app/contracts/guest_registration_contract.rb — contract
+        - config/routes.rb — route
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: Verifiable criteria. Each line is one criterion.
+      placeholder: |
+        - POST /api/v1/auth/guest returns 201 with JWT when email is valid
+        - Returns 422 with error code when email is already taken by an active user
+        - Guest user has account_type: guest in DB
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Issue or PR numbers that must be merged before starting. Write "none" if none.
+      placeholder: "#38 must be merged first"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Edge cases, gotchas, do-not-touch rules — optional.
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples
+      description: References to existing code that must be replicated or adapted.
+      placeholder: |
+        - app/controllers/api/v1/auth/passwords_controller.rb — same contract + response shape pattern
+        - test/controllers/api/v1/auth/sessions_controller_test.rb — test structure to follow

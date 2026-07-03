@@ -1,0 +1,57 @@
+name: Epic
+description: Parent issue for a feature or initiative, decomposed into tasks.
+labels: ["epic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to open an epic. Decompose it into tasks using the `decompose` Calvin scenario.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One sentence — what this epic delivers, concrete and verifiable.
+      placeholder: "e.g. Allow guest users to register with email without creating a full account."
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Why this epic matters. Business or product reason.
+      placeholder: "e.g. Reduces friction for new users before they commit to a full signup."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: stack
+    attributes:
+      label: Stack
+      options:
+        - label: backend
+        - label: ios
+        - label: frontend
+
+  - type: textarea
+    id: docs
+    attributes:
+      label: Docs
+      description: Links to specs, designs, ADRs or related docs.
+      placeholder: "e.g. Notion spec: https://..."
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is explicitly in and out of scope.
+      placeholder: |
+        In scope: guest registration, token issuance.
+        Out of scope: social login, email verification.
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Edge cases, dependencies, risks — optional.
