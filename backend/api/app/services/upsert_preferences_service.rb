@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Upserts preferences for a given user.
+# Upserts (creates or updates) preferences for a given user.
 # Returns Success(preference_profile) or Failure([:validation_failed, message]).
 class UpsertPreferencesService
   include Dry::Monads[:result]
@@ -13,7 +13,7 @@ class UpsertPreferencesService
     if preference_profile.update(attrs)
       Success(preference_profile)
     else
-      Failure([ :validation_failed, preference_profile.errors.full_messages.first ])
+      Failure([:validation_failed, preference_profile.errors.full_messages.first])
     end
   end
 end

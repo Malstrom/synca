@@ -2,44 +2,60 @@
 
 class UpsertPreferencesContract < Dry::Validation::Contract
   params do
-    required(:preferences).hash do
-      optional(:sleep_together_importance).maybe(:integer)
-      optional(:temperature_preference).maybe(:string)
-      optional(:movement_preference).maybe(:string)
-      optional(:rhythm_importance).maybe(:integer)
-      optional(:self_chronotype).maybe(:string)
+    optional(:preferences).hash do
+      optional(:sleep_together_importance).value(:integer?)
+      optional(:temperature_preference).value(:string?)
+      optional(:movement_preference).value(:string?)
+      optional(:rhythm_importance).value(:integer?)
+      optional(:self_chronotype).value(:string?)
     end
   end
 
-  VALID_TEMPERATURE_PREFERENCES = %w[cool warm no_preference].freeze
-  VALID_MOVEMENT_PREFERENCES = %w[very_little moderate a_lot as_much_as_possible].freeze
-  VALID_CHRONOTYPES = %w[morning night depends].freeze
+  rule(preferences: :sleep_together_importance) do |ctx|
+    next unless ctx[:preferences]&.key?(:sleep_together_importance)
 
-  rule(preferences: :sleep_together_importance) do
-    next unless value
-    key.failure("must be between 1 and 5") unless value >= 1 && value <= 5
+    value = ctx[:preferences][:sleep_together_importance]
+    if value && (value < 1 || value > 5)
+      key.failure("must be between 1 and 5")
+    end
   end
 
-  rule(preferences: :temperature_preference) do
-    next unless value
-    key.failure("must be cool, warm or no_preference") unless
-      VALID_TEMPERATURE_PREFERENCES.include?(value)
+  rule(preferences: :rhythm_importance) do |ctx|
+    next unless ctx[:preferences]&.key?(:rhythm_importance)
+
+    value = ctx[:preferences][:rhythm_importance]
+    if value && (value < 1 || value > 5)
+      key.failure("must be between 1 and 5")
+    end
   end
 
-  rule(preferences: :movement_preference) do
-    next unless value
-    key.failure("must be very_little, moderate, a_lot or as_much_as_possible") unless
-      VALID_MOVEMENT_PREFERENCES.include?(value)
+  rule(preferences: :temperature_preference) do |ctx|
+    next unless ctx[:preferences]&.key?(:temperature_preference)
+
+    value = ctx[:preferences][:temperature_preference]
+    valid_values = %w[cool warm no_preference]
+    if value && !valid_values.include?(value)
+      key.failure("must be one of: #{valid_values.join(', ')}")
+    end
   end
 
-  rule(preferences: :rhythm_importance) do
-    next unless value
-    key.failure("must be between 1 and 5") unless value >= 1 && value <= 5
+  rule(preferences: :movement_preference) do |ctx|
+    next unless ctx[:preferences]&.key?(:movement_preference)
+
+    value = ctx[:preferences][:movement_preference]
+    valid_values = %w[very_little moderate a_lot as_much_as_possible]
+    if value && !valid_values.include?(value)
+      key.failure("must be one of: #{valid_values.join(', ')}")
+    end
   end
 
-  rule(preferences: :self_chronotype) do
-    next unless value
-    key.failure("must be morning, night or depends") unless
-      VALID_CHRONOTYPES.include?(value)
+  rule(preferences: :self_chronotype) do |ctx|
+    next unless ctx[:preferences]&.key?(:self_chronotype)
+
+    value = ctx[:preferences][:self_chronotype]
+    valid_values = %w[morning night depends]
+    if value && !valid_values.include?(value)
+      key.failure("must be one of: #{valid_values.join(', ')}")
+    end
   end
 end

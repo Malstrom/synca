@@ -4,24 +4,36 @@ module Api
   module V1
     module Signals
       class PreferencesController < ApplicationController
-        include Dry::Monads[:result]
+        before_action :authenticate!
 
-        # POST /api/v1/signals/preferences
         def create
-          contract_result = UpsertPreferencesContract.new.call(preferences: params[:preferences]&.to_unsafe_h || {})
+          result = UpsertPreferencesContract.new.call(params)
 
-          return render_contract_errors(contract_result) if contract_result.failure?
+          if result.success?
+            preferences_result = UpsertPreferencesService.call(
+              current_user:,
+              attrs: result.to_h[:preferences] || {}
+            )
 
-          result = UpsertPreferencesService.call(
-            current_user: current_user,
-            attrs: contract_result.to_h[:preferences]
-          )
-
-          case result
-          in Success[ preference_profile ]
-            render_success({ preferences: PreferencesSerializer.new(preference_profile).serializable_hash })
-          in Failure[ :validation_failed, message ]
-            render_error(code: "validation_failed", message: message)
+            if preferences_result.success?
+              render json: {
+                preferences: PreferencesSerializer.new(preferences_result.value!).to_h
+              }, status: :ok
+            else
+              render json: {
+                error: {
+                  code: preferences_result.failure.first,
+                  message: preferences_result.failure.last
+                }
+              }, status: :unprocessable_entity
+            end
+          else
+            render json: {
+              error: {
+                code: :validation_failed,
+                message: result.errors(full: true).to_h.inspect
+              }
+            }, status: :unprocessable_entity
           end
         end
       end
