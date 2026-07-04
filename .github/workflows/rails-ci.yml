@@ -2,11 +2,11 @@ name: CI — Rails API
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - "backend/api/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - "backend/api/**"
 
@@ -21,17 +21,17 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.3.1"
+          ruby-version-file: backend/api/.ruby-version
           bundler-cache: true
           working-directory: backend/api
 
       - name: Scan for Rails security vulnerabilities
-        run: bin/brakeman --no-pager --ignore-config config/brakeman.ignore
+        run: bin/brakeman --no-pager
 
   gem_audit:
     name: Gem CVE Audit (bundler-audit)
@@ -39,12 +39,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.3.1"
+          ruby-version-file: backend/api/.ruby-version
           bundler-cache: true
           working-directory: backend/api
 
@@ -60,22 +60,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.3.1"
+          ruby-version-file: backend/api/.ruby-version
           bundler-cache: true
           working-directory: backend/api
 
-      - name: Run RuboCop (no autocorrect)
-        run: bin/rubocop --format github
+      - name: Lint code for consistent style
+        run: bin/rubocop -f github
 
   test:
     name: Tests + Coverage (Minitest)
     runs-on: ubuntu-latest
-    # Espone outputs per il job ci-report
     outputs:
       tests_passed: ${{ steps.run_tests.outcome == 'success' }}
       test_output:  ${{ steps.run_tests.outputs.test_output }}
@@ -95,42 +94,33 @@ jobs:
           --health-timeout=5s
           --health-retries=3
 
-    env:
-      RAILS_ENV: test
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432
-      SECRET_KEY_BASE: a_dummy_secret_for_ci_at_least_64_chars_long_so_hmac_is_happy_1234
-
     steps:
       - name: Install system packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config
         working-directory: /tmp
 
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.3.1"
+          ruby-version-file: backend/api/.ruby-version
           bundler-cache: true
           working-directory: backend/api
 
-      - name: Set up database
-        run: bin/rails db:create db:migrate
-
-      # Cattura stdout+stderr in un file e lo espone come output.
-      # continue-on-error: true perché vogliamo postare il report
-      # anche quando i test falliscono.
       - name: Run tests
         id: run_tests
         continue-on-error: true
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          SECRET_KEY_BASE: a_dummy_secret_for_ci_at_least_64_chars_long_so_hmac_is_happy_1234
         run: |
           set +e
-          bin/rails test 2>&1 | tee /tmp/test-output.txt
+          bin/rails db:test:prepare test 2>&1 | tee /tmp/test-output.txt
           EXIT_CODE=${PIPESTATUS[0]}
-          # Espone le prime 200 righe (limite output GitHub Actions ~1MB)
           OUTPUT=$(head -200 /tmp/test-output.txt)
-          # Escaping per output multiline
           OUTPUT="${OUTPUT//'%'/'%25'}"
           OUTPUT="${OUTPUT//$'\n'/'%0A'}"
           OUTPUT="${OUTPUT//$'\r'/'%0D'}"
@@ -139,7 +129,6 @@ jobs:
 
       - name: Check coverage threshold (≥ 90%)
         id: coverage
-        # Gira sempre, anche se i test hanno fallito
         if: always()
         run: |
           COVERAGE=$(ruby -rjson -e '
@@ -175,8 +164,6 @@ jobs:
             echo "\u2705 Coverage ${COVERAGE}% meets the 90% threshold." >> $GITHUB_STEP_SUMMARY
           fi
 
-      # Fallisce il job se i test non sono passati (ripristina il comportamento
-      # che continue-on-error aveva temporaneamente sospeso)
       - name: Fail job if tests failed
         if: steps.run_tests.outcome == 'failure'
         run: exit 1
@@ -185,7 +172,6 @@ jobs:
     name: Post test report on PR
     runs-on: ubuntu-latest
     needs: test
-    # Gira solo su pull_request, sempre (anche se test ha fallito)
     if: always() && github.event_name == 'pull_request'
     uses: Malstrom/calvin/.github/workflows/rails-ci-report.yml@main
     with:
