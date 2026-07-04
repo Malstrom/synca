@@ -1,7 +1,9 @@
-alice_prefs:
-  user: alice
-  travel_style: 2
+aligned:
+  user: with_health_summary
+  self_chronotype: early_bird
+  travel_style: balanced
 
-bob_prefs:
-  user: bob
-  travel_style: 1
+not_aligned:
+  user: with_health_summary
+  self_chronotype: night_owl
+  travel_style: balanced

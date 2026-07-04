@@ -1,19 +1,29 @@
-alice_health:
-  user: alice
-  chronotype: 0
+early_bird:
+  user: with_health_summary
+  chronotype: early_bird
+  source: apple_health
+  effective_from: <%= 1.month.ago %>
+  effective_to: null
+  sleep_start_local: <%= Time.zone.parse("22:00") %>
+  sleep_end_local: <%= Time.zone.parse("06:30") %>
   avg_sleep_duration_minutes: 450
-  routine_stability_index: 0.82
-  activity_level: 1
-  recovery_score: 1
-  source: 0
-  effective_from: "2026-05-01"
+  routine_stability_index: 0.8
+  activity_level: medium
+  peak_energy_start_local: <%= Time.zone.parse("08:00") %>
+  peak_energy_end_local: <%= Time.zone.parse("10:00") %>
+  recovery_score: high
 
-bob_health:
-  user: bob
-  chronotype: 2
-  avg_sleep_duration_minutes: 390
-  routine_stability_index: 0.45
-  activity_level: 0
-  recovery_score: 0
-  source: 0
-  effective_from: "2026-05-01"
+night_owl:
+  user: with_health_summary
+  chronotype: night_owl
+  source: apple_health
+  effective_from: <%= 1.month.ago %>
+  effective_to: null
+  sleep_start_local: <%= Time.zone.parse("01:00") %>
+  sleep_end_local: <%= Time.zone.parse("09:30") %>
+  avg_sleep_duration_minutes: 480
+  routine_stability_index: 0.7
+  activity_level: high
+  peak_energy_start_local: <%= Time.zone.parse("22:00") %>
+  peak_energy_end_local: <%= Time.zone.parse("00:00") %>
+  recovery_score: medium
