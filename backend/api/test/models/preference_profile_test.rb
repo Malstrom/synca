@@ -1,25 +1,42 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 
 class PreferenceProfileTest < ActiveSupport::TestCase
-  test "valid preference profile" do
-    assert preference_profiles(:alice_prefs).valid?
+  setup do
+    @user = users(:alice)
+    @preference_profile = @user.build_preference_profile
   end
 
-  test "valid without travel_style" do
-    pref = preference_profiles(:alice_prefs)
-    pref.travel_style = nil
-    assert pref.valid?
+  test 'validates sleep_together_importance range' do
+    @preference_profile.sleep_together_importance = 6
+    assert_not @preference_profile.valid?
+    assert_includes @preference_profile.errors[:sleep_together_importance], 'must be between 1 and 5'
+
+    @preference_profile.sleep_together_importance = 3
+    assert @preference_profile.valid?
   end
 
-  test "valid without visual_embedding" do
-    pref = preference_profiles(:alice_prefs)
-    pref.visual_embedding = nil
-    assert pref.valid?
+  test 'validates rhythm_importance range' do
+    @preference_profile.rhythm_importance = 0
+    assert_not @preference_profile.valid?
+    assert_includes @preference_profile.errors[:rhythm_importance], 'must be between 1 and 5'
+
+    @preference_profile.rhythm_importance = 4
+    assert @preference_profile.valid?
   end
 
-  test "belongs to user" do
-    assert_equal users(:alice), preference_profiles(:alice_prefs).user
+  test 'enum values' do
+    assert_equal %w[cool warm no_preference], PreferenceProfile.temperature_preferences.keys
+    assert_equal %w[very_little moderate a_lot as_much_as_possible], PreferenceProfile.movement_preferences.keys
+    assert_equal %w[morning night depends], PreferenceProfile.self_chronotypes.keys
+  end
+
+  test 'nil fields' do
+    assert_nil @preference_profile.sleep_together_importance
+    assert_nil @preference_profile.temperature_preference
+    assert_nil @preference_profile.movement_preference
+    assert_nil @preference_profile.rhythm_importance
+    assert_nil @preference_profile.self_chronotype
   end
 end
