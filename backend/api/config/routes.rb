@@ -35,6 +35,10 @@ Rails.application.routes.draw do
           post :simulate
         end
       end
+
+      namespace :signals do
+        resources :preferences, only: [ :create ]
+      end
     end
   end
 end
