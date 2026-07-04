@@ -16,3 +16,12 @@ MINIMUM COVERAGE:
 - At least one happy path + one error/edge path per public method.
 - Controllers: always test 401 (no token) + 422 (invalid params) + 200 (happy path).
 - Do not re-test what is already covered in the corresponding contract test.
+
+## FIXTURES (MANDATORY)
+
+If your implementation adds columns to an existing model or creates a new model,
+you MUST output the updated fixture file as a FILE: block.
+
+- Add the new fields to every existing fixture entry with realistic values.
+- The fixture file path is test/fixtures/<table_name>.yml.
+- Do not leave new columns absent from fixtures — missing values cause test failures.
