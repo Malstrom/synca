@@ -1,25 +1,35 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 
 class PreferenceProfileTest < ActiveSupport::TestCase
-  test "valid preference profile" do
-    assert preference_profiles(:alice_prefs).valid?
+  setup do
+    @user = users(:alice)
+    @preference_profile = @user.preference_profile
   end
 
-  test "valid without travel_style" do
-    pref = preference_profiles(:alice_prefs)
-    pref.travel_style = nil
-    assert pref.valid?
+  test 'enum values' do
+    assert_equal :cool, @preference_profile.temperature_preference
+    assert_equal :moderate, @preference_profile.movement_preference
+    assert_equal :night, @preference_profile.self_chronotype
   end
 
-  test "valid without visual_embedding" do
-    pref = preference_profiles(:alice_prefs)
-    pref.visual_embedding = nil
-    assert pref.valid?
+  test 'validations' do
+    @preference_profile.sleep_together_importance = 6
+    assert_not @preference_profile.valid?
+
+    @preference_profile.rhythm_importance = 0
+    assert_not @preference_profile.valid?
+
+    @preference_profile.sleep_together_importance = 3
+    @preference_profile.rhythm_importance = 4
+    assert @preference_profile.valid?
   end
 
-  test "belongs to user" do
-    assert_equal users(:alice), preference_profiles(:alice_prefs).user
+  test 'nil fields' do
+    @preference_profile.temperature_preference = nil
+    @preference_profile.movement_preference = nil
+    @preference_profile.self_chronotype = nil
+    assert @preference_profile.valid?
   end
 end
