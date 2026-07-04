@@ -1,0 +1,18 @@
+## TEST CONVENTIONS (MANDATORY)
+
+For every new .rb file that is NOT a test, produce the corresponding test file.
+Test files are required output, not optional.
+
+Before writing any test:
+- Read test/test_helper.rb to know the base classes and available helpers.
+- Read test/fixtures/ to know which fixtures exist.
+- Read the relevant fixture file to know the available records.
+- Read a similar existing test to understand style and reuse helpers.
+
+Reuse existing helpers and fixtures.
+Create new helpers or fixture entries only if they do not already exist.
+
+MINIMUM COVERAGE:
+- At least one happy path + one error/edge path per public method.
+- Controllers: always test 401 (no token) + 422 (invalid params) + 200 (happy path).
+- Do not re-test what is already covered in the corresponding contract test.
