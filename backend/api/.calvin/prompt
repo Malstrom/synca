@@ -17,6 +17,41 @@ MINIMUM COVERAGE:
 - Controllers: always test 401 (no token) + 422 (invalid params) + 200 (happy path).
 - Do not re-test what is already covered in the corresponding contract test.
 
+## CONTROLLER TESTS (MANDATORY)
+
+Controller tests MUST inherit from ApiTestCase, NOT from ActionDispatch::IntegrationTest.
+ApiTestCase is defined in test/test_helper.rb and provides these helpers:
+
+  def auth_headers(user)
+    token = JwtService.access_token(user)
+    { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
+  end
+
+  def json
+    JSON.parse(response.body, symbolize_names: true)
+  end
+
+NEVER use @user.jwt_token — that method does not exist.
+Always use auth_headers(@user) for authenticated requests.
+
+Example:
+  class Api::V1::MyControllerTest < ApiTestCase
+    setup do
+      @user = users(:alice)
+      @headers = auth_headers(@user)
+    end
+
+    test '200 success' do
+      get api_v1_my_path, headers: @headers
+      assert_response :success
+    end
+
+    test '401 unauthorized' do
+      get api_v1_my_path
+      assert_response :unauthorized
+    end
+  end
+
 ## FIXTURES (MANDATORY)
 
 If your implementation adds columns to an existing model or creates a new model,
