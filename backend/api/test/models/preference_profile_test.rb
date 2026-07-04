@@ -1,25 +1,41 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 
 class PreferenceProfileTest < ActiveSupport::TestCase
-  test "valid preference profile" do
-    assert preference_profiles(:alice_prefs).valid?
+  setup do
+    @user = users(:alice)
+    @preference_profile = @user.build_preference_profile
   end
 
-  test "valid without travel_style" do
-    pref = preference_profiles(:alice_prefs)
-    pref.travel_style = nil
-    assert pref.valid?
+  test 'validates sleep_together_importance range' do
+    @preference_profile.sleep_together_importance = 6
+    assert_not @preference_profile.valid?
+    assert_includes @preference_profile.errors[:sleep_together_importance], 'must be between 1 and 5'
   end
 
-  test "valid without visual_embedding" do
-    pref = preference_profiles(:alice_prefs)
-    pref.visual_embedding = nil
-    assert pref.valid?
+  test 'validates rhythm_importance range' do
+    @preference_profile.rhythm_importance = 0
+    assert_not @preference_profile.valid?
+    assert_includes @preference_profile.errors[:rhythm_importance], 'must be between 1 and 5'
   end
 
-  test "belongs to user" do
-    assert_equal users(:alice), preference_profiles(:alice_prefs).user
+  test 'allows nil values' do
+    assert @preference_profile.valid?
+  end
+
+  test 'enum values' do
+    assert_equal 'cool', @preference_profile.temperature_preference = :cool
+    assert_equal 'warm', @preference_profile.temperature_preference = :warm
+    assert_equal 'no_preference', @preference_profile.temperature_preference = :no_preference
+
+    assert_equal 'very_little', @preference_profile.movement_preference = :very_little
+    assert_equal 'moderate', @preference_profile.movement_preference = :moderate
+    assert_equal 'a_lot', @preference_profile.movement_preference = :a_lot
+    assert_equal 'as_much_as_possible', @preference_profile.movement_preference = :as_much_as_possible
+
+    assert_equal 'morning', @preference_profile.self_chronotype = :morning
+    assert_equal 'night', @preference_profile.self_chronotype = :night
+    assert_equal 'depends', @preference_profile.self_chronotype = :depends
   end
 end
