@@ -20,6 +20,10 @@ Rails.application.routes.draw do
         post "guest",    to: "guest_registrations#create"
       end
 
+      namespace :signals do
+        post "preferences", to: "preferences#create"
+      end
+
       resources :spark_sessions, only: [ :create ] do
         member do
           post :join
