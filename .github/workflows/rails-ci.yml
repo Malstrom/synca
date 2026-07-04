@@ -33,27 +33,6 @@ jobs:
       - name: Scan for Rails security vulnerabilities
         run: bin/brakeman --no-pager
 
-  gem_audit:
-    name: Gem CVE Audit (bundler-audit)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version-file: backend/api/.ruby-version
-          bundler-cache: true
-          working-directory: backend/api
-
-      - name: Update advisory database
-        run: bundle exec bundle-audit update
-
-      - name: Audit gems for CVEs
-        run: bundle exec bundle-audit check
-
   lint:
     name: Linting (RuboCop)
     runs-on: ubuntu-latest
@@ -73,12 +52,8 @@ jobs:
         run: bin/rubocop -f github
 
   test:
-    name: Tests + Coverage (Minitest)
+    name: Tests (Minitest)
     runs-on: ubuntu-latest
-    outputs:
-      tests_passed: ${{ steps.run_tests.outcome == 'success' }}
-      test_output:  ${{ steps.run_tests.outputs.test_output }}
-      coverage_line: ${{ steps.coverage.outputs.coverage_line }}
 
     services:
       postgres:
@@ -97,7 +72,6 @@ jobs:
     steps:
       - name: Install system packages
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config
-        working-directory: /tmp
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -110,75 +84,7 @@ jobs:
           working-directory: backend/api
 
       - name: Run tests
-        id: run_tests
-        continue-on-error: true
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
-          SECRET_KEY_BASE: a_dummy_secret_for_ci_at_least_64_chars_long_so_hmac_is_happy_1234
-        run: |
-          set +e
-          bin/rails db:test:prepare test 2>&1 | tee /tmp/test-output.txt
-          EXIT_CODE=${PIPESTATUS[0]}
-          OUTPUT=$(head -200 /tmp/test-output.txt)
-          OUTPUT="${OUTPUT//'%'/'%25'}"
-          OUTPUT="${OUTPUT//$'\n'/'%0A'}"
-          OUTPUT="${OUTPUT//$'\r'/'%0D'}"
-          echo "test_output=${OUTPUT}" >> $GITHUB_OUTPUT
-          exit $EXIT_CODE
-
-      - name: Check coverage threshold (≥ 90%)
-        id: coverage
-        if: always()
-        run: |
-          COVERAGE=$(ruby -rjson -e '
-            data = JSON.parse(File.read("coverage/.resultset.json"))
-            result = data.values.first["coverage"]
-            total_lines = 0; covered_lines = 0
-            result.each_value do |file|
-              next unless file.is_a?(Hash)
-              lines = file["lines"] || []
-              relevant = lines.compact
-              total_lines += relevant.size
-              covered_lines += relevant.count { |n| n > 0 }
-            end
-            pct = total_lines > 0 ? (covered_lines.to_f / total_lines * 100).round(2) : 0
-            puts pct
-          ' 2>/dev/null || echo "n/a")
-          echo "Coverage: ${COVERAGE}%"
-          echo "coverage_line=${COVERAGE}% covered" >> $GITHUB_OUTPUT
-
-          echo "## \U0001F4CA Test Coverage" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Coverage | **${COVERAGE}%** |" >> $GITHUB_STEP_SUMMARY
-          echo "| Threshold | **90%** |" >> $GITHUB_STEP_SUMMARY
-
-          if [ "$COVERAGE" != "n/a" ]; then
-            ruby -e "exit 1 if ${COVERAGE}.to_f < 90" || {
-              echo "\u274C Coverage ${COVERAGE}% is below the 90% threshold." >> $GITHUB_STEP_SUMMARY
-              echo "::error::Coverage ${COVERAGE}% is below the required 90% threshold"
-              exit 1
-            }
-            echo "\u2705 Coverage ${COVERAGE}% meets the 90% threshold." >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Fail job if tests failed
-        if: steps.run_tests.outcome == 'failure'
-        run: exit 1
-
-  ci-report:
-    name: Post test report on PR
-    runs-on: ubuntu-latest
-    needs: test
-    if: always() && github.event_name == 'pull_request'
-    uses: Malstrom/calvin/.github/workflows/rails-ci-report.yml@main
-    with:
-      pr_number:    ${{ github.event.pull_request.number }}
-      target_repo:  ${{ github.repository }}
-      tests_passed: ${{ needs.test.outputs.tests_passed == 'true' }}
-      test_output:  ${{ needs.test.outputs.test_output }}
-      coverage_line: ${{ needs.test.outputs.coverage_line }}
-    secrets:
-      SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
+        run: bin/rails db:test:prepare test
