@@ -1,25 +1,45 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 
 class PreferenceProfileTest < ActiveSupport::TestCase
-  test "valid preference profile" do
-    assert preference_profiles(:alice_prefs).valid?
+  setup do
+    @user = users(:alice)
+    @preference_profile = @user.preference_profile
   end
 
-  test "valid without travel_style" do
-    pref = preference_profiles(:alice_prefs)
-    pref.travel_style = nil
-    assert pref.valid?
+  test 'enum values' do
+    assert_equal :cool, @preference_profile.temperature_preference = 'cool'
+    assert_equal :warm, @preference_profile.temperature_preference = 'warm'
+    assert_equal :no_preference, @preference_profile.temperature_preference = 'no_preference'
+
+    assert_equal :very_little, @preference_profile.movement_preference = 'very_little'
+    assert_equal :moderate, @preference_profile.movement_preference = 'moderate'
+    assert_equal :a_lot, @preference_profile.movement_preference = 'a_lot'
+    assert_equal :as_much_as_possible, @preference_profile.movement_preference = 'as_much_as_possible'
+
+    assert_equal :morning, @preference_profile.self_chronotype = 'morning'
+    assert_equal :night, @preference_profile.self_chronotype = 'night'
+    assert_equal :depends, @preference_profile.self_chronotype = 'depends'
   end
 
-  test "valid without visual_embedding" do
-    pref = preference_profiles(:alice_prefs)
-    pref.visual_embedding = nil
-    assert pref.valid?
+  test 'validations' do
+    assert @preference_profile.update(sleep_together_importance: 1)
+    assert @preference_profile.update(sleep_together_importance: 5)
+    assert_not @preference_profile.update(sleep_together_importance: 0)
+    assert_not @preference_profile.update(sleep_together_importance: 6)
+
+    assert @preference_profile.update(rhythm_importance: 1)
+    assert @preference_profile.update(rhythm_importance: 5)
+    assert_not @preference_profile.update(rhythm_importance: 0)
+    assert_not @preference_profile.update(rhythm_importance: 6)
   end
 
-  test "belongs to user" do
-    assert_equal users(:alice), preference_profiles(:alice_prefs).user
+  test 'nil fields' do
+    assert @preference_profile.update(sleep_together_importance: nil)
+    assert @preference_profile.update(temperature_preference: nil)
+    assert @preference_profile.update(movement_preference: nil)
+    assert @preference_profile.update(rhythm_importance: nil)
+    assert @preference_profile.update(self_chronotype: nil)
   end
 end
