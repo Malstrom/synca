@@ -1,0 +1,22 @@
+name: Calvin Fix
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  calvin-fix:
+    if: github.event.label.name == 'calvin-fix'
+    uses: malstrom/calvin/.github/workflows/calvin-fix-engine.yml@main
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      pr_branch: ${{ github.event.pull_request.head.ref }}
+      target_repo: malstrom/synca
+    secrets:
+      SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
