@@ -72,6 +72,12 @@ migrations:
     WRONG:     db/migrate/TIMESTAMP_add_account_type_to_users.rb
     "[timestamp]" is a placeholder — it is NOT a valid filename and Rails will ignore the migration.
 
+  concurrent_index_rule: |
+    Any add_index with algorithm: :concurrently MUST be preceded by
+    disable_ddl_transaction! at the class level — otherwise PostgreSQL
+    raises inside the DDL transaction and the migration fails.
+    Keep concurrent indexes at the end of the migration body (no rollback on failure).
+
   format: |
     class AddExampleColumnToUsers < ActiveRecord::Migration[8.0]
       def change
