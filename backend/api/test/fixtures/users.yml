@@ -21,3 +21,9 @@ dave:
   password_digest: <%= BCrypt::Password.create('password') %>
   auth_provider: 0
   account_type: 1
+
+guest:
+  email: guest@example.com
+  password_digest: <%= BCrypt::Password.create('password') %>
+  auth_provider: 0
+  account_type: 0
