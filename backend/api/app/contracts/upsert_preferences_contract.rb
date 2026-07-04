@@ -12,6 +12,7 @@ class UpsertPreferencesContract < Dry::Validation::Contract
   end
 
   rule(preferences: :sleep_together_importance) do
+    
     next unless value
     key.failure("must be between 1 and 5") unless (1..5).cover?(value)
   end
