@@ -1,62 +1,18 @@
-## TEST CONVENTIONS (MANDATORY)
+## TESTS
 
 For every new .rb file that is NOT a test, produce the corresponding test file.
-Test files are required output, not optional.
+Tests are required output — never optional.
 
-Before writing any test:
-- Read test/test_helper.rb to know the base classes and available helpers.
-- Read test/fixtures/ to know which fixtures exist.
-- Read the relevant fixture file to know the available records.
-- Read a similar existing test to understand style and reuse helpers.
+Before writing any test, read the injected files above:
+- `.calvin/testing.yml`    — conventions, base classes, helpers, fixture catalogue, forbidden patterns
+- `test/test_helper.rb`    — real ApiTestCase definition with auth_helpers, json, post_json, put_json
+- The EXAMPLE controller test — copy its exact pattern for every controller test you write
+- The injected fixture file  — use existing records, update with new columns if needed
 
-Reuse existing helpers and fixtures.
-Create new helpers or fixture entries only if they do not already exist.
-
-MINIMUM COVERAGE:
-- At least one happy path + one error/edge path per public method.
-- Controllers: always test 401 (no token) + 422 (invalid params) + 200 (happy path).
-- Do not re-test what is already covered in the corresponding contract test.
-
-## CONTROLLER TESTS (MANDATORY)
-
-Controller tests MUST inherit from ApiTestCase, NOT from ActionDispatch::IntegrationTest.
-ApiTestCase is defined in test/test_helper.rb and provides these helpers:
-
-  def auth_headers(user)
-    token = JwtService.access_token(user)
-    { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
-  end
-
-  def json
-    JSON.parse(response.body, symbolize_names: true)
-  end
-
-NEVER use @user.jwt_token — that method does not exist.
-Always use auth_headers(@user) for authenticated requests.
-
-Example:
-  class Api::V1::MyControllerTest < ApiTestCase
-    setup do
-      @user = users(:alice)
-      @headers = auth_headers(@user)
-    end
-
-    test '200 success' do
-      get api_v1_my_path, headers: @headers
-      assert_response :success
-    end
-
-    test '401 unauthorized' do
-      get api_v1_my_path
-      assert_response :unauthorized
-    end
-  end
-
-## FIXTURES (MANDATORY)
-
-If your implementation adds columns to an existing model or creates a new model,
-you MUST output the updated fixture file as a FILE: block.
-
-- Add the new fields to every existing fixture entry with realistic values.
-- The fixture file path is test/fixtures/<table_name>.yml.
-- Do not leave new columns absent from fixtures — missing values cause test failures.
+Key rules (all derived from testing.yml above — do not invent alternatives):
+- Controller tests inherit from `ApiTestCase` — never ActionDispatch::IntegrationTest
+- Use `auth_headers(@user)` — never @user.jwt, never JwtService.encode directly
+- Use `post_json` / `put_json` for requests with a body
+- Minimum coverage: 401 (no token) + 422 (invalid params) + 200 (happy path)
+- If you add or modify model columns, output the updated fixture file as a FILE: block
+- Enum columns in fixtures must use the integer value (e.g. temperature_preference: 0 for :cool)
