@@ -103,7 +103,16 @@ helpers:
   auth_headers: |
     auth_headers(user) → { 'Authorization' => 'Bearer <token>', 'Content-Type' => 'application/json' }
     Internally calls JwtService.access_token(user). Never hardcode tokens.
-    ALWAYS use auth_headers(users(:alice)) — NEVER users(:alice).jwt (no such method).
+    ALWAYS use auth_headers(users(:alice)) — NEVER users(:alice).jwt or auth_headers_for(users(:alice)).
+
+    Correct usage in a controller test:
+      post some_path,
+           params: { foo: "bar" },
+           headers: auth_headers(users(:alice))
+
+    For guest user tests:
+      headers: auth_headers(users(:guest))
+
   post_json:   "post_json(path, params:, headers:)"
   put_json:    "put_json(path, params:, headers:)"
 
@@ -127,6 +136,9 @@ forbidden:
   - Calling MatchScoringFacade or MlEventLogger in tests without stubbing
     (both make external calls / write event log; stub them on the instance)
   - user.jwt / users(:name).jwt — User model has no jwt method; use auth_headers(user)
+  - auth_headers_for(user) — method does not exist; the correct name is auth_headers(user)
+  - assign_attributes(attrs).save — assign_attributes returns nil in Rails, not self;
+    always call assign_attributes and save on separate lines
 
 # ─── What to always test per layer ───────────────────────────────────────────
 always_test:
