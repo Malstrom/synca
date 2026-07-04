@@ -21,4 +21,8 @@ class ProfileTest < ActiveSupport::TestCase
     profile.trust_score = 100
     assert profile.valid?
   end
+
+  test "intentional failure to smoke-test CI report" do
+    assert false, "questo test fallisce di proposito — smoke test CI report"
+  end
 end
