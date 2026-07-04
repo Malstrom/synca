@@ -115,7 +115,14 @@ jobs:
         run: bin/rails db:create db:migrate
 
       - name: Run tests
-        run: bin/rails test
+        run: bin/rails test 2>&1 | tee /tmp/test-output.txt; exit ${PIPESTATUS[0]}
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: /tmp/test-output.txt
 
       - name: Check coverage threshold (≥ 90%)
         run: |
@@ -146,3 +153,60 @@ jobs:
             exit 1
           }
           echo "✅ Coverage ${COVERAGE}% meets the 90% threshold." >> $GITHUB_STEP_SUMMARY
+
+  pr-report:
+    name: PR Test Report
+    runs-on: ubuntu-latest
+    needs: test
+    if: always() && github.event_name == 'pull_request'
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Download test output
+        uses: actions/download-artifact@v4
+        with:
+          name: test-output
+          path: /tmp
+
+      - name: Post failing tests as PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('/tmp/test-output.txt', 'utf8');
+
+            const jobConclusion = '${{ needs.test.result }}';
+
+            if (jobConclusion === 'success') {
+              // All tests passed — post a green comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: '✅ **All tests passed!**'
+              });
+              return;
+            }
+
+            // Extract failing test lines (lines starting with FAIL or ERROR)
+            const failLines = output
+              .split('\n')
+              .filter(l => /^\s*(FAIL|ERROR|Failure:|Error:)/.test(l))
+              .join('\n');
+
+            const body = [
+              '## ❌ Failing Tests',
+              '',
+              '```',
+              failLines || output.slice(-3000),
+              '```'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
