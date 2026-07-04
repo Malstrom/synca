@@ -176,11 +176,9 @@ jobs:
           script: |
             const fs = require('fs');
             const output = fs.readFileSync('/tmp/test-output.txt', 'utf8');
-
             const jobConclusion = '${{ needs.test.result }}';
 
             if (jobConclusion === 'success') {
-              // All tests passed — post a green comment
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -190,17 +188,38 @@ jobs:
               return;
             }
 
-            // Extract failing test lines (lines starting with FAIL or ERROR)
-            const failLines = output
-              .split('\n')
-              .filter(l => /^\s*(FAIL|ERROR|Failure:|Error:)/.test(l))
-              .join('\n');
+            // Minitest failure blocks: numbered entries like "  1) Failure:" or "  1) Error:"
+            const blocks = [];
+            const lines = output.split('\n');
+            let inBlock = false;
+            let current = [];
+
+            for (const line of lines) {
+              if (/^\s+\d+\) (Failure|Error):/.test(line)) {
+                if (current.length) blocks.push(current.join('\n'));
+                current = [line];
+                inBlock = true;
+              } else if (inBlock) {
+                if (/^\d+ runs,/.test(line)) {
+                  if (current.length) blocks.push(current.join('\n'));
+                  current = [];
+                  inBlock = false;
+                } else {
+                  current.push(line);
+                }
+              }
+            }
+            if (current.length) blocks.push(current.join('\n'));
+
+            const failSection = blocks.length
+              ? blocks.join('\n\n---\n\n')
+              : output.slice(-3000);
 
             const body = [
               '## ❌ Failing Tests',
               '',
               '```',
-              failLines || output.slice(-3000),
+              failSection,
               '```'
             ].join('\n');
 
