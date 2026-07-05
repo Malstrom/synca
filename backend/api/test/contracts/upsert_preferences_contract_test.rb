@@ -1,58 +1,60 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 
 class UpsertPreferencesContractTest < ActiveSupport::TestCase
-  test "valid input" do
+  test 'valid input' do
     result = UpsertPreferencesContract.new.call(
       preferences: {
         sleep_together_importance: 3,
-        temperature_preference: "cool",
-        movement_preference: "moderate",
+        temperature_preference: 'cool',
+        movement_preference: 'moderate',
         rhythm_importance: 4,
-        self_chronotype: "night"
+        self_chronotype: 'night'
       }
     )
     assert result.success?
   end
 
-  test "invalid sleep_together_importance" do
+  test 'invalid sleep_together_importance' do
     result = UpsertPreferencesContract.new.call(
       preferences: { sleep_together_importance: 6 }
     )
     assert result.failure?
-    assert_includes result.errors.to_h[:preferences][:sleep_together_importance], "must be one of: 1 - 5"
+    assert_includes result.errors.to_h[:preferences][:sleep_together_importance], 'must be one of: 1 - 5'
   end
 
-  test "invalid temperature_preference" do
+  test 'invalid temperature_preference' do
     result = UpsertPreferencesContract.new.call(
-      preferences: { temperature_preference: "invalid" }
+      preferences: { temperature_preference: 'invalid' }
     )
     assert result.failure?
-    assert_includes result.errors.to_h[:preferences][:temperature_preference], "must be one of: cool, warm, no_preference"
+    assert_includes result.errors.to_h[:preferences][:temperature_preference],
+                    'must be one of: cool, warm, no_preference'
   end
 
-  test "invalid movement_preference" do
+  test 'invalid movement_preference' do
     result = UpsertPreferencesContract.new.call(
-      preferences: { movement_preference: "invalid" }
+      preferences: { movement_preference: 'invalid' }
     )
     assert result.failure?
-    assert_includes result.errors.to_h[:preferences][:movement_preference], "must be one of: very_little, moderate, a_lot, as_much_as_possible"
+    assert_includes result.errors.to_h[:preferences][:movement_preference],
+                    'must be one of: very_little, moderate, a_lot, as_much_as_possible'
   end
 
-  test "invalid rhythm_importance" do
+  test 'invalid rhythm_importance' do
     result = UpsertPreferencesContract.new.call(
       preferences: { rhythm_importance: 0 }
     )
     assert result.failure?
-    assert_includes result.errors.to_h[:preferences][:rhythm_importance], "must be one of: 1 - 5"
+    assert_includes result.errors.to_h[:preferences][:rhythm_importance], 'must be one of: 1 - 5'
   end
 
-  test "invalid self_chronotype" do
+  test 'invalid self_chronotype' do
     result = UpsertPreferencesContract.new.call(
-      preferences: { self_chronotype: "invalid" }
+      preferences: { self_chronotype: 'invalid' }
     )
     assert result.failure?
-    assert_includes result.errors.to_h[:preferences][:self_chronotype], "must be one of: morning, night, depends"
+    assert_includes result.errors.to_h[:preferences][:self_chronotype], 'must be one of: morning, night, depends'
   end
 end
