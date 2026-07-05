@@ -1,7 +1,17 @@
 alice_prefs:
   user: alice
-  travel_style: 2
+  travel_style: balanced
+  sleep_together_importance: null
+  temperature_preference: null
+  movement_preference: null
+  rhythm_importance: null
+  self_chronotype: null
 
 bob_prefs:
   user: bob
-  travel_style: 1
+  travel_style: explorer
+  sleep_together_importance: null
+  temperature_preference: null
+  movement_preference: null
+  rhythm_importance: null
+  self_chronotype: null
