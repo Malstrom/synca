@@ -16,7 +16,7 @@ folder_structure:
   models: app/models/
   tests: test/
 
-# ─── ZEITWERK ────────────────────────────────────────────────────────────────────────
+# ─── ZEITWERK ─────────────────────────────────────────────────────────────────────────────────
 zeitwerk:
   autoload_roots:
     - path: app/contracts
@@ -39,7 +39,7 @@ zeitwerk:
     Every other autoload root in this app is flat — the class name is derived from
     the filename alone, not from the folder path.
 
-# ─── MIGRATIONS ──────────────────────────────────────────────────────────────────────
+# ─── MIGRATIONS ───────────────────────────────────────────────────────────────────────────────
 migrations:
   rule: |
     Generate a migration if and only if the issue contains a "## DB Changes" section.
@@ -86,7 +86,7 @@ migrations:
       end
     end
 
-# ─── TESTING MANDATE ─────────────────────────────────────────────────────────────────
+# ─── TESTING MANDATE ─────────────────────────────────────────────────────────────────────────
 testing_mandate: |
   EVERY file of production code you create or modify MUST have a corresponding test file
   in the same commit. No exceptions.
@@ -117,7 +117,7 @@ testing_mandate: |
     - 401 on missing Authorization header (unless skip_before_action is used — then omit 401 tests)
     - 422 on missing or invalid params
 
-# ─── API RESPONSE ───────────────────────────────────────────────────────────────────
+# ─── API RESPONSE ────────────────────────────────────────────────────────────────────────────
 api_response:
   concern: app/controllers/concerns/api_response.rb
   helpers:
@@ -150,7 +150,7 @@ api_response:
     - field: in errors identifies the offending parameter name as a string
     - never call render json: directly — always go through ApiResponse helpers
 
-# ─── CONTROLLERS ───────────────────────────────────────────────────────────────────
+# ─── CONTROLLERS ────────────────────────────────────────────────────────────────────────────
 controllers:
   rules:
     - all under Api::V1, mounted at /api/v1/
@@ -192,7 +192,7 @@ controllers:
       end
     end
 
-# ─── SERIALIZERS ───────────────────────────────────────────────────────────────────
+# ─── SERIALIZERS ────────────────────────────────────────────────────────────────────────────
 serializers:
   location: app/serializers/
   naming: ResourceSerializer (e.g. UserSerializer, MatchSerializer)
@@ -218,11 +218,19 @@ serializers:
     - nil associations return nil, never raise
     - no inline hashes in controllers
     - only generate a serializer if the controller actually instantiates it
+    - do NOT define explicit attribute methods that simply return resource.<attr> —
+      declare them with `attributes :field` instead; Alba handles the delegation automatically
 
-# ─── CONTRACTS ───────────────────────────────────────────────────────────────────
+# ─── CONTRACTS ────────────────────────────────────────────────────────────────────────────
 contracts:
   location: app/contracts/
   naming: OperationContract (e.g. CreateSparkSessionContract, RegisterUserContract)
+
+  naming_rules: |
+    Use action verbs: Create, Update, Save, Validate.
+    NEVER use: Upsert, Handle, Process, Manage.
+    CORRECT: SavePreferencesContract, UpdateProfileContract
+    WRONG:   UpsertPreferencesContract
 
   canonical_pattern: |
     # frozen_string_literal: true
@@ -252,13 +260,22 @@ contracts:
   rules:
     - params block always nests fields under the resource key (health_summary:, spark_session:, etc.)
     - date fields declared as :date — dry-types handles string→date coercion automatically
-    - enum validations belong in rule blocks with a constant, not inline strings
+    - enum validations belong in rule blocks with a CONSTANT array, not inline strings
+    - one rule per field using rule(resource: :field) — NEVER a single rule(:resource) block
+      with multiple if-statements inside
     - params.require/permit is NOT used in controllers that have a contract
 
-# ─── SERVICE OBJECTS ────────────────────────────────────────────────────────────────
+# ─── SERVICE OBJECTS ─────────────────────────────────────────────────────────────────────────
 service_objects:
   gem: dry-monads
   entry_point: "ServiceName.call(args) — always .call, never .new.call from outside"
+
+  naming_rules: |
+    Use action verbs: Create, Update, Save, Validate.
+    NEVER use: Upsert, Handle, Process, Manage.
+    CORRECT: SavePreferencesService, UpdateProfileService
+    WRONG:   UpsertPreferencesService
+
   result_pattern: |
     Success(value)                        — happy path, value is the primary record/result
     Failure([:error_code, message])       — business failure, error_code is snake_case string
@@ -343,7 +360,7 @@ service_objects:
     - never call CompatibilityService directly from a job — go through MatchScoringFacade when it exists
     - do NOT generate calls to MatchScoringFacade or MlEventLogger until they exist in app/services/
 
-# ─── MODELS ───────────────────────────────────────────────────────────────────
+# ─── MODELS ─────────────────────────────────────────────────────────────────────────────────
 models:
   rules:
     - all inherit from ApplicationRecord
@@ -353,6 +370,11 @@ models:
     - enums use modern syntax only: enum :field, { value: integer }
     - before_save callbacks handle normalization (e.g. normalize_email → downcase)
     - custom validations use validate :method_name
+    - NEVER add validates for fields already validated in a contract.
+      Contracts are the single source of validation truth for API inputs.
+      This means: no `validates :field, numericality:` or `validates :field, inclusion:`
+      when that field is covered by a dry-validation rule in a contract.
+      Enum declarations (enum :field, {...}) are correct and required — they are not validations.
 
   auth_providers: |
     User.auth_provider enum has FOUR values (not three):
@@ -369,7 +391,7 @@ models:
     scope :active, -> { where(deleted_at: nil) }
     def soft_delete! = update!(deleted_at: Time.current)
 
-# ─── PATTERNS ───────────────────────────────────────────────────────────────────────
+# ─── PATTERNS ────────────────────────────────────────────────────────────────────────────────
 patterns:
   - all endpoints under /api/v1/ with Bearer JWT auth
   - background jobs: inherit ApplicationJob < ActiveJob::Base, enqueued via SolidQueue
@@ -389,7 +411,7 @@ pagination_defaults:
     pagy, records = pagy(scope, items: params.fetch(:per_page, 20).to_i.clamp(1, 100))
     render_success({ resource_name => serialize(records), meta: { total_count: pagy.count } })
 
-# ─── TESTING ─────────────────────────────────────────────────────────────────────────
+# ─── TESTING ─────────────────────────────────────────────────────────────────────────────────
 testing:
   monad_assertions: |
     # Use assert_pattern for monad result matching in Minitest:
@@ -398,7 +420,7 @@ testing:
     assert_pattern { result => Failure[:validation_failed, _] }        # specific failure code
     # Do NOT use result.success? / result.failure? booleans in tests
 
-# ─── DO NOT TOUCH ───────────────────────────────────────────────────────────────────────
+# ─── DO NOT TOUCH ───────────────────────────────────────────────────────────────────────────────
 do_not_touch:
   score_thresholds:
     what: Numeric threshold values for match scoring and circle eligibility
