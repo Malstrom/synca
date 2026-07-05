@@ -35,6 +35,10 @@ Rails.application.routes.draw do
           post :simulate
         end
       end
+
+      namespace :signals do
+        post :preferences, to: 'signals/preferences#create'
+      end
     end
   end
 end
