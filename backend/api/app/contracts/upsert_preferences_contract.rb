@@ -14,7 +14,7 @@ class UpsertPreferencesContract < ApplicationContract
   rule(:preferences) do
     if values[:preferences][:sleep_together_importance] &&
        (values[:preferences][:sleep_together_importance] < 1 || values[:preferences][:sleep_together_importance] > 5)
-      key.failure("must be between 1 and 5")
+      key.failure('must be between 1 and 5')
     end
 
     if values[:preferences][:temperature_preference] &&
@@ -29,7 +29,7 @@ class UpsertPreferencesContract < ApplicationContract
 
     if values[:preferences][:rhythm_importance] &&
        (values[:preferences][:rhythm_importance] < 1 || values[:preferences][:rhythm_importance] > 5)
-      key.failure("must be between 1 and 5")
+      key.failure('must be between 1 and 5')
     end
 
     if values[:preferences][:self_chronotype] &&

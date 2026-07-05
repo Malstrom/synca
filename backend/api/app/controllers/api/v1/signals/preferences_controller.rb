@@ -15,10 +15,12 @@ module Api
             if service_result.success?
               render json: PreferencesSerializer.new(service_result.value!).serialize, status: :ok
             else
-              render json: { error: { code: service_result.failure.first, message: service_result.failure.last } }, status: :unprocessable_entity
+              render json: { error: { code: service_result.failure.first, message: service_result.failure.last } },
+                     status: :unprocessable_entity
             end
           else
-            render json: { error: { code: :validation_failed, message: result.errors.to_h } }, status: :unprocessable_entity
+            render json: { error: { code: :validation_failed, message: result.errors.to_h } },
+                   status: :unprocessable_entity
           end
         end
       end
