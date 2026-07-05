@@ -16,34 +16,34 @@ folder_structure:
   models: app/models/
   tests: test/
 
-# ─── ZEITWERK ─────────────────────────────────────────────────────────────────────────────────
+# --- ZEITWERK ---
 zeitwerk:
   autoload_roots:
     - path: app/contracts
       rule: |
         Top-level constant only.
-        File app/contracts/foo_contract.rb → class FooContract.
+        File app/contracts/foo_contract.rb -> class FooContract.
         NEVER wrap in a module namespace (Api::, V1::, etc.).
     - path: app/services
       rule: |
         Top-level constant only.
-        File app/services/foo_service.rb → class FooService.
+        File app/services/foo_service.rb -> class FooService.
         NEVER wrap in a module namespace.
     - path: app/serializers
       rule: |
         Top-level constant only.
-        File app/serializers/foo_serializer.rb → class FooSerializer.
+        File app/serializers/foo_serializer.rb -> class FooSerializer.
         NEVER wrap in a module namespace.
   note: |
     Only app/controllers/ and app/models/ respect namespace via directory structure.
-    Every other autoload root in this app is flat — the class name is derived from
+    Every other autoload root in this app is flat -- the class name is derived from
     the filename alone, not from the folder path.
 
-# ─── MIGRATIONS ───────────────────────────────────────────────────────────────────────────────
+# --- MIGRATIONS ---
 migrations:
   rule: |
     Generate a migration if and only if the issue contains a "## DB Changes" section.
-    When that section is present, a migration is MANDATORY — do not skip it.
+    When that section is present, a migration is MANDATORY -- do not skip it.
     When that section is absent, do NOT generate any migration.
 
   triggers:
@@ -70,11 +70,11 @@ migrations:
     CORRECT:   db/migrate/20260702154200_add_account_type_to_users.rb
     WRONG:     db/migrate/[timestamp]_add_account_type_to_users.rb
     WRONG:     db/migrate/TIMESTAMP_add_account_type_to_users.rb
-    "[timestamp]" is a placeholder — it is NOT a valid filename and Rails will ignore the migration.
+    "[timestamp]" is a placeholder -- it is NOT a valid filename and Rails will ignore the migration.
 
   concurrent_index_rule: |
     Any add_index with algorithm: :concurrently MUST be preceded by
-    disable_ddl_transaction! at the class level — otherwise PostgreSQL
+    disable_ddl_transaction! at the class level -- otherwise PostgreSQL
     raises inside the DDL transaction and the migration fails.
     Keep concurrent indexes at the end of the migration body (no rollback on failure).
 
@@ -86,49 +86,49 @@ migrations:
       end
     end
 
-# ─── TESTING MANDATE ─────────────────────────────────────────────────────────────────────────
+# --- TESTING MANDATE ---
 testing_mandate: |
   EVERY file of production code you create or modify MUST have a corresponding test file
   in the same commit. No exceptions.
 
   Mapping rules:
     app/controllers/api/v1/auth/guest_registrations_controller.rb
-      → test/controllers/api/v1/auth/guest_registrations_controller_test.rb
+      -> test/controllers/api/v1/auth/guest_registrations_controller_test.rb
 
     app/services/example_service.rb
-      → test/services/example_service_test.rb
+      -> test/services/example_service_test.rb
 
     app/models/user.rb (if modified)
-      → test/models/user_test.rb (add new test cases — do not delete existing ones)
+      -> test/models/user_test.rb (add new test cases -- do not delete existing ones)
 
     app/contracts/example_contract.rb
-      → test/contracts/example_contract_test.rb
+      -> test/contracts/example_contract_test.rb
 
     app/serializers/example_serializer.rb
-      → test/serializers/example_serializer_test.rb
+      -> test/serializers/example_serializer_test.rb
 
-  What to test per layer is defined in testing.yml → always_test.
-  Use fixtures from testing.yml → fixture_catalogue. Never invent new fixture names.
+  What to test per layer is defined in testing.yml -> always_test.
+  Use fixtures from testing.yml -> fixture_catalogue. Never invent new fixture names.
   Test class inherits from ApiTestCase for controllers, ActiveSupport::TestCase for everything else.
-  Never require 'minitest/mock' — see testing.yml → forbidden.
+  Never require 'minitest/mock' -- see testing.yml -> forbidden.
 
   If you create a controller, you MUST test:
     - the happy path (correct status + response shape)
-    - 401 on missing Authorization header (unless skip_before_action is used — then omit 401 tests)
+    - 401 on missing Authorization header (unless skip_before_action is used -- then omit 401 tests)
     - 422 on missing or invalid params
 
-# ─── API RESPONSE ────────────────────────────────────────────────────────────────────────────
+# --- API RESPONSE ---
 api_response:
   concern: app/controllers/concerns/api_response.rb
   helpers:
-    render_success:           "render_success(data, status: :ok)       → 200 + raw data hash"
-    render_created:           "render_created(data)                    → 201 + raw data hash"
-    render_error:             "render_error(code:, message:, field:)   → 422 by default; field is optional"
-    render_unauthorized:      "render_unauthorized                     → 401 {error: {code: 'unauthorized', message: ...}}"
-    render_not_found:         "render_not_found('SparkSession')        → 404 {error: {code: 'not_found', message: 'SparkSession not found'}}"
-    render_validation_errors: "render_validation_errors(record)        → 422 using record.errors.first"
-    render_contract_errors:   "render_contract_errors(result)          → 422 using dry-validation result.errors"
-    auth_response:            "auth_response(user)                     → {access_token:, refresh_token:, user: {id:, email:}}"
+    render_success:           "render_success(data, status: :ok)       -> 200 + raw data hash"
+    render_created:           "render_created(data)                    -> 201 + raw data hash"
+    render_error:             "render_error(code:, message:, field:)   -> 422 by default; field is optional"
+    render_unauthorized:      "render_unauthorized                     -> 401 {error: {code: 'unauthorized', message: ...}}"
+    render_not_found:         "render_not_found('SparkSession')        -> 404 {error: {code: 'not_found', message: 'SparkSession not found'}}"
+    render_validation_errors: "render_validation_errors(record)        -> 422 using record.errors.first"
+    render_contract_errors:   "render_contract_errors(result)          -> 422 using dry-validation result.errors"
+    auth_response:            "auth_response(user)                     -> {access_token:, refresh_token:, user: {id:, email:}}"
 
   json_shapes: |
     # Success:
@@ -136,7 +136,7 @@ api_response:
 
     # Error:
     { "error": { "code": "validation_failed", "message": "Email can't be blank", "field": "email" } }
-    # field key is omitted when nil — do NOT include it as null
+    # field key is omitted when nil -- do NOT include it as null
 
     # Unauthorized:
     { "error": { "code": "unauthorized", "message": "Invalid or missing token" } }
@@ -148,22 +148,22 @@ api_response:
     - success payloads use the resource name as key, never a generic {data:} wrapper
     - error codes are snake_case strings (validation_failed, not_found, unauthorized)
     - field: in errors identifies the offending parameter name as a string
-    - never call render json: directly — always go through ApiResponse helpers
+    - never call render json: directly -- always go through ApiResponse helpers
 
-# ─── CONTROLLERS ────────────────────────────────────────────────────────────────────────────
+# --- CONTROLLERS ---
 controllers:
   rules:
     - all under Api::V1, mounted at /api/v1/
     - authentication via before_action :authenticate_user! in ApplicationController (inherited)
-    - no inline response hashes — use Alba serializer
+    - no inline response hashes -- use Alba serializer
     - input validation via dry-validation contract
     - public methods map to standard REST actions only (index, show, create, update, destroy)
-    - business logic delegated to service objects — never inline in controllers
+    - business logic delegated to service objects -- never inline in controllers
     - include Dry::Monads[:result] and use case/in pattern matching on service results
 
   migration_note: |
     Some existing controllers (me_controller.rb, spark_sessions_controller.rb) still use
-    params.require/permit and inline hashes — they predate the Alba + dry-validation decision.
+    params.require/permit and inline hashes -- they predate the Alba + dry-validation decision.
     NEW controllers MUST use the contract + serializer + service pattern.
     Do NOT copy the old params.require/permit pattern.
 
@@ -192,7 +192,7 @@ controllers:
       end
     end
 
-# ─── SERIALIZERS ────────────────────────────────────────────────────────────────────────────
+# --- SERIALIZERS ---
 serializers:
   location: app/serializers/
   naming: ResourceSerializer (e.g. UserSerializer, MatchSerializer)
@@ -218,10 +218,10 @@ serializers:
     - nil associations return nil, never raise
     - no inline hashes in controllers
     - only generate a serializer if the controller actually instantiates it
-    - do NOT define explicit attribute methods that simply return resource.<attr> —
+    - do NOT define explicit attribute methods that simply return resource.<attr> --
       declare them with `attributes :field` instead; Alba handles the delegation automatically
 
-# ─── CONTRACTS ────────────────────────────────────────────────────────────────────────────
+# --- CONTRACTS ---
 contracts:
   location: app/contracts/
   naming: OperationContract (e.g. CreateSparkSessionContract, RegisterUserContract)
@@ -255,20 +255,20 @@ contracts:
   usage: |
     result = HealthSummaryContract.new.call(params.to_unsafe_h)
     return render_contract_errors(result) if result.failure?
-    # result.to_h contains typed, validated attributes — pass directly to service
+    # result.to_h contains typed, validated attributes -- pass directly to service
 
   rules:
     - params block always nests fields under the resource key (health_summary:, spark_session:, etc.)
-    - date fields declared as :date — dry-types handles string→date coercion automatically
+    - date fields declared as :date -- dry-types handles string->date coercion automatically
     - enum validations belong in rule blocks with a CONSTANT array, not inline strings
-    - one rule per field using rule(resource: :field) — NEVER a single rule(:resource) block
+    - one rule per field using rule(resource: :field) -- NEVER a single rule(:resource) block
       with multiple if-statements inside
     - params.require/permit is NOT used in controllers that have a contract
 
-# ─── SERVICE OBJECTS ─────────────────────────────────────────────────────────────────────────
+# --- SERVICE OBJECTS ---
 service_objects:
   gem: dry-monads
-  entry_point: "ServiceName.call(args) — always .call, never .new.call from outside"
+  entry_point: "ServiceName.call(args) -- always .call, never .new.call from outside"
 
   naming_rules: |
     Use action verbs: Create, Update, Save, Validate.
@@ -277,9 +277,10 @@ service_objects:
     WRONG:   UpsertPreferencesService
 
   result_pattern: |
-    Success(value)                        — happy path, value is the primary record/result
-    Failure([:error_code, message])       — business failure, error_code is snake_case string
+    Success(value)                        -- happy path, value is the primary record/result
+    Failure([:error_code, message])       -- business failure, error_code is snake_case string
     include Dry::Monads[:result] in the service class
+
   controller_pattern: |
     include Dry::Monads[:result] in the controller
     case ServiceName.call(...)
@@ -287,10 +288,12 @@ service_objects:
     in Failure[:validation_failed, msg]   then render_error(code: "validation_failed", message: msg)
     in Failure[:not_found, msg]           then render_not_found(msg)
     end
+
   pure_services_note: |
     Services that never fail on business logic (e.g. CompatibilityService, RewardEngine)
-    keep plain Data.define return values — do NOT wrap in Success/Failure.
+    keep plain Data.define return values -- do NOT wrap in Success/Failure.
     Reserve Success/Failure for services that have meaningful failure paths.
+
   location: app/services/
 
   canonical_pattern: |
@@ -323,64 +326,64 @@ service_objects:
       signature: "CompatibilityService.call(first_health_summary, second_health_summary)"
       result: "Data.define(:total, :sleep, :activity, :lifestyle, :preferences)"
       constants: WEIGHT_SLEEP, WEIGHT_ACTIVITY, WEIGHT_LIFESTYLE, WEIGHT_PREFERENCES
-      note: Pure calculation service — returns Data.define, not Success/Failure. NEVER call directly from a job — always go through MatchScoringFacade
+      note: Pure calculation service -- returns Data.define, not Success/Failure. NEVER call directly from a job -- always go through MatchScoringFacade
 
     JwtService:
       file: app/services/jwt_service.rb
       signatures:
-        - "JwtService.access_token(user)  → String"
-        - "JwtService.refresh_token(user) → String"
-        - "JwtService.decode(token)       → { user_id: Integer } or raises JWT::DecodeError"
+        - "JwtService.access_token(user)  -> String"
+        - "JwtService.refresh_token(user) -> String"
+        - "JwtService.decode(token)       -> { user_id: Integer } or raises JWT::DecodeError"
       note: called in ApplicationController#authenticate_user! and auth controllers
 
     RewardEngine:
       file: app/services/reward_engine.rb
-      note: Pure side-effect service — issues SparkReward records post SparkSession completion. Returns nil, not Success/Failure.
+      note: Pure side-effect service -- issues SparkReward records post SparkSession completion. Returns nil, not Success/Failure.
 
     MatchScoringFacade:
-      status: NOT YET IMPLEMENTED (V2 — do not generate stubs or calls to it)
-      intended_signature: "MatchScoringFacade.call(match) → Result"
+      status: NOT YET IMPLEMENTED (V2 -- do not generate stubs or calls to it)
+      intended_signature: "MatchScoringFacade.call(match) -> Result"
       note: |
         Referenced in conventions as the required entrypoint for background jobs.
         When implemented, jobs must call this, never CompatibilityService directly.
         ML_SCORING_ENABLED env var guards whether the ML path is active (default: false).
 
     MlEventLogger:
-      status: NOT YET IMPLEMENTED (V2 — do not generate stubs or calls to it)
-      intended_signature: "MlEventLogger.call(event_type:, user_id:, payload:) → nil"
+      status: NOT YET IMPLEMENTED (V2 -- do not generate stubs or calls to it)
+      intended_signature: "MlEventLogger.call(event_type:, user_id:, payload:) -> nil"
       intended_behavior: |
-        Must never raise — wraps all logic in rescue StandardError.
+        Must never raise -- wraps all logic in rescue StandardError.
         Call at every interaction point in hot paths (match scoring, spark completion).
         When implemented, stub in tests via define_singleton_method on the instance.
 
   rules:
     - always include Dry::Monads[:result] in service class
-    - services never call render — always return Success/Failure
+    - services never call render -- always return Success/Failure
     - pure calculation or side-effect services may return plain Data.define or nil
-    - never call CompatibilityService directly from a job — go through MatchScoringFacade when it exists
+    - never call CompatibilityService directly from a job -- go through MatchScoringFacade when it exists
     - do NOT generate calls to MatchScoringFacade or MlEventLogger until they exist in app/services/
 
-# ─── MODELS ─────────────────────────────────────────────────────────────────────────────────
+# --- MODELS ---
 models:
   rules:
     - all inherit from ApplicationRecord
     - all files have # frozen_string_literal: true as first line
-    - all FK columns point to users.id — NEVER profiles.id
+    - all FK columns point to users.id -- NEVER profiles.id
     - soft delete: NOT YET IN DB (see schema.yml implementation_gaps). When added: deleted_at column + scope
     - enums use modern syntax only: enum :field, { value: integer }
-    - before_save callbacks handle normalization (e.g. normalize_email → downcase)
+    - before_save callbacks handle normalization (e.g. normalize_email -> downcase)
     - custom validations use validate :method_name
     - NEVER add validates for fields already validated in a contract.
       Contracts are the single source of validation truth for API inputs.
       This means: no `validates :field, numericality:` or `validates :field, inclusion:`
       when that field is covered by a dry-validation rule in a contract.
-      Enum declarations (enum :field, {...}) are correct and required — they are not validations.
+      Enum declarations (enum :field, {...}) are correct and required -- they are not validations.
 
   auth_providers: |
     User.auth_provider enum has FOUR values (not three):
       email: 0, apple: 1, google: 2, telegram: 3
     The schema shows auth_provider default: 0. telegram (3) is defined in the model
-    but has no production flow yet — do NOT generate telegram auth controllers.
+    but has no production flow yet -- do NOT generate telegram auth controllers.
 
   soft_delete_pattern: |
     # Not active yet. When implementing:
@@ -391,7 +394,7 @@ models:
     scope :active, -> { where(deleted_at: nil) }
     def soft_delete! = update!(deleted_at: Time.current)
 
-# ─── PATTERNS ────────────────────────────────────────────────────────────────────────────────
+# --- PATTERNS ---
 patterns:
   - all endpoints under /api/v1/ with Bearer JWT auth
   - background jobs: inherit ApplicationJob < ActiveJob::Base, enqueued via SolidQueue
@@ -411,7 +414,7 @@ pagination_defaults:
     pagy, records = pagy(scope, items: params.fetch(:per_page, 20).to_i.clamp(1, 100))
     render_success({ resource_name => serialize(records), meta: { total_count: pagy.count } })
 
-# ─── TESTING ─────────────────────────────────────────────────────────────────────────────────
+# --- TESTING ---
 testing:
   monad_assertions: |
     # Use assert_pattern for monad result matching in Minitest:
@@ -420,7 +423,7 @@ testing:
     assert_pattern { result => Failure[:validation_failed, _] }        # specific failure code
     # Do NOT use result.success? / result.failure? booleans in tests
 
-# ─── DO NOT TOUCH ───────────────────────────────────────────────────────────────────────────────
+# --- DO NOT TOUCH ---
 do_not_touch:
   score_thresholds:
     what: Numeric threshold values for match scoring and circle eligibility
@@ -434,7 +437,7 @@ do_not_touch:
   ml_event_logger_rescue:
     what: The rescue block inside MlEventLogger (when implemented) must never raise
     why: MlEventLogger is called in hot paths. An exception here would break the entire request.
-    current_status: MlEventLogger does not exist yet — do not generate it unless the issue targets V2.
+    current_status: MlEventLogger does not exist yet -- do not generate it unless the issue targets V2.
 
   ml_scoring_enabled_flag:
     what: ML_SCORING_ENABLED defaults to false in all environments
