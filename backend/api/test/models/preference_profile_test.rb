@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require 'test_helper'
 
 class PreferenceProfileTest < ActiveSupport::TestCase
-  test "enum values" do
+  test 'enum values' do
     profile = PreferenceProfile.new
 
     assert_equal %w[cool warm no_preference], PreferenceProfile.temperature_preferences.keys
@@ -20,7 +20,7 @@ class PreferenceProfileTest < ActiveSupport::TestCase
     assert_equal :night, profile.self_chronotype
   end
 
-  test "validations" do
+  test 'validations' do
     profile = PreferenceProfile.new
 
     profile.sleep_together_importance = 3
@@ -28,17 +28,17 @@ class PreferenceProfileTest < ActiveSupport::TestCase
 
     profile.sleep_together_importance = 6
     assert_not profile.valid?
-    assert_includes profile.errors[:sleep_together_importance], "must be between 1 and 5"
+    assert_includes profile.errors[:sleep_together_importance], 'must be between 1 and 5'
 
     profile.rhythm_importance = 4
     assert profile.valid?
 
     profile.rhythm_importance = 0
     assert_not profile.valid?
-    assert_includes profile.errors[:rhythm_importance], "must be between 1 and 5"
+    assert_includes profile.errors[:rhythm_importance], 'must be between 1 and 5'
   end
 
-  test "nil fields" do
+  test 'nil fields' do
     profile = PreferenceProfile.new
 
     assert_nil profile.sleep_together_importance
