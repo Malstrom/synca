@@ -13,6 +13,10 @@ Rails.application.routes.draw do
       put  "me/profile",        to: "profile#update"
       put  "me/health_summary", to: "health_summary#update"
 
+      namespace :signals do
+        post :preferences, to: "signals/preferences#create"
+      end
+
       namespace :auth do
         post "register", to: "registrations#create"
         post "login",    to: "sessions#create"
