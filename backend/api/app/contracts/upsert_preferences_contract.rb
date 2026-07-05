@@ -17,26 +17,33 @@ class UpsertPreferencesContract < Dry::Validation::Contract
 
   rule(preferences: :sleep_together_importance) do
     next unless value
+
     key.failure('must be between 1 and 5') unless value.between?(1, 5)
   end
 
   rule(preferences: :temperature_preference) do
     next unless value
+
     key.failure('must be cool, warm or no_preference') unless VALID_TEMPERATURE_PREFERENCES.include?(value)
   end
 
   rule(preferences: :movement_preference) do
     next unless value
-    key.failure('must be very_little, moderate, a_lot or as_much_as_possible') unless VALID_MOVEMENT_PREFERENCES.include?(value)
+
+    unless VALID_MOVEMENT_PREFERENCES.include?(value)
+      key.failure('must be very_little, moderate, a_lot or as_much_as_possible')
+    end
   end
 
   rule(preferences: :rhythm_importance) do
     next unless value
+
     key.failure('must be between 1 and 5') unless value.between?(1, 5)
   end
 
   rule(preferences: :self_chronotype) do
     next unless value
+
     key.failure('must be morning, night or depends') unless VALID_SELF_CHRONOTYPES.include?(value)
   end
 end
