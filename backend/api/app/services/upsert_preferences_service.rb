@@ -20,7 +20,7 @@ class UpsertPreferencesService
     if preference_profile.save
       Success(preference_profile)
     else
-      Failure([:validation_failed, preference_profile.errors.full_messages.join(", ")])
+      Failure([:validation_failed, preference_profile.errors.full_messages.join(', ')])
     end
   end
 

@@ -12,8 +12,6 @@ class UpsertPreferencesContract < Dry::Validation::Contract
   end
 
   rule(:preferences) do
-    if values[:preferences].empty?
-      key.failure("must contain at least one preference")
-    end
+    key.failure('must contain at least one preference') if values[:preferences].empty?
   end
 end
