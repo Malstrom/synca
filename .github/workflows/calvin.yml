@@ -22,19 +22,19 @@ jobs:
       SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
       MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
 
-  # ── calvin-auto-body: usa title+body issue → Codestral → PR ───────────
+  # ── calvin-auto-body: title+body issue → ExploreFlow → PR ────────────
   calvin-auto-body:
     if: github.event.label.name == 'calvin-auto-body'
     uses: malstrom/calvin/.github/workflows/calvin-engine.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
       target_repo: malstrom/synca
-      auto_mode: false
+      auto_mode: true
     secrets:
       SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
       MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
 
-  # ── calvin-auto: esplora repo → Codestral → PR ──────────────────────
+  # ── calvin-auto: prompt da commento → ExploreFlow → PR ────────────────
   calvin-auto:
     if: github.event.label.name == 'calvin-auto'
     uses: malstrom/calvin/.github/workflows/calvin-engine.yml@main
