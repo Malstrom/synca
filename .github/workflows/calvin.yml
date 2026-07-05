@@ -10,40 +10,25 @@ permissions:
   pull-requests: write
 
 jobs:
-  # ── calvin-direct (ex agent): prompt manuale → Codestral → PR ─────────────────────
+  # ── calvin-direct: prompt manuale → Codestral → PR ─────────────────────────
   calvin-direct:
     if: github.event.label.name == 'calvin-direct'
     uses: malstrom/calvin/.github/workflows/calvin-engine.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
       target_repo: malstrom/synca
-      aider_mode: false
       auto_mode: false
     secrets:
       SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
       MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
 
-  # ── calvin-aider (ex agent-aider): prompt manuale → Aider → PR ─────────────────
-  calvin-aider:
-    if: github.event.label.name == 'calvin-aider'
-    uses: malstrom/calvin/.github/workflows/calvin-engine.yml@main
-    with:
-      issue_number: ${{ github.event.issue.number }}
-      target_repo: malstrom/synca
-      aider_mode: true
-      auto_mode: false
-    secrets:
-      SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
-      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-
-  # ── calvin-auto (nuovo): esplora repo → Codestral → PR → fixa CI ────────────
+  # ── calvin-auto: esplora repo → Codestral → PR ───────────────────────────
   calvin-auto:
     if: github.event.label.name == 'calvin-auto'
     uses: malstrom/calvin/.github/workflows/calvin-engine.yml@main
     with:
       issue_number: ${{ github.event.issue.number }}
       target_repo: malstrom/synca
-      aider_mode: false
       auto_mode: true
     secrets:
       SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
