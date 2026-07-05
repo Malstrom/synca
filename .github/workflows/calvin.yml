@@ -10,18 +10,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  # ── calvin-direct: prompt da commento → Codestral → PR ─────────────────
-  calvin-direct:
-    if: github.event.label.name == 'calvin-direct'
-    uses: malstrom/calvin/.github/workflows/calvin-engine.yml@main
-    with:
-      issue_number: ${{ github.event.issue.number }}
-      target_repo: malstrom/synca
-      auto_mode: false
-    secrets:
-      SYNCA_TOKEN: ${{ secrets.SYNCA_TOKEN }}
-      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-
   # ── calvin-auto-body: title+body issue → ExploreFlow → PR ────────────
   calvin-auto-body:
     if: github.event.label.name == 'calvin-auto-body'
