@@ -1,2 +1,0 @@
-run_at,workflow,ref,model,prompt_tokens,completion_tokens,total_tokens,cost_usd,status,test_pass_pct
-2026-07-05T08:41:18Z,calvin-auto,100,codestral-latest,4411,3918,8329,0.00485,success,""
