@@ -1,10 +1,11 @@
 # Calvin Run Reports
 
-| Date | Workflow | Ref | Model | Prompt tok | Completion tok | Total tok | Cost USD | Status | Test pass % |
-|------|----------|-----|-------|-----------|----------------|-----------|----------|--------|-------------|
-| 2026-07-05 09:07 | calvin-auto | #100 | codestral-latest | 4 397 | 3 720 | 8 117 | $0.004667 | ✅ success | — |
-| 2026-07-05 13:05 | calvin-auto-body | #100 | codestral-latest | 3 447 | 3 476 | 6 923 | $0.004162 | ✅ success | — |
-| 2026-07-05 14:38 | calvin-auto-body | #100 | codestral-latest | 2 461 | 4 070 | 6 531 | $0.004401 | ✅ success | — |
-| 2026-07-05 15:14 | calvin-auto-body | #100 | codestral-latest | 0 | 0 | 0 | $0.0 | ❌ failure | — |
-| 2026-07-05 15:22 | calvin-auto-body | #100 | codestral-latest | 5 447 | 4 546 | 9 993 | $0.005726 | ✅ success | — |
-| 2026-07-05 16:56 | calvin | #100 | codestral-latest | 0 | 0 | 0 | $0.0 | ❌ failure | — |
+| Date | Workflow | Ref | Model | Prompt tok | Completion tok | Total tok | Cost USD | Status | Explore turns | Test pass % |
+|------|----------|-----|-------|-----------|----------------|-----------|----------|--------|---------------|-------------|
+| 2026-07-05 09:07 | calvin-auto | #100 | codestral-latest | 4 397 | 3 720 | 8 117 | $0.004667 | ✅ success | — | — |
+| 2026-07-05 13:05 | calvin-auto-body | #100 | codestral-latest | 3 447 | 3 476 | 6 923 | $0.004162 | ✅ success | — | — |
+| 2026-07-05 14:38 | calvin-auto-body | #100 | codestral-latest | 2 461 | 4 070 | 6 531 | $0.004401 | ✅ success | — | — |
+| 2026-07-05 15:14 | calvin-auto-body | #100 | codestral-latest | 0 | 0 | 0 | $0.0 | ❌ failure | — | — |
+| 2026-07-05 15:22 | calvin-auto-body | #100 | codestral-latest | 5 447 | 4 546 | 9 993 | $0.005726 | ✅ success | — | — |
+| 2026-07-05 16:56 | calvin | #100 | codestral-latest | 0 | 0 | 0 | $0.0 | ❌ failure | — | — |
+| 2026-07-05 17:03 | calvin | #100 | codestral-latest | 4 506 | 3 937 | 8 443 | $0.004895 | ✅ success | — | — |
