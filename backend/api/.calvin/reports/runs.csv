@@ -1,4 +1,4 @@
-run_at,workflow,ref,model,prompt_tokens,completion_tokens,total_tokens,cost_usd,status,explore_turns,test_pass_pct
+run_at,workflow,ref,model,prompt_tokens,completion_tokens,total_tokens,cost_usd,status,explore_turns,test_pass_pct,temperature,files_written,issue_length
 2026-07-05T09:07:43Z,calvin-auto,100,codestral-latest,4397,3720,8117,0.004667,success,,
 2026-07-05T13:05:56Z,calvin-auto-body,100,codestral-latest,3447,3476,6923,0.004162,success,,
 2026-07-05T14:38:34Z,calvin-auto-body,100,codestral-latest,2461,4070,6531,0.004401,success,,
@@ -13,3 +13,4 @@ run_at,workflow,ref,model,prompt_tokens,completion_tokens,total_tokens,cost_usd,
 2026-07-05T19:48:18Z,calvin,100,codestral-latest,4976,2900,7876,0.004103,success,8,
 2026-07-05T20:05:06Z,calvin,100,codestral-latest,5406,3944,9350,0.005171,success,8,
 2026-07-05T20:56:15Z,calvin,100,codestral-latest,5406,3314,8720,0.004604,success,8,
+2026-07-05T21:09:24Z,calvin,100,codestral-latest,5406,3260,8666,0.004556,success,8,,,12,5999
