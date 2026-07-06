@@ -37,7 +37,7 @@ Rails.application.routes.draw do
       end
 
       namespace :signals do
-        post :preferences, to: 'preferences#create'
+        post :preferences, to: "preferences#create"
       end
     end
   end
