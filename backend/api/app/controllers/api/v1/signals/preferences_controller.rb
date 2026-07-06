@@ -10,7 +10,7 @@ module Api
 
         def create
           contract_result = UpsertPreferencesContract.new.call(
-            preferences: params[:preferences].to_h
+            preferences: params[:preferences].to_unsafe_h
           )
 
           return render_contract_errors(contract_result) if contract_result.failure?
