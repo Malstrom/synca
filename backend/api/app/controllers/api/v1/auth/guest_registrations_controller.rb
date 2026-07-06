@@ -10,9 +10,9 @@ module Api
           result = GuestRegistrationContract.new.call(params.to_unsafe_h)
           return render_contract_errors(result) if result.failure?
 
-          email = result[:auth][:email].downcase
+          email = result[:auth][:email]&.downcase
 
-          user = User.find_by(email: email)
+          user = User.find_by(email: email) if email
 
           if user&.active?
             return render_error(
