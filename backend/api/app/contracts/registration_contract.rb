@@ -14,17 +14,19 @@ class RegistrationContract < Dry::Validation::Contract
   end
 
   rule(auth: :email) do
+    next if schema_error?(:auth)
     next unless value
     key.failure("is not a valid email") unless EMAIL_REGEXP.match?(value)
   end
 
   rule(auth: :password) do
+    next if schema_error?(:auth)
     next unless value
     key.failure("must be at least 8 characters") if value.length < 8
   end
 
   rule(auth: :auth_provider) do
-    provider = value.to_s
-    key.failure("is not a valid auth provider") unless User.auth_providers.key?(provider)
+    next if schema_error?(:auth)
+    key.failure("is not a valid auth provider") unless User.auth_providers.key?(value.to_s)
   end
 end

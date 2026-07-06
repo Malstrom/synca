@@ -28,26 +28,31 @@ class HealthSummaryContract < Dry::Validation::Contract
   end
 
   rule(health_summary: :chronotype) do
+    next if schema_error?(:health_summary)
     next unless value
     key.failure("is not included in the list") unless HealthSummary.chronotypes.key?(value)
   end
 
   rule(health_summary: :source) do
+    next if schema_error?(:health_summary)
     next unless value
     key.failure("is not included in the list") unless HealthSummary.sources.key?(value)
   end
 
   rule(health_summary: :activity_level) do
+    next if schema_error?(:health_summary)
     next unless value
     key.failure("is not included in the list") unless HealthSummary.activity_levels.key?(value)
   end
 
   rule(health_summary: :recovery_score) do
+    next if schema_error?(:health_summary)
     next unless value
     key.failure("is not included in the list") unless HealthSummary.recovery_scores.key?(value)
   end
 
   rule(health_summary: :avg_sleep_duration_minutes) do
+    next if schema_error?(:health_summary)
     next unless value
 
     min = Settings.health_summary.avg_sleep_duration_minutes.min
@@ -55,6 +60,7 @@ class HealthSummaryContract < Dry::Validation::Contract
   end
 
   rule(health_summary: :routine_stability_index) do
+    next if schema_error?(:health_summary)
     next unless value
 
     min = Settings.health_summary.routine_stability_index.min
