@@ -1,6 +1,0 @@
-health_summary.rb     — enum only, no AR validations, clean
-profile.rb            — enum + belongs_to only, no AR validations, clean
-match.rb              — enums + belongs_to only, no AR validations, clean
-match_participant.rb  — belongs_to only, clean
-preference_profile.rb — belongs_to only, clean
-spark_reward.rb       — enums + belongs_to only, no AR validations, clean
