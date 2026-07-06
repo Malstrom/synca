@@ -10,7 +10,8 @@ class UpsertPreferencesService
   def call(current_user:, attrs:)
     preference_profile = current_user.preference_profile || current_user.build_preference_profile
 
-    if preference_profile.update(attrs)
+    preference_profile.assign_attributes(attrs)
+    if preference_profile.save
       Success(preference_profile)
     else
       Failure([ :validation_failed, preference_profile.errors.full_messages.first ])

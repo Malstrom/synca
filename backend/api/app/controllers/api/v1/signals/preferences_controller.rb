@@ -8,7 +8,9 @@ module Api
 
         # POST /api/v1/signals/preferences
         def create
-          contract_result = UpsertPreferencesContract.new.call(preferences: params[:preferences]&.to_unsafe_h || {})
+          contract_result = UpsertPreferencesContract.new.call(
+            params.to_unsafe_h.deep_symbolize_keys
+          )
 
           return render_contract_errors(contract_result) if contract_result.failure?
 

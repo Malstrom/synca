@@ -14,7 +14,7 @@ class UpsertPreferencesServiceTest < ActiveSupport::TestCase
     }
   end
 
-  def test_success
+  def test_successful_upsert
     result = UpsertPreferencesService.call(current_user: @user, attrs: @attrs)
 
     assert_pattern { result => Success(preference_profile) }
@@ -26,8 +26,8 @@ class UpsertPreferencesServiceTest < ActiveSupport::TestCase
   end
 
   def test_validation_failed
-    @attrs[:sleep_together_importance] = 6
-    result = UpsertPreferencesService.call(current_user: @user, attrs: @attrs)
+    invalid_attrs = @attrs.merge(sleep_together_importance: 6)
+    result = UpsertPreferencesService.call(current_user: @user, attrs: invalid_attrs)
 
     assert_pattern { result => Failure[:validation_failed, _] }
   end
