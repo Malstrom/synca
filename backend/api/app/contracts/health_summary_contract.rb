@@ -56,7 +56,7 @@ class HealthSummaryContract < Dry::Validation::Contract
     next unless value
 
     min = Settings.health_summary.avg_sleep_duration_minutes.min
-    key.failure("must be greater than #{min}") unless value > min
+    key.failure("must be at least #{min}") unless value >= min
   end
 
   rule(health_summary: :routine_stability_index) do

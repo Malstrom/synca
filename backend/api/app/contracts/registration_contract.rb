@@ -27,8 +27,17 @@ class RegistrationContract < Dry::Validation::Contract
 
   rule(auth: :auth_provider) do
     next if schema_error?(:auth)
-    # Accept both string name ("email") and integer value (0) — Rails enum allows both.
     valid = User.auth_providers.key?(value.to_s) || User.auth_providers.value?(value.to_i)
     key.failure("is not a valid auth provider") unless valid
+  end
+
+  rule(:auth) do
+    next if schema_error?(:auth)
+    auth = values.to_h[:auth]
+    provider = auth[:auth_provider]
+    is_email_provider = User.auth_providers.key?("email") &&
+                        (provider.to_s == "email" || provider.to_i == User.auth_providers["email"])
+    next unless is_email_provider
+    key([:auth, :email]).failure("is required for email auth provider") if auth[:email].blank?
   end
 end

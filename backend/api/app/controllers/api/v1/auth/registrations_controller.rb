@@ -20,6 +20,8 @@ module Api
           )
 
           render_created(auth_response(user))
+        rescue ActiveRecord::RecordNotUnique
+          render_error(:unprocessable_entity, :validation_failed, "email has already been taken", :email)
         end
       end
     end
