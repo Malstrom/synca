@@ -9,22 +9,22 @@ class UpsertPreferencesServiceTest < ActiveSupport::TestCase
     @user = users(:alice)
   end
 
-  test "successful update" do
+  test "successful upsert" do
     result = UpsertPreferencesService.call(
       current_user: @user,
       attrs: {
-        sleep_together_importance: 3,
+        sleep_together_importance: 4,
         temperature_preference: "cool",
         movement_preference: "moderate",
-        rhythm_importance: 4,
+        rhythm_importance: 3,
         self_chronotype: "night"
       }
     )
     assert_pattern { result => Success }
-    assert_equal 3, result.value!.sleep_together_importance
+    assert_equal 4, result.value!.sleep_together_importance
     assert_equal "cool", result.value!.temperature_preference
     assert_equal "moderate", result.value!.movement_preference
-    assert_equal 4, result.value!.rhythm_importance
+    assert_equal 3, result.value!.rhythm_importance
     assert_equal "night", result.value!.self_chronotype
   end
 

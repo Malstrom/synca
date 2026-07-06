@@ -6,7 +6,8 @@ module Api
       class PreferencesController < ApplicationController
         include Dry::Monads[:result]
 
-        # POST /api/v1/signals/preferences
+        before_action :authenticate_user!
+
         def create
           contract_result = UpsertPreferencesContract.new.call(
             preferences: params[:preferences].to_h
@@ -18,7 +19,7 @@ module Api
           in Success[preference_profile]
             render_success({ preferences: PreferencesSerializer.new(preference_profile).serializable_hash })
           in Failure[:validation_failed, message]
-            render_error(code: "validation_failed", message: message)
+            render_error(code: 'validation_failed', message: message)
           end
         end
       end

@@ -6,10 +6,10 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
   test "valid input" do
     result = UpsertPreferencesContract.new.call(
       preferences: {
-        sleep_together_importance: 3,
+        sleep_together_importance: 4,
         temperature_preference: "cool",
         movement_preference: "moderate",
-        rhythm_importance: 4,
+        rhythm_importance: 3,
         self_chronotype: "night"
       }
     )
@@ -42,7 +42,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
 
   test "invalid rhythm_importance" do
     result = UpsertPreferencesContract.new.call(
-      preferences: { rhythm_importance: 0 }
+      preferences: { rhythm_importance: 6 }
     )
     assert result.failure?
     assert_includes result.errors.to_h[:preferences][:rhythm_importance], "must be one of: 1 - 5"
