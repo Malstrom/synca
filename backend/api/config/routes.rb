@@ -35,6 +35,12 @@ Rails.application.routes.draw do
           post :simulate
         end
       end
+
+      namespace :signals do
+        namespace :me do
+          get :summary, to: 'summary#show'
+        end
+      end
     end
   end
 end
