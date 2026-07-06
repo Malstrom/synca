@@ -81,6 +81,10 @@ gem "aws-sdk-s3", require: false
 # Role-based authorization (users can only modify their own resources)
 gem "pundit"
 
+# Domain settings via YAML files per domain area (config/settings/)
+# Exposes settings as Settings.namespace.key with per-environment overrides
+gem "config"
+
 # ─── Error Tracking ───────────────────────────────────
 
 # GlitchTip / Sentry-compatible error tracking

@@ -1,0 +1,7 @@
+profile:
+  display_name:
+    max_length: 50
+  bio:
+    max_length: 300
+  photo_urls:
+    max_count: 6
