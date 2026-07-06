@@ -19,14 +19,12 @@ class HealthSummaryContract < Dry::Validation::Contract
   end
 
   rule(:health_summary) do
-    next if schema_error?([:health_summary, :effective_from])
+    next if schema_error?(:health_summary)
 
-    hs = values[:health_summary]
-    next unless hs.key?(:effective_to) && hs[:effective_to]
+    hs = values.to_h[:health_summary]
+    next unless hs.is_a?(Hash) && hs[:effective_to] && hs[:effective_from]
 
-    if hs[:effective_to] < hs[:effective_from]
-      key([:health_summary, :effective_to]).failure("must be after effective_from")
-    end
+    key([:health_summary, :effective_to]).failure("must be after effective_from") if hs[:effective_to] < hs[:effective_from]
   end
 
   rule(health_summary: :avg_sleep_duration_minutes) do
