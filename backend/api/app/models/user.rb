@@ -32,23 +32,14 @@ class User < ApplicationRecord
 
   before_save :normalize_email
 
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP },
-                    uniqueness: { case_sensitive: false },
-                    allow_nil: true
+  # Uniqueness enforced at DB level (unique index). Kept here to surface
+  # ActiveRecord::RecordNotUnique as a structured 422 before it hits the DB.
+  validates :email, uniqueness: { case_sensitive: false }, allow_nil: true
   validates :phone, uniqueness: true, allow_nil: true
-  validates :auth_provider, presence: true
-  validates :password, length: { minimum: 8 }, allow_nil: true
-  validate  :email_or_phone_present
 
   private
 
     def normalize_email
       self.email = email&.downcase
-    end
-
-    def email_or_phone_present
-      return if self.email.present? || phone.present? || !email?
-
-      errors.add(:base, "email or phone is required for email auth")
     end
 end
