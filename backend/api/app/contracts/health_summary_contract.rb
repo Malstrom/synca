@@ -13,8 +13,15 @@ class HealthSummaryContract < Dry::Validation::Contract
         included_in?: HealthSummary.sources.keys
       )
       optional(:effective_to).maybe(:date)
-      optional(:avg_sleep_duration_minutes).maybe(:integer, gt?: 0)
-      optional(:routine_stability_index).maybe(:float, gteq?: 0.0, lteq?: 1.0)
+      optional(:avg_sleep_duration_minutes).maybe(
+        :integer,
+        gt?: Settings.health_summary.avg_sleep_duration_minutes.min
+      )
+      optional(:routine_stability_index).maybe(
+        :float,
+        gteq?: Settings.health_summary.routine_stability_index.min,
+        lteq?: Settings.health_summary.routine_stability_index.max
+      )
       optional(:activity_level).maybe(
         :string,
         included_in?: HealthSummary.activity_levels.keys
