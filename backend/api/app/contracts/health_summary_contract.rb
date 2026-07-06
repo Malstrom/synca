@@ -19,9 +19,9 @@ class HealthSummaryContract < Dry::Validation::Contract
   end
 
   rule(:health_summary) do
-    next if schema_error?(:health_summary)
+    next unless values.key?(:health_summary)
 
-    hs = value
+    hs = values[:health_summary]
     next unless hs[:effective_to] && hs[:effective_from]
 
     if hs[:effective_to] < hs[:effective_from]
@@ -30,7 +30,7 @@ class HealthSummaryContract < Dry::Validation::Contract
   end
 
   rule(health_summary: :avg_sleep_duration_minutes) do
-    next if schema_error?(:health_summary)
+    next unless values.key?(:health_summary)
     next unless value
 
     min = Settings.health_summary.avg_sleep_duration_minutes.min
@@ -38,7 +38,7 @@ class HealthSummaryContract < Dry::Validation::Contract
   end
 
   rule(health_summary: :routine_stability_index) do
-    next if schema_error?(:health_summary)
+    next unless values.key?(:health_summary)
     next unless value
 
     min = Settings.health_summary.routine_stability_index.min

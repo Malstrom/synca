@@ -9,7 +9,7 @@ class RegistrationContract < Dry::Validation::Contract
       optional(:phone).maybe(:string)
       optional(:password).maybe(:string)
       optional(:provider_uid).maybe(:string)
-      required(:auth_provider).filled(:string)
+      required(:auth_provider).filled
     end
   end
 
@@ -24,6 +24,7 @@ class RegistrationContract < Dry::Validation::Contract
   end
 
   rule(auth: :auth_provider) do
-    key.failure("is not a valid auth provider") unless User.auth_providers.key?(value)
+    provider = value.to_s
+    key.failure("is not a valid auth provider") unless User.auth_providers.key?(provider)
   end
 end
