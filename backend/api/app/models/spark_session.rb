@@ -14,13 +14,15 @@ class SparkSession < ApplicationRecord
 
   before_validation :generate_tokens, on: :create
 
+  EXPIRY_MINUTES = Settings.spark.expiry_minutes.freeze
+
   scope :stale, -> {
     where(status: [ :pending, :active ])
-      .where("created_at < ?", Settings.spark.expiry_minutes.minutes.ago)
+      .where("created_at < ?", EXPIRY_MINUTES.minutes.ago)
   }
 
   def expired?
-    created_at < Settings.spark.expiry_minutes.minutes.ago || status == "expired"
+    created_at < EXPIRY_MINUTES.minutes.ago || status == "expired"
   end
 
   def both_answered?

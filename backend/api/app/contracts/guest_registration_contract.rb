@@ -22,7 +22,8 @@ class GuestRegistrationContract < Dry::Validation::Contract
   end
 
   rule(:auth) do
-    next if value[:email].present? || value[:phone].present?
+    next unless value[:email].nil? || value[:email].strip.empty?
+    next unless value[:phone].nil? || value[:phone].strip.empty?
     key.failure("email or phone is required")
   end
 end
