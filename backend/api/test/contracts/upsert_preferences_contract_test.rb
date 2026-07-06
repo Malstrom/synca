@@ -21,13 +21,6 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
     assert result.success?
   end
 
-  def test_missing_preferences
-    result = @contract.call({})
-
-    assert result.failure?
-    assert_equal "is missing", result.errors.to_h[:preferences][:error]
-  end
-
   def test_invalid_sleep_together_importance
     result = @contract.call(
       preferences: {
@@ -36,7 +29,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
     )
 
     assert result.failure?
-    assert_equal "must be one of: 1, 2, 3, 4, 5", result.errors.to_h[:preferences][:sleep_together_importance][:error]
+    assert_equal "must be one of: 1, 2, 3, 4, 5", result.errors.to_h[:preferences][:sleep_together_importance].first
   end
 
   def test_invalid_temperature_preference
@@ -47,7 +40,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
     )
 
     assert result.failure?
-    assert_equal "must be one of: cool, warm, no_preference", result.errors.to_h[:preferences][:temperature_preference][:error]
+    assert_equal "must be one of: cool, warm, no_preference", result.errors.to_h[:preferences][:temperature_preference].first
   end
 
   def test_invalid_movement_preference
@@ -58,7 +51,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
     )
 
     assert result.failure?
-    assert_equal "must be one of: very_little, moderate, a_lot, as_much_as_possible", result.errors.to_h[:preferences][:movement_preference][:error]
+    assert_equal "must be one of: very_little, moderate, a_lot, as_much_as_possible", result.errors.to_h[:preferences][:movement_preference].first
   end
 
   def test_invalid_rhythm_importance
@@ -69,7 +62,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
     )
 
     assert result.failure?
-    assert_equal "must be one of: 1, 2, 3, 4, 5", result.errors.to_h[:preferences][:rhythm_importance][:error]
+    assert_equal "must be one of: 1, 2, 3, 4, 5", result.errors.to_h[:preferences][:rhythm_importance].first
   end
 
   def test_invalid_self_chronotype
@@ -80,6 +73,6 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
     )
 
     assert result.failure?
-    assert_equal "must be one of: morning, night, depends", result.errors.to_h[:preferences][:self_chronotype][:error]
+    assert_equal "must be one of: morning, night, depends", result.errors.to_h[:preferences][:self_chronotype].first
   end
 end

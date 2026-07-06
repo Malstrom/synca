@@ -14,21 +14,30 @@ class UpsertPreferencesServiceTest < ActiveSupport::TestCase
     }
   end
 
-  def test_successful_upsert
+  def test_success
     result = UpsertPreferencesService.call(current_user: @user, attrs: @attrs)
 
-    assert_pattern { result => Success(preference_profile) }
-    assert_equal 3, preference_profile.sleep_together_importance
-    assert_equal "cool", preference_profile.temperature_preference
-    assert_equal "moderate", preference_profile.movement_preference
-    assert_equal 4, preference_profile.rhythm_importance
-    assert_equal "night", preference_profile.self_chronotype
+    case result
+    in Success[ preference_profile ]
+      assert_equal @attrs[:sleep_together_importance], preference_profile.sleep_together_importance
+      assert_equal @attrs[:temperature_preference], preference_profile.temperature_preference
+      assert_equal @attrs[:movement_preference], preference_profile.movement_preference
+      assert_equal @attrs[:rhythm_importance], preference_profile.rhythm_importance
+      assert_equal @attrs[:self_chronotype], preference_profile.self_chronotype
+    else
+      assert false, "Expected Success, got #{result.inspect}"
+    end
   end
 
   def test_validation_failed
     invalid_attrs = @attrs.merge(sleep_together_importance: 6)
     result = UpsertPreferencesService.call(current_user: @user, attrs: invalid_attrs)
 
-    assert_pattern { result => Failure[:validation_failed, _] }
+    case result
+    in Failure[ :validation_failed, message ]
+      assert_equal "Sleep together importance is not included in the list", message
+    else
+      assert false, "Expected Failure, got #{result.inspect}"
+    end
   end
 end

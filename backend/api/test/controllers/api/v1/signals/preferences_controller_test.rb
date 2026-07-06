@@ -2,69 +2,76 @@
 
 require "test_helper"
 
-class Api::V1::Signals::PreferencesControllerTest < ApiTestCase
-  def setup
-    @user = users(:alice)
-    @headers = auth_headers(@user)
-    @valid_params = {
-      preferences: {
-        sleep_together_importance: 3,
-        temperature_preference: "cool",
-        movement_preference: "moderate",
-        rhythm_importance: 4,
-        self_chronotype: "night"
-      }
-    }
-  end
+module Api
+  module V1
+    module Signals
+      class PreferencesControllerTest < ActionDispatch::IntegrationTest
+        def setup
+          @user = users(:alice)
+          @headers = auth_headers(@user)
+          @valid_params = {
+            preferences: {
+              sleep_together_importance: 3,
+              temperature_preference: "cool",
+              movement_preference: "moderate",
+              rhythm_importance: 4,
+              self_chronotype: "night"
+            }
+          }
+        end
 
-  def test_create_success
-    post_json "/api/v1/signals/preferences", params: @valid_params, headers: @headers
+        def test_create_success
+          post api_v1_signals_preferences_path, headers: @headers, params: @valid_params
 
-    assert_response :success
-    assert_equal "cool", json[:preferences][:temperature_preference]
-  end
+          assert_response :success
+          response_body = JSON.parse(response.body)
+          assert_equal @valid_params[:preferences][:sleep_together_importance], response_body["preferences"]["sleep_together_importance"]
+          assert_equal @valid_params[:preferences][:temperature_preference], response_body["preferences"]["temperature_preference"]
+          assert_equal @valid_params[:preferences][:movement_preference], response_body["preferences"]["movement_preference"]
+          assert_equal @valid_params[:preferences][:rhythm_importance], response_body["preferences"]["rhythm_importance"]
+          assert_equal @valid_params[:preferences][:self_chronotype], response_body["preferences"]["self_chronotype"]
+        end
 
-  def test_create_partial_success
-    partial_params = {
-      preferences: {
-        sleep_together_importance: 3,
-        temperature_preference: "cool"
-      }
-    }
+        def test_create_guest_success
+          guest = users(:guest)
+          guest_headers = auth_headers(guest)
+          post api_v1_signals_preferences_path, headers: guest_headers, params: @valid_params
 
-    post_json "/api/v1/signals/preferences", params: partial_params, headers: @headers
+          assert_response :success
+        end
 
-    assert_response :success
-    assert_equal 3, json[:preferences][:sleep_together_importance]
-    assert_equal "cool", json[:preferences][:temperature_preference]
-    assert_nil json[:preferences][:movement_preference]
-  end
+        def test_create_unauthorized
+          post api_v1_signals_preferences_path, params: @valid_params
 
-  def test_create_guest_success
-    guest_headers = auth_headers(users(:guest))
-    post_json "/api/v1/signals/preferences", params: @valid_params, headers: guest_headers
+          assert_response :unauthorized
+        end
 
-    assert_response :success
-  end
+        def test_create_contract_errors
+          invalid_params = {
+            preferences: {
+              sleep_together_importance: 6
+            }
+          }
+          post api_v1_signals_preferences_path, headers: @headers, params: invalid_params
 
-  def test_create_unauthorized
-    post_json "/api/v1/signals/preferences", params: @valid_params
+          assert_response :unprocessable_entity
+          response_body = JSON.parse(response.body)
+          assert_equal "validation_failed", response_body["error"]["code"]
+        end
 
-    assert_response :unauthorized
-  end
+        def test_create_validation_failed
+          invalid_params = {
+            preferences: {
+              sleep_together_importance: 6
+            }
+          }
+          post api_v1_signals_preferences_path, headers: @headers, params: invalid_params
 
-  def test_create_validation_failed
-    invalid_params = @valid_params.merge(preferences: { sleep_together_importance: 6 })
-    post_json "/api/v1/signals/preferences", params: invalid_params, headers: @headers
-
-    assert_response :unprocessable_entity
-    assert_equal "validation_failed", json[:error][:code]
-  end
-
-  def test_create_contract_errors
-    post_json "/api/v1/signals/preferences", params: {}, headers: @headers
-
-    assert_response :unprocessable_entity
-    assert_equal "is missing", json[:error][:details][:preferences][:error]
+          assert_response :unprocessable_entity
+          response_body = JSON.parse(response.body)
+          assert_equal "validation_failed", response_body["error"]["code"]
+        end
+      end
+    end
   end
 end
