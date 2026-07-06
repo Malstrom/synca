@@ -7,6 +7,5 @@
 # or numeric limits in contracts or models — define them here.
 Config.setup do |config|
   config.const_name = "Settings"
-  config.use_settings_as_const = true
   config.fail_on_missing = true
 end
