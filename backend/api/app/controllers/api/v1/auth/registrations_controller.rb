@@ -16,7 +16,7 @@ module Api
             phone:         result[:auth][:phone],
             password:      result[:auth][:password],
             provider_uid:  result[:auth][:provider_uid],
-            auth_provider: result[:auth_provider]
+            auth_provider: result[:auth][:auth_provider]
           )
 
           render_created(auth_response(user))
