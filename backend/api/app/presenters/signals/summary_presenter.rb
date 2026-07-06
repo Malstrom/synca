@@ -3,15 +3,15 @@
 module Signals
   class SummaryPresenter
     CHRONOTYPE_LABELS = {
-      'early_bird' => 'Early bird',
-      'intermediate' => 'Flexible',
-      'night_owl' => 'Night owl'
+      "early_bird" => "Early bird",
+      "intermediate" => "Flexible",
+      "night_owl" => "Night owl"
     }.freeze
 
     ROUTINE_STABILITY_TIERS = {
-      0..0.39 => 'low',
-      0.4..0.7 => 'medium',
-      0.71..1.0 => 'high'
+      0..0.39 => "low",
+      0.4..0.7 => "medium",
+      0.71..1.0 => "high"
     }.freeze
 
     def initialize(health_summary:, user:)
@@ -66,7 +66,7 @@ module Signals
       end
 
       def format_time(time)
-        time.strftime('%H:%M')
+        time.strftime("%H:%M")
       end
   end
 end

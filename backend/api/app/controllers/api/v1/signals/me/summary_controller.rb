@@ -10,7 +10,7 @@ module Api
             health_summary = current_user.health_summary.active.first
 
             if health_summary.nil?
-              render_error(code: 'no_signals', message: 'No health data found. Connect Apple Health to see your profile.')
+              render_error(code: "no_signals", message: "No health data found. Connect Apple Health to see your profile.")
               return
             end
 

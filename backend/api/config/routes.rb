@@ -38,7 +38,7 @@ Rails.application.routes.draw do
 
       namespace :signals do
         namespace :me do
-          get :summary, to: 'summary#show'
+          get :summary, to: "summary#show"
         end
       end
     end
