@@ -8,5 +8,5 @@
 Config.setup do |config|
   config.const_name = "Settings"
   config.fail_on_missing = true
-  config.additional_files = Dir[Rails.root.join("config", "settings", "*.yml")].sort
+  config.extra_sources = Dir[Rails.root.join("config", "settings", "*.yml")].sort
 end
