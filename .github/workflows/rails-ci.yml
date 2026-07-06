@@ -32,7 +32,16 @@ jobs:
 
       - name: Scan for Rails security vulnerabilities
         # --ignore-config suppresses known false positives tracked in config/brakeman.ignore
-        run: bin/brakeman --no-pager --ignore-config config/brakeman.ignore
+        run: |
+          bin/brakeman --no-pager --ignore-config config/brakeman.ignore 2>&1 | tee /tmp/brakeman-output.txt
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload brakeman output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: brakeman-output
+          path: /tmp/brakeman-output.txt
 
   gem_audit:
     name: Gem CVE Audit (bundler-audit)
@@ -53,7 +62,16 @@ jobs:
         run: bundle exec bundle-audit update
 
       - name: Audit gems for CVEs
-        run: bundle exec bundle-audit check
+        run: |
+          bundle exec bundle-audit check 2>&1 | tee /tmp/bundler-audit-output.txt
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload bundler-audit output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundler-audit-output
+          path: /tmp/bundler-audit-output.txt
 
   lint:
     name: Linting (RuboCop)
@@ -157,7 +175,7 @@ jobs:
   pr-report:
     name: PR Test Report
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, scan_ruby, gem_audit]
     if: always() && github.event_name == 'pull_request'
 
     permissions:
@@ -169,69 +187,121 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: test-output
-          path: /tmp
+          path: /tmp/artifacts
+        continue-on-error: true
 
-      - name: Post failing tests as PR comment
+      - name: Download brakeman output
+        uses: actions/download-artifact@v4
+        with:
+          name: brakeman-output
+          path: /tmp/artifacts
+        continue-on-error: true
+
+      - name: Download bundler-audit output
+        uses: actions/download-artifact@v4
+        with:
+          name: bundler-audit-output
+          path: /tmp/artifacts
+        continue-on-error: true
+
+      - name: Post unified PR comment (upsert)
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const output = fs.readFileSync('/tmp/test-output.txt', 'utf8');
-            const jobConclusion = '${{ needs.test.result }}';
+            const MARKER = '<!-- ci-report -->';
 
-            if (jobConclusion === 'success') {
+            const readFile = (path) => {
+              try { return fs.readFileSync(path, 'utf8'); } catch { return null; }
+            };
+
+            const testOutput    = readFile('/tmp/artifacts/test-output.txt');
+            const brakemanOutput = readFile('/tmp/artifacts/brakeman-output.txt');
+            const auditOutput   = readFile('/tmp/artifacts/bundler-audit-output.txt');
+
+            const testResult    = '${{ needs.test.result }}';
+            const brakemanResult = '${{ needs.scan_ruby.result }}';
+            const auditResult   = '${{ needs.gem_audit.result }}';
+
+            const allGreen = testResult === 'success' && brakemanResult === 'success' && auditResult === 'success';
+
+            // ── Test section ──────────────────────────────────────────────
+            let testSection = '';
+            if (testResult === 'success') {
+              testSection = '### ✅ Tests — all passed';
+            } else {
+              const blocks = [];
+              if (testOutput) {
+                const lines = testOutput.split('\n');
+                let inBlock = false, current = [];
+                for (const line of lines) {
+                  if (/^\s+\d+\) (Failure|Error):/.test(line)) {
+                    if (current.length) blocks.push(current.join('\n'));
+                    current = [line]; inBlock = true;
+                  } else if (inBlock) {
+                    if (/^\d+ runs,/.test(line)) {
+                      if (current.length) blocks.push(current.join('\n'));
+                      current = []; inBlock = false;
+                    } else { current.push(line); }
+                  }
+                }
+                if (current.length) blocks.push(current.join('\n'));
+              }
+              const failBody = blocks.length
+                ? blocks.join('\n\n---\n\n')
+                : (testOutput ? testOutput.slice(-3000) : '_No output available_');
+              testSection = `### ❌ Tests — failures\n\n\`\`\`\n${failBody}\n\`\`\``;
+            }
+
+            // ── Brakeman section ──────────────────────────────────────────
+            let brakemanSection = '';
+            if (brakemanResult === 'success') {
+              brakemanSection = '### ✅ Brakeman — no issues';
+            } else {
+              const body = brakemanOutput ? brakemanOutput.slice(-3000) : '_No output available_';
+              brakemanSection = `### ❌ Brakeman — security warnings\n\n\`\`\`\n${body}\n\`\`\``;
+            }
+
+            // ── Bundler-audit section ─────────────────────────────────────
+            let auditSection = '';
+            if (auditResult === 'success') {
+              auditSection = '### ✅ Bundler-audit — no CVEs';
+            } else {
+              const body = auditOutput ? auditOutput.slice(-3000) : '_No output available_';
+              auditSection = `### ❌ Bundler-audit — CVEs found\n\n\`\`\`\n${body}\n\`\`\``;
+            }
+
+            // ── Assemble body ─────────────────────────────────────────────
+            const headline = allGreen ? '## ✅ CI — all checks passed' : '## ❌ CI — checks failed';
+            const body = [MARKER, headline, '', testSection, '', brakemanSection, '', auditSection].join('\n');
+
+            // ── Upsert: find existing bot comment with marker, update or create ──
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100
+            });
+
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes(MARKER)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: '✅ **All tests passed!**'
+                body
               });
-              return;
             }
-
-            // Minitest failure blocks: numbered entries like "  1) Failure:" or "  1) Error:"
-            // Each block ends at the next numbered entry or at the summary line (e.g. "X runs, Y assertions")
-            const blocks = [];
-            const lines = output.split('\n');
-            let inBlock = false;
-            let current = [];
-
-            for (const line of lines) {
-              if (/^\s+\d+\) (Failure|Error):/.test(line)) {
-                if (current.length) blocks.push(current.join('\n'));
-                current = [line];
-                inBlock = true;
-              } else if (inBlock) {
-                // Stop at the summary line
-                if (/^\d+ runs,/.test(line)) {
-                  if (current.length) blocks.push(current.join('\n'));
-                  current = [];
-                  inBlock = false;
-                } else {
-                  current.push(line);
-                }
-              }
-            }
-            if (current.length) blocks.push(current.join('\n'));
-
-            const failSection = blocks.length
-              ? blocks.join('\n\n---\n\n')
-              : output.slice(-3000);
-
-            const body = [
-              '## ❌ Failing Tests',
-              '',
-              '```',
-              failSection,
-              '```'
-            ].join('\n');
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body
-            });
 
       - name: Apply calvin-fix label if tests failed
         if: needs.test.result == 'failure'
