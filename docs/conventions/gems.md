@@ -25,7 +25,7 @@ specific phase dependency (e.g. `puma`, `bootsnap`, `tzinfo-data`).
 | `image_processing` | 1 | Profile photo variants (Active Storage) |
 | `aws-sdk-s3` | 1 | S3-compatible storage (Yandex Object Storage RU / AWS S3) |
 | `pundit` | 0 | Per-resource authorization |
-| `interactor` | 0 | Service objects: CompatibilityScoreService, TrustScoreService |
+| `config` | 0 | Domain settings via YAML files per domain area (`config/settings/`). Exposes `Settings.namespace.key` with per-environment overrides. No hardcoded thresholds or numeric limits in contracts or models — define them here. See `docs/conventions/backend.md` — Domain Settings. |
 | `sentry-ruby` + `sentry-rails` | 1 | Error tracking — no-op without `SENTRY_DSN` |
 
 ### Development
