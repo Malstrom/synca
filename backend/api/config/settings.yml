@@ -1,0 +1,2 @@
+# Root settings file — required by config gem.
+# Domain-specific settings live in config/settings/*.yml

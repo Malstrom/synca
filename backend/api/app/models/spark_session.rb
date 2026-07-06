@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class SparkSession < ApplicationRecord
-  EXPIRY_MINUTES = 10
-
   belongs_to :initiator, class_name: "User", inverse_of: :initiated_spark_sessions
   belongs_to :partner,   class_name: "User", optional: true, inverse_of: :joined_spark_sessions
 
@@ -18,11 +16,11 @@ class SparkSession < ApplicationRecord
 
   scope :stale, -> {
     where(status: [ :pending, :active ])
-      .where("created_at < ?", EXPIRY_MINUTES.minutes.ago)
+      .where("created_at < ?", expiry_minutes.minutes.ago)
   }
 
   def expired?
-    created_at < EXPIRY_MINUTES.minutes.ago || status == "expired"
+    created_at < self.class.expiry_minutes.minutes.ago || status == "expired"
   end
 
   def both_answered?
@@ -31,6 +29,10 @@ class SparkSession < ApplicationRecord
 
   def dimensions
     {}
+  end
+
+  def self.expiry_minutes
+    @expiry_minutes ||= Settings.spark.expiry_minutes
   end
 
   private

@@ -1,0 +1,3 @@
+# Phase 1 placeholder — update values in sync with docs/features/trust-v1.md
+trust:
+  initial_score: 0

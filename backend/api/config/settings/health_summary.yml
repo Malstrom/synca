@@ -1,0 +1,6 @@
+health_summary:
+  routine_stability_index:
+    min: 0.0
+    max: 1.0
+  avg_sleep_duration_minutes:
+    min: 1

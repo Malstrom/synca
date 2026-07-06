@@ -1,0 +1,3 @@
+# Phase 1 placeholder — update values in sync with docs/features/matching-v1.md
+matching:
+  min_compatibility_score: 0

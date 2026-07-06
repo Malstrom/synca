@@ -13,24 +13,33 @@ class ProfileContract < Dry::Validation::Contract
     end
   end
 
-  VALID_GENDERS = %w[male female non_binary other].freeze
+  rule(profile: :gender) do
+    next if schema_error?(:profile)
+    next unless value
+    key.failure("is not included in the list") unless Profile.genders.key?(value)
+  end
 
   rule(profile: :display_name) do
-    key.failure("must be 50 characters or less") if value.length > 50
+    next if schema_error?(:profile)
+    next unless value
+
+    max = Settings.profile.display_name.max_length
+    key.failure("is too long (maximum #{max} characters)") if value.length > max
   end
 
   rule(profile: :bio) do
+    next if schema_error?(:profile)
     next unless value
-    key.failure("must be 300 characters or less") if value.length > 300
-  end
 
-  rule(profile: :gender) do
-    next unless value
-    key.failure("must be male, female, non_binary or other") unless VALID_GENDERS.include?(value)
+    max = Settings.profile.bio.max_length
+    key.failure("is too long (maximum #{max} characters)") if value.length > max
   end
 
   rule(profile: :photo_urls) do
+    next if schema_error?(:profile)
     next unless value
-    key.failure("cannot have more than 6 photos") if value.length > 6
+
+    max = Settings.profile.photo_urls.max_count
+    key.failure("too many photos (maximum #{max})") if value.length > max
   end
 end

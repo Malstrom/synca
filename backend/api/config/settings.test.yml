@@ -1,0 +1,5 @@
+# Test overrides.
+# Override values from config/settings/*.yml that need different behaviour in the test suite.
+# For spark expiry: stub Settings.spark.expiry_minutes in individual tests instead of
+# overriding globally here — a global expiry_minutes: 0 causes created_at < Time.current
+# race conditions on freshly-created records.

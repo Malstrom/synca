@@ -8,29 +8,23 @@ module Api
 
         # POST /api/v1/auth/register
         def create
-          unless register_params.key?(:auth_provider)
-            return render_error(
-              code: "validation_failed",
-              message: "Auth provider can't be blank",
-              field: "auth_provider",
-              status: :unprocessable_entity
-            )
-          end
+          result = RegistrationContract.new.call(params.to_unsafe_h)
+          return render_contract_errors(result) if result.failure?
 
-          user = User.new(register_params)
-
-          unless user.save
-            return render_validation_errors(user)
-          end
+          user = User.create!(
+            email:         result[:auth][:email]&.downcase,
+            phone:         result[:auth][:phone],
+            password:      result[:auth][:password],
+            provider_uid:  result[:auth][:provider_uid],
+            auth_provider: result[:auth][:auth_provider]
+          )
 
           render_created(auth_response(user))
+        rescue ActiveRecord::RecordInvalid => e
+          render_validation_errors(e.record)
+        rescue ActiveRecord::RecordNotUnique
+          render_error(code: "validation_failed", message: "email has already been taken", field: "email")
         end
-
-        private
-
-          def register_params
-            params.require(:auth).permit(:email, :phone, :password, :auth_provider, :provider_uid)
-          end
       end
     end
   end

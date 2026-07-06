@@ -7,7 +7,9 @@ module Api
 
       # PUT /api/v1/me/health_summary
       def update
-        contract_result = HealthSummaryContract.new.call(health_summary: params[:health_summary]&.to_unsafe_h || {})
+        contract_result = HealthSummaryContract.new.call(
+          params.to_unsafe_h.deep_symbolize_keys
+        )
 
         return render_contract_errors(contract_result) if contract_result.failure?
 

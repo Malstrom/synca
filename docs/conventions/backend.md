@@ -1,7 +1,7 @@
 # Synca — Rails Backend Technical Spec
 
-**Version:** 1.3  
-**Last updated:** May 2026
+**Version:** 1.4  
+**Last updated:** July 2026
 
 ---
 
@@ -49,6 +49,46 @@ Composite indexes are documented in `docs/architecture/db-schema.md`.
 All score thresholds (Spark-origin, algorithm-origin, Circle admission) are defined
 exclusively in `docs/features/matching-v1.md` and `docs/features/circles-v1.md`.
 This file must not introduce or repeat numeric threshold values.
+
+---
+
+## Domain Settings
+
+All numeric limits, thresholds, and configurable parameters are defined in YAML files
+under `config/settings/` via the `config` gem. **Never hardcode these values in contracts,
+models, or services.**
+
+### Structure
+
+```
+config/
+  settings.yml                     # root — required by gem, generally empty
+  settings.development.yml         # local dev overrides
+  settings.test.yml                # test overrides (e.g. spark.expiry_minutes: 0)
+  settings/
+    health_summary.yml             # routine_stability_index range, sleep duration min
+    profile.yml                    # display_name max length, bio max length, photo max count
+    spark.yml                      # expiry_minutes
+    matching.yml                   # phase 1 — compatibility score thresholds
+    trust.yml                      # phase 1 — trust score thresholds
+```
+
+One file per domain area. Do not create a single catch-all settings file.
+
+### Access
+
+```ruby
+Settings.health_summary.routine_stability_index.min  # => 0.0
+Settings.spark.expiry_minutes                        # => 10
+Settings.profile.display_name.max_length             # => 50
+```
+
+### Adding a new setting
+
+1. Identify the domain file (e.g. `config/settings/spark.yml`)
+2. Add the key with its default value
+3. Add overrides in `settings.test.yml` if test behavior differs
+4. Reference via `Settings.domain.key` in code
 
 ---
 
