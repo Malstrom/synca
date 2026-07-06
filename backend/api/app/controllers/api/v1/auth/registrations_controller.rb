@@ -20,6 +20,8 @@ module Api
           )
 
           render_created(auth_response(user))
+        rescue ActiveRecord::RecordInvalid => e
+          render_validation_errors(e.record)
         rescue ActiveRecord::RecordNotUnique
           render_error(code: "validation_failed", message: "email has already been taken", field: "email")
         end
