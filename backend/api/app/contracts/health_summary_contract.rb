@@ -4,13 +4,13 @@ class HealthSummaryContract < Dry::Validation::Contract
   params do
     required(:health_summary).hash do
       required(:effective_from).filled(:date)
-      optional(:chronotype).maybe(:string, included_in?: HealthSummary.chronotypes.keys)
-      optional(:source).maybe(:string, included_in?: HealthSummary.sources.keys)
+      optional(:chronotype).maybe(:string)
+      optional(:source).maybe(:string)
       optional(:effective_to).maybe(:date)
       optional(:avg_sleep_duration_minutes).maybe(:integer)
       optional(:routine_stability_index).maybe(:float)
-      optional(:activity_level).maybe(:string, included_in?: HealthSummary.activity_levels.keys)
-      optional(:recovery_score).maybe(:string, included_in?: HealthSummary.recovery_scores.keys)
+      optional(:activity_level).maybe(:string)
+      optional(:recovery_score).maybe(:string)
       optional(:sleep_start_local).maybe(:string)
       optional(:sleep_end_local).maybe(:string)
       optional(:peak_energy_start_local).maybe(:string)
@@ -27,8 +27,27 @@ class HealthSummaryContract < Dry::Validation::Contract
     key([:health_summary, :effective_to]).failure("must be after effective_from") if hs[:effective_to] < hs[:effective_from]
   end
 
+  rule(health_summary: :chronotype) do
+    next unless value
+    key.failure("is not included in the list") unless HealthSummary.chronotypes.key?(value)
+  end
+
+  rule(health_summary: :source) do
+    next unless value
+    key.failure("is not included in the list") unless HealthSummary.sources.key?(value)
+  end
+
+  rule(health_summary: :activity_level) do
+    next unless value
+    key.failure("is not included in the list") unless HealthSummary.activity_levels.key?(value)
+  end
+
+  rule(health_summary: :recovery_score) do
+    next unless value
+    key.failure("is not included in the list") unless HealthSummary.recovery_scores.key?(value)
+  end
+
   rule(health_summary: :avg_sleep_duration_minutes) do
-    next if schema_error?([:health_summary, :avg_sleep_duration_minutes])
     next unless value
 
     min = Settings.health_summary.avg_sleep_duration_minutes.min
@@ -36,7 +55,6 @@ class HealthSummaryContract < Dry::Validation::Contract
   end
 
   rule(health_summary: :routine_stability_index) do
-    next if schema_error?([:health_summary, :routine_stability_index])
     next unless value
 
     min = Settings.health_summary.routine_stability_index.min
