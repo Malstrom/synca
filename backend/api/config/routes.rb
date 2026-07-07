@@ -35,6 +35,10 @@ Rails.application.routes.draw do
           post :simulate
         end
       end
+
+      namespace :signals do
+        patch "preferences", to: "preferences#upsert"
+      end
     end
   end
 end
