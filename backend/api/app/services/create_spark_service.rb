@@ -6,8 +6,6 @@ class CreateSparkService
   def self.call(...) = new.call(...)
 
   def call(current_user:, attrs: {})
-    return Failure([ :already_active, "initiator already has an active Spark" ]) if active_spark?(current_user)
-
     spark = current_user.initiated_sparks.build(
       session_code: generate_session_code,
       qr_token:     SecureRandom.uuid,
@@ -22,10 +20,6 @@ class CreateSparkService
   end
 
   private
-
-    def active_spark?(user)
-      Spark.where(initiator_id: user.id, status: [ :pending, :active ]).exists?
-    end
 
     def generate_session_code
       loop do

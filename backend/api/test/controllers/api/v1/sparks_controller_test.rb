@@ -39,7 +39,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
     assert_response :unauthorized
   end
 
-  test "create returns 422 when user already has an active spark" do
+  test "create allows multiple concurrent sparks for the same user" do
     post_json "/api/v1/sparks",
       params: {},
       headers: @alice_headers
@@ -49,8 +49,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
       params: {},
       headers: @alice_headers
 
-    assert_response :unprocessable_entity
-    assert_equal "validation_failed", json.dig(:error, :code)
+    assert_response :created
   end
 
   # --- POST /sparks/:id/join ---
