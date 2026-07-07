@@ -30,16 +30,13 @@ class User < ApplicationRecord
                                inverse_of: :partner
   has_many :spark_rewards, dependent: :destroy
 
-  before_save :normalize_email
+  # NOTE: no callbacks. Email normalization is the responsibility of the
+  # calling service (e.g. CreateUserService, UpdateEmailService).
+  # Convention: any service that writes User#email MUST call
+  # email.downcase before persisting.
 
-  # Uniqueness enforced at DB level (unique index). Kept here to surface
-  # ActiveRecord::RecordNotUnique as a structured 422 before it hits the DB.
+  # Uniqueness enforced at DB level (unique indexes on email and phone).
+  # Kept here to surface RecordNotUnique as a structured 422 before hitting the DB.
   validates :email, uniqueness: { case_sensitive: false }, allow_nil: true
   validates :phone, uniqueness: true, allow_nil: true
-
-  private
-
-    def normalize_email
-      self.email = email&.downcase
-    end
 end

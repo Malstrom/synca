@@ -8,20 +8,20 @@ class Spark < ApplicationRecord
 
   enum :status, { pending: 0, active: 1, completed: 2, expired: 3 }
 
+  # Uniqueness enforced at DB level (unique indexes).
+  # Kept here to surface RecordNotUnique as a structured 422 before hitting the DB.
   validates :session_code, uniqueness: true
   validates :qr_token,     uniqueness: true
-  validate  :one_active_spark_per_initiator, on: :create
 
-  before_validation :generate_tokens, on: :create
+  # NOTE: no AR callbacks, no business-rule validations.
+  # Token generation  → CreateSparkService
+  # Duplicate guard   → partial UNIQUE index idx_one_active_spark_per_initiator
+  #                     (see db/migrate/..._add_spark_indexes.rb)
 
   scope :stale, -> {
     where(status: [ :pending, :active ])
       .where("created_at < ?", expiry_minutes.minutes.ago)
   }
-
-  def expired?
-    created_at < self.class.expiry_minutes.minutes.ago || status == "expired"
-  end
 
   def both_answered?
     initiator_answers.present? && partner_answers.present?
@@ -37,21 +37,4 @@ class Spark < ApplicationRecord
   def self.expiry_minutes
     @expiry_minutes ||= Settings.spark.expiry_minutes
   end
-
-  private
-
-    def generate_tokens
-      self.session_code ||= SecureRandom.random_number(10**6).to_s.rjust(6, "0")
-      self.qr_token     ||= SecureRandom.uuid
-    end
-
-    # Fast-path AR check. The authoritative constraint is the partial UNIQUE index
-    # idx_one_active_spark_per_initiator on the DB — this validation is NOT a
-    # substitute for it. Concurrent requests that bypass this check will fail
-    # at the DB level with a unique violation.
-    def one_active_spark_per_initiator
-      return unless Spark.where(initiator_id: initiator_id, status: [ :pending, :active ]).exists?
-
-      errors.add(:base, "initiator already has an active Spark")
-    end
 end

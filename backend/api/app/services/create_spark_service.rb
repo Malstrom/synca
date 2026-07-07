@@ -6,7 +6,13 @@ class CreateSparkService
   def self.call(...) = new.call(...)
 
   def call(current_user:, attrs: {})
-    spark = current_user.initiated_sparks.build(map_location_attrs(attrs))
+    return Failure([ :already_active, "initiator already has an active Spark" ]) if active_spark?(current_user)
+
+    spark = current_user.initiated_sparks.build(
+      session_code: generate_session_code,
+      qr_token:     SecureRandom.uuid,
+      **map_location_attrs(attrs)
+    )
 
     if spark.save
       Success(spark)
@@ -16,6 +22,17 @@ class CreateSparkService
   end
 
   private
+
+    def active_spark?(user)
+      Spark.where(initiator_id: user.id, status: [ :pending, :active ]).exists?
+    end
+
+    def generate_session_code
+      loop do
+        code = SecureRandom.random_number(10**6).to_s.rjust(6, "0")
+        break code unless Spark.exists?(session_code: code)
+      end
+    end
 
     def map_location_attrs(attrs)
       result = {}
