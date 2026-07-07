@@ -10,27 +10,40 @@ jobs:
   ingest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout synca
+        uses: actions/checkout@v4
         with:
           repository: Malstrom/synca
+          token: ${{ secrets.SYNCA_TOKEN }}
+          path: synca
 
-      - uses: actions/checkout@v4
+      - name: Checkout calvin
+        uses: actions/checkout@v4
         with:
           repository: Malstrom/calvin
-          path: calvin
           token: ${{ secrets.SYNCA_TOKEN }}
+          path: calvin
+
+      - name: Configure git identity
+        run: |
+          git config --global user.email "calvin@synca.app"
+          git config --global user.name "Calvin"
 
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
-          bundler-cache: true
-          working-directory: calvin
+          bundler-cache: false
+
+      - name: Install Ruby dependencies
+        run: bundle install
+        working-directory: calvin/bin
 
       - name: Run ingestion
         working-directory: calvin
         env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/calvin/bin/Gemfile
           MISTRAL_API_KEY:      ${{ secrets.MISTRAL_API_KEY }}
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          GITHUB_TOKEN:         ${{ secrets.GITHUB_TOKEN }}
-        run: ruby bin/ingest.rb --repo Malstrom/synca
+          GITHUB_TOKEN:         ${{ secrets.SYNCA_TOKEN }}
+        run: bundle exec ruby bin/ingest.rb --repo Malstrom/synca
