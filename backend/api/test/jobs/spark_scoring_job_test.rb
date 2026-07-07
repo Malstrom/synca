@@ -4,7 +4,7 @@ require "test_helper"
 
 class SparkScoringJobTest < ActiveJob::TestCase
   setup do
-    @spark = sparks(:alice_bob_active_spark)
+    @spark = sparks(:active_both_answered)
   end
 
   test "performs scoring and transitions spark to completed" do
