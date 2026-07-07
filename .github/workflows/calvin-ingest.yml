@@ -1,0 +1,36 @@
+name: Calvin RAG Ingestion
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: Malstrom/synca
+
+      - uses: actions/checkout@v4
+        with:
+          repository: Malstrom/calvin
+          path: calvin
+          token: ${{ secrets.CALVIN_REPO_TOKEN }}
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: calvin
+
+      - name: Run ingestion
+        working-directory: calvin
+        env:
+          MISTRAL_API_KEY:      ${{ secrets.MISTRAL_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GITHUB_TOKEN:         ${{ secrets.GITHUB_TOKEN }}
+        run: ruby bin/ingest.rb --repo Malstrom/synca
