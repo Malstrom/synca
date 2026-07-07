@@ -1,6 +1,6 @@
 alice_reward:
   user: alice
-  spark_session: alice_spark
+  spark: alice_spark
   reward_type: 0
   status: 0
-  valid_until: <%= 7.days.from_now %>
+  valid_until: <%= 7.days.from_now.iso8601 %>

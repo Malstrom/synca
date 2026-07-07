@@ -11,28 +11,27 @@ class SubmitSparkAnswersServiceTest < ActiveSupport::TestCase
   end
 
   test "stores initiator answers and enqueues job when both answered" do
-    session = SparkSession.create!(
-      initiator: @alice,
-      partner:   @bob,
-      status:    :active,
+    spark = Spark.create!(
+      initiator:         @alice,
+      partner:           @bob,
+      status:            :active,
       initiator_answers: [ 1, 2, 3 ]
     )
 
-    assert_enqueued_with(job: SparkScoringJob, args: [ session.id ]) do
+    assert_enqueued_with(job: SparkScoringJob, args: [ spark.id ]) do
       result = SubmitSparkAnswersService.call(
         current_user: @bob,
-        spark_session: session,
-        answers: [ 4, 5, 6 ]
+        spark:        spark,
+        answers:      [ 4, 5, 6 ]
       )
       assert result.success?, "expected Success, got #{result.inspect}"
     end
 
-    reloaded = session.reload
-    assert_equal [ 4, 5, 6 ], reloaded.partner_answers
+    assert_equal [ 4, 5, 6 ], spark.reload.partner_answers
   end
 
   test "stores initiator answers but does not enqueue job when partner not answered" do
-    session = SparkSession.create!(
+    spark = Spark.create!(
       initiator: @alice,
       partner:   @bob,
       status:    :active
@@ -41,23 +40,22 @@ class SubmitSparkAnswersServiceTest < ActiveSupport::TestCase
     assert_no_enqueued_jobs(only: SparkScoringJob) do
       result = SubmitSparkAnswersService.call(
         current_user: @alice,
-        spark_session: session,
-        answers: [ 1, 2, 3 ]
+        spark:        spark,
+        answers:      [ 1, 2, 3 ]
       )
       assert result.success?, "expected Success, got #{result.inspect}"
     end
 
-    reloaded = session.reload
-    assert_equal [ 1, 2, 3 ], reloaded.initiator_answers
+    assert_equal [ 1, 2, 3 ], spark.reload.initiator_answers
   end
 
-  test "returns session_not_active when session is not active" do
-    session = SparkSession.create!(initiator: @alice, partner: @bob, status: :pending)
+  test "returns session_not_active when spark is not active" do
+    spark = Spark.create!(initiator: @alice, partner: @bob, status: :pending)
 
     result = SubmitSparkAnswersService.call(
       current_user: @alice,
-      spark_session: session,
-      answers: [ 1, 2, 3 ]
+      spark:        spark,
+      answers:      [ 1, 2, 3 ]
     )
 
     assert result.failure?, "expected Failure, got #{result.inspect}"

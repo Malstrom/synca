@@ -6,58 +6,58 @@ class RewardEngineTest < ActiveSupport::TestCase
   setup do
     @alice = users(:alice)
     @bob   = users(:bob)
-    @session = SparkSession.create!(
-      initiator:         @alice,
-      partner:           @bob,
-      status:            :completed,
-      started_at:        1.hour.ago,
-      completed_at:      Time.current,
-      initiator_answers: [ 1, 2, 3 ],
-      partner_answers:   [ 4, 5, 6 ],
+    @spark = Spark.create!(
+      initiator:           @alice,
+      partner:             @bob,
+      status:              :completed,
+      started_at:          1.hour.ago,
+      completed_at:        Time.current,
+      initiator_answers:   [ 1, 2, 3 ],
+      partner_answers:     [ 4, 5, 6 ],
       compatibility_score: 80.0
     )
   end
 
   test "issues one reward per participant" do
     assert_difference "SparkReward.count", 2 do
-      RewardEngine.call(@session)
+      RewardEngine.call(@spark)
     end
   end
 
   test "issues premium_week reward for free users" do
-    RewardEngine.call(@session)
+    RewardEngine.call(@spark)
 
-    alice_reward = SparkReward.find_by(user: @alice, spark_session: @session)
+    alice_reward = SparkReward.find_by(user: @alice, spark: @spark)
     assert_equal "premium_week", alice_reward.reward_type
   end
 
   test "reward has pending status" do
-    RewardEngine.call(@session)
+    RewardEngine.call(@spark)
 
-    alice_reward = SparkReward.find_by(user: @alice, spark_session: @session)
+    alice_reward = SparkReward.find_by(user: @alice, spark: @spark)
     assert_equal "pending", alice_reward.status
   end
 
   test "reward valid_until is 7 days from now for premium_week" do
-    RewardEngine.call(@session)
+    RewardEngine.call(@spark)
 
-    alice_reward = SparkReward.find_by(user: @alice, spark_session: @session)
+    alice_reward = SparkReward.find_by(user: @alice, spark: @spark)
     assert_in_delta 7.days.from_now, alice_reward.valid_until, 5.seconds
   end
 
   test "does not issue duplicate rewards when called twice" do
-    RewardEngine.call(@session)
+    RewardEngine.call(@spark)
 
     assert_no_difference "SparkReward.count" do
-      RewardEngine.call(@session)
+      RewardEngine.call(@spark)
     end
   end
 
-  test "marks reward_issued flags on session" do
-    RewardEngine.call(@session)
+  test "marks reward_issued flags on spark" do
+    RewardEngine.call(@spark)
 
-    @session.reload
-    assert @session.reward_issued_initiator
-    assert @session.reward_issued_partner
+    @spark.reload
+    assert @spark.reward_issued_initiator
+    assert @spark.reward_issued_partner
   end
 end
