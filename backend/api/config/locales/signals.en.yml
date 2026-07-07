@@ -1,0 +1,6 @@
+en:
+  signals:
+    summary:
+      alignment_note: "You declared %{chronotype} but your data shows %{chronotype}."
+  errors:
+    no_signals: "No health data found. Connect Apple Health to see your profile."
