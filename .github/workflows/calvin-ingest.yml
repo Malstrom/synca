@@ -14,7 +14,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Malstrom/synca
-          token: ${{ secrets.SYNCA_TOKEN }}
           path: synca
 
       - name: Checkout calvin
@@ -32,7 +31,6 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
-          bundler-cache: false
 
       - name: Install Ruby dependencies
         run: bundle install
