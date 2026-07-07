@@ -1,0 +1,7 @@
+# Reward validity in days per reward_type.
+# Used by RewardEngine — change here without touching application code.
+rewards:
+  valid_days:
+    premium_week: 7
+    match_credit: 30
+    boost: 7

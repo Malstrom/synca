@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-class JoinSparkSessionContract < Dry::Validation::Contract
+class JoinSparkContract < Dry::Validation::Contract
   params do
-    required(:spark_session).hash do
+    required(:spark).hash do
       optional(:session_code).maybe(:string)
       optional(:qr_token).maybe(:string)
     end
   end
 
-  rule(:spark_session) do
+  rule(:spark) do
     session_code = value[:session_code]
     qr_token     = value[:qr_token]
 

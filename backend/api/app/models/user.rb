@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
+  # validations: false because non-email providers (apple, google, telegram)
+  # never set a password. Presence/length validation for the :email provider
+  # is handled by Dry::Validation contracts (e.g. RegisterContract).
   has_secure_password validations: false
 
   enum :auth_provider, {
@@ -20,26 +23,27 @@ class User < ApplicationRecord
   has_one  :preference_profile, dependent: :destroy
   has_many :match_participants,  dependent: :destroy
   has_many :matches,             through: :match_participants
-  has_many :initiated_spark_sessions, class_name: "SparkSession",
-                                       foreign_key: :initiator_id,
-                                       dependent: :destroy,
-                                       inverse_of: :initiator
-  has_many :joined_spark_sessions,    class_name: "SparkSession",
-                                       foreign_key: :partner_id,
-                                       dependent: :nullify,
-                                       inverse_of: :partner
+  has_many :initiated_sparks, class_name: "Spark",
+                               foreign_key: :initiator_id,
+                               dependent: :destroy,
+                               inverse_of: :initiator
+  # dependent: :nullify is intentional: when a User is deleted as a partner,
+  # the Spark record is preserved with partner_id = nil.
+  # ExpireStaleSparkJob is responsible for cleaning up orphaned sparks
+  # in pending/active state.
+  has_many :joined_sparks,    class_name: "Spark",
+                               foreign_key: :partner_id,
+                               dependent: :nullify,
+                               inverse_of: :partner
   has_many :spark_rewards, dependent: :destroy
 
-  before_save :normalize_email
+  # NOTE: no callbacks. Email normalization is the responsibility of the
+  # calling service (e.g. CreateUserService, UpdateEmailService).
+  # Convention: any service that writes User#email MUST call
+  # email.downcase before persisting.
 
-  # Uniqueness enforced at DB level (unique index). Kept here to surface
-  # ActiveRecord::RecordNotUnique as a structured 422 before it hits the DB.
-  validates :email, uniqueness: { case_sensitive: false }, allow_nil: true
-  validates :phone, uniqueness: true, allow_nil: true
-
-  private
-
-    def normalize_email
-      self.email = email&.downcase
-    end
+  # NOTE: no AR uniqueness validations. Uniqueness is enforced at DB level
+  # (unique indexes on email and phone). The writing service (CreateUserService,
+  # UpdateEmailService) is responsible for rescuing ActiveRecord::RecordNotUnique
+  # and returning a structured Failure.
 end

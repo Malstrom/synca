@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class SparkSessionSerializer
+class SparkSerializer
   include Alba::Resource
 
   attributes :id,

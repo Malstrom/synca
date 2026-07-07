@@ -3,44 +3,28 @@
 require "test_helper"
 
 class SparkExpireJobTest < ActiveJob::TestCase
-  test "expires stale pending and active sessions" do
-    stale_session = SparkSession.create!(
-      initiator:  users(:alice),
-      status:     :pending,
-      created_at: 20.minutes.ago
-    )
+  test "expires stale pending and active sparks" do
+    stale_spark = sparks(:stale_pending_spark)  # created_at: 20.minutes.ago
 
-    assert_changes -> { stale_session.reload.status }, from: "pending", to: "expired" do
+    assert_changes -> { stale_spark.reload.status }, from: "pending", to: "expired" do
       SparkExpireJob.perform_now
     end
   end
 
-  test "does not expire recent sessions" do
-    recent_session = SparkSession.create!(
-      initiator:  users(:alice),
-      status:     :pending,
-      created_at: 2.minutes.ago
-    )
+  test "does not expire recent sparks" do
+    recent_spark = sparks(:recent_pending_spark)  # created_at: now
 
     SparkExpireJob.perform_now
 
-    assert_equal "pending", recent_session.reload.status
+    assert_equal "pending", recent_spark.reload.status
   end
 
-  test "does not expire already completed sessions" do
-    completed_session = SparkSession.create!(
-      initiator:        users(:alice),
-      partner:          users(:bob),
-      status:           :completed,
-      created_at:       20.minutes.ago,
-      completed_at:     Time.current,
-      initiator_answers: [],
-      partner_answers:   []
-    )
+  test "does not expire already completed sparks" do
+    completed_spark = sparks(:alice_spark)  # status: completed
 
     SparkExpireJob.perform_now
 
-    assert_equal "completed", completed_session.reload.status
+    assert_equal "completed", completed_spark.reload.status
   end
 
   test "is enqueued on spark queue" do

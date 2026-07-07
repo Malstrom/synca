@@ -1,2 +1,11 @@
 spark:
-  expiry_minutes: 10
+  expiry_minutes: 15
+
+# Valid state transitions (enforced by services, not a state machine gem):
+#   pending  -> active    (JoinSparkService)
+#   pending  -> expired   (ExpireStaleSparkService)
+#   active   -> completed (SparkScoringJob via SparkScoringService)
+#   active   -> expired   (ExpireStaleSparkService)
+# completed and expired are terminal — no outgoing transitions.
+# NEVER call spark.update!(status: ...) outside of the service responsible
+# for that transition.

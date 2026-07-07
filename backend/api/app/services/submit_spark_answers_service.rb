@@ -5,21 +5,21 @@ class SubmitSparkAnswersService
 
   def self.call(...) = new.call(...)
 
-  def call(current_user:, spark_session:, answers:)
-    unless spark_session.active?
+  def call(current_user:, spark:, answers:)
+    unless spark.active?
       return Failure[:session_not_active, "Session is not active"]
     end
 
-    if current_user.id == spark_session.initiator_id
-      spark_session.update!(initiator_answers: answers)
+    if current_user.id == spark.initiator_id
+      spark.update!(initiator_answers: answers)
     else
-      spark_session.update!(partner_answers: answers)
+      spark.update!(partner_answers: answers)
     end
 
-    if spark_session.reload.both_answered?
-      SparkScoringJob.perform_later(spark_session.id)
+    if spark.reload.both_answered?
+      SparkScoringJob.perform_later(spark.id)
     end
 
-    Success(spark_session)
+    Success(spark)
   end
 end

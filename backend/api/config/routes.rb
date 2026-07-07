@@ -20,7 +20,7 @@ Rails.application.routes.draw do
         post "guest",    to: "guest_registrations#create"
       end
 
-      resources :spark_sessions, only: [ :create ] do
+      resources :sparks, only: [ :create ] do
         member do
           post :join
           post :submit_answers

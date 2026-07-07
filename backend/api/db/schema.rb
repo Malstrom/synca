@@ -16,7 +16,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
 
   create_table "health_summaries", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.integer "chronotype", null: false
+    t.integer "chronotype"
     t.time "sleep_start_local"
     t.time "sleep_end_local"
     t.integer "avg_sleep_duration_minutes"
@@ -31,13 +31,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id", "effective_from"], name: "index_health_summaries_on_user_id_and_effective_from"
+    t.index ["user_id"], name: "idx_one_active_health_summary_per_user", unique: true, where: "(effective_to IS NULL)"
     t.index ["user_id"], name: "index_health_summaries_on_user_id"
   end
 
   create_table "match_participants", force: :cascade do |t|
     t.bigint "match_id", null: false
     t.bigint "user_id", null: false
-    t.integer "role", default: 0, null: false
+    t.integer "role", default: 1, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["match_id", "user_id"], name: "index_match_participants_on_match_id_and_user_id", unique: true
@@ -82,18 +83,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
 
   create_table "spark_rewards", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.bigint "spark_session_id", null: false
+    t.bigint "spark_id", null: false
     t.integer "reward_type", null: false
     t.integer "status", default: 0, null: false
-    t.datetime "valid_until", null: false
+    t.datetime "valid_until"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["spark_session_id"], name: "index_spark_rewards_on_spark_session_id"
+    t.index ["spark_id"], name: "index_spark_rewards_on_spark_id"
     t.index ["user_id", "status"], name: "index_spark_rewards_on_user_id_and_status"
     t.index ["user_id"], name: "index_spark_rewards_on_user_id"
   end
 
-  create_table "spark_sessions", force: :cascade do |t|
+  create_table "sparks", force: :cascade do |t|
     t.bigint "initiator_id", null: false
     t.bigint "partner_id"
     t.integer "status", default: 0, null: false
@@ -110,11 +111,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
     t.boolean "reward_issued_partner", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["initiator_id"], name: "index_spark_sessions_on_initiator_id"
-    t.index ["partner_id"], name: "index_spark_sessions_on_partner_id"
-    t.index ["qr_token"], name: "index_spark_sessions_on_qr_token", unique: true
-    t.index ["session_code"], name: "index_spark_sessions_on_session_code", unique: true
-    t.index ["status"], name: "index_spark_sessions_on_status"
+    t.index ["initiator_id"], name: "index_sparks_on_initiator_id"
+    t.index ["partner_id"], name: "index_sparks_on_partner_id"
+    t.index ["qr_token"], name: "index_sparks_on_qr_token", unique: true
+    t.index ["session_code"], name: "index_sparks_on_session_code", unique: true
+    t.index ["status"], name: "index_sparks_on_status"
   end
 
   create_table "users", force: :cascade do |t|
@@ -137,8 +138,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
   add_foreign_key "match_participants", "users"
   add_foreign_key "preference_profiles", "users"
   add_foreign_key "profiles", "users"
-  add_foreign_key "spark_rewards", "spark_sessions"
+  add_foreign_key "spark_rewards", "sparks"
   add_foreign_key "spark_rewards", "users"
-  add_foreign_key "spark_sessions", "users", column: "initiator_id"
-  add_foreign_key "spark_sessions", "users", column: "partner_id"
+  add_foreign_key "sparks", "users", column: "initiator_id"
+  add_foreign_key "sparks", "users", column: "partner_id"
 end
