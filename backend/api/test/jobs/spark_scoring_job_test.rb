@@ -4,16 +4,7 @@ require "test_helper"
 
 class SparkScoringJobTest < ActiveJob::TestCase
   setup do
-    @alice = users(:alice)
-    @bob   = users(:bob)
-    @spark = Spark.create!(
-      initiator:         @alice,
-      partner:           @bob,
-      status:            :active,
-      started_at:        Time.current,
-      initiator_answers: [ 1, 2, 3 ],
-      partner_answers:   [ 4, 5, 6 ]
-    )
+    @spark = sparks(:alice_bob_active_spark)
   end
 
   test "performs scoring and transitions spark to completed" do

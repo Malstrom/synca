@@ -14,6 +14,20 @@ alice_spark:
   reward_issued_initiator: true
   reward_issued_partner: true
 
+# Active spark — alice initiated, bob joined, both answered.
+# Used by SparkScoringJobTest as the clean active state precondition.
+alice_bob_active_spark:
+  initiator: alice
+  partner: bob
+  status: 1
+  session_code: "ABC123"
+  qr_token: "880e8400-e29b-41d4-a716-446655440003"
+  started_at: <%= 30.minutes.ago.iso8601 %>
+  initiator_answers: [1, 2, 3]
+  partner_answers: [4, 5, 6]
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
 # Pending spark — charlie initiated, old enough to be stale.
 # Used by SparkTest#stale_scope and #one_active_spark_per_initiator.
 # charlie is NOT used as initiator in controller/job/service tests so no conflict.
