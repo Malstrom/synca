@@ -22,5 +22,5 @@ class UpsertPreferencesService
 
   private
 
-  attr_reader :current_user, :attrs
+    attr_reader :current_user, :attrs
 end
