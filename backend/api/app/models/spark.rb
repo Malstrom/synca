@@ -16,8 +16,7 @@ class Spark < ApplicationRecord
   # Valid state transitions — see config/settings/spark.yml for the canonical list.
   # NEVER call spark.update!(status: ...) outside of the responsible service.
   # NOTE: no AR callbacks, no business-rule validations.
-  # Token generation  → CreateSparkService
-  # Duplicate guard   → partial UNIQUE index idx_one_active_spark_per_initiator
+  # Token generation → CreateSparkService
 
   scope :stale, -> {
     where(status: [ :pending, :active ])

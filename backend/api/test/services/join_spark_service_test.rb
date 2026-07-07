@@ -42,7 +42,7 @@ class JoinSparkServiceTest < ActiveSupport::TestCase
   end
 
   test "returns spark_not_joinable when spark is not pending" do
-    spark = sparks(:alice_active_spark_for_join)
+    spark = sparks(:alice_spark)  # completed — not pending, JoinSparkService rejects it
 
     result = JoinSparkService.call(
       current_user: @bob,

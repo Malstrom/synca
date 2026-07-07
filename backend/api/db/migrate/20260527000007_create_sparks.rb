@@ -31,14 +31,5 @@ class CreateSparks < ActiveRecord::Migration[8.0]
     add_index :sparks, :session_code, unique: true
     add_index :sparks, :qr_token,     unique: true
     add_index :sparks, :status
-
-    # Prevents race condition in one_active_spark_per_initiator validation.
-    # Guarantees at DB level that an initiator can have at most one pending/active
-    # spark at a time. The AR validation is a fast-path check; this index is the
-    # authoritative constraint that makes concurrent requests safe.
-    add_index :sparks, :initiator_id,
-              name: "idx_one_active_spark_per_initiator",
-              unique: true,
-              where: "status IN (0, 1)"
   end
 end

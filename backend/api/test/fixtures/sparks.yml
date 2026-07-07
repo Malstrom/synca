@@ -1,5 +1,6 @@
 # Completed spark — alice initiated, bob joined.
-# Used by model tests (both_answered?, valid?, session_code uniqueness).
+# Used by model tests and JoinSparkServiceTest#returns_spark_not_joinable
+# (completed is not-pending, so JoinSparkService rejects it).
 alice_spark:
   initiator: alice
   partner: bob
@@ -38,20 +39,8 @@ alice_pending_spark:
   reward_issued_initiator: false
   reward_issued_partner: false
 
-# Active spark — alice initiated, no partner yet, already active.
-# Used by JoinSparkServiceTest#returns_spark_not_joinable.
-alice_active_spark_for_join:
-  initiator: alice
-  status: 1
-  session_code: "JOIN02"
-  qr_token: "aa0e8400-e29b-41d4-a716-446655440005"
-  started_at: <%= 10.minutes.ago.iso8601 %>
-  reward_issued_initiator: false
-  reward_issued_partner: false
-
 # Pending spark — charlie initiated, old enough to be stale.
-# Used by SparkTest#stale_scope and #one_active_spark_per_initiator.
-# charlie is NOT used as initiator in controller/job/service tests so no conflict.
+# Used by SparkTest#stale_scope.
 pending_spark:
   initiator: charlie
   status: 0
