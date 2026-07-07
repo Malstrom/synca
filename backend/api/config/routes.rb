@@ -37,7 +37,7 @@ Rails.application.routes.draw do
       end
 
       namespace :signals do
-        get  "me/summary", to: "summary#show"
+        get "me/summary", to: "summary#show"
         patch "preferences", to: "preferences#upsert"
       end
     end
