@@ -55,7 +55,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   # --- POST /sparks/:id/join ---
 
   test "join sets partner, transitions to active and returns 200" do
-    spark = create_pending_spark_for(@alice)
+    spark = sparks(:alice_pending_spark)
 
     post_json "/api/v1/sparks/#{spark.id}/join",
       params: { spark: { session_code: spark.session_code } },
@@ -67,7 +67,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "join with qr_token works" do
-    spark = create_pending_spark_for(@alice)
+    spark = sparks(:alice_pending_spark)
 
     post_json "/api/v1/sparks/#{spark.id}/join",
       params: { spark: { qr_token: spark.qr_token } },
@@ -78,7 +78,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "join with wrong session_code returns 422" do
-    spark = create_pending_spark_for(@alice)
+    spark = sparks(:alice_pending_spark)
 
     post_json "/api/v1/sparks/#{spark.id}/join",
       params: { spark: { session_code: "000000" } },
@@ -89,7 +89,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "join own spark returns 422" do
-    spark = create_pending_spark_for(@alice)
+    spark = sparks(:alice_pending_spark)
 
     post_json "/api/v1/sparks/#{spark.id}/join",
       params: { spark: { session_code: spark.session_code } },
@@ -100,13 +100,11 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "join an already active spark returns 422" do
-    spark = create_pending_spark_for(@alice)
-    spark.update!(partner_id: @bob.id, status: :active, started_at: Time.current)
+    spark = sparks(:active_no_answers)
 
-    third_user = users(:charlie)
     post_json "/api/v1/sparks/#{spark.id}/join",
       params: { spark: { session_code: spark.session_code } },
-      headers: auth_headers(third_user)
+      headers: auth_headers(users(:charlie))
 
     assert_response :unprocessable_entity
     assert_equal "spark_not_joinable", json.dig(:error, :code)
@@ -115,7 +113,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   # --- POST /sparks/:id/submit_answers ---
 
   test "submit_answers stores initiator answers and returns 200" do
-    spark = create_active_spark_for(@alice, @bob)
+    spark = sparks(:active_no_answers)
 
     post_json "/api/v1/sparks/#{spark.id}/submit_answers",
       params: { spark: { answers: [ 1, 2, 3 ] } },
@@ -126,7 +124,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "submit_answers stores partner answers and returns 200" do
-    spark = create_active_spark_for(@alice, @bob)
+    spark = sparks(:active_no_answers)
 
     post_json "/api/v1/sparks/#{spark.id}/submit_answers",
       params: { spark: { answers: [ 4, 5, 6 ] } },
@@ -137,8 +135,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "submit_answers enqueues SparkScoringJob when both users have answered" do
-    spark = create_active_spark_for(@alice, @bob)
-    spark.update!(initiator_answers: [ 1, 2, 3 ])
+    spark = sparks(:active_awaiting_partner_answers)
 
     assert_enqueued_with(job: SparkScoringJob, args: [ spark.id ]) do
       post_json "/api/v1/sparks/#{spark.id}/submit_answers",
@@ -148,7 +145,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "submit_answers does not enqueue SparkScoringJob when only one side answered" do
-    spark = create_active_spark_for(@alice, @bob)
+    spark = sparks(:active_no_answers)
 
     assert_no_enqueued_jobs(only: SparkScoringJob) do
       post_json "/api/v1/sparks/#{spark.id}/submit_answers",
@@ -158,7 +155,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "submit_answers on non-active spark returns 422" do
-    spark = create_pending_spark_for(@alice)
+    spark = sparks(:alice_pending_spark)
 
     post_json "/api/v1/sparks/#{spark.id}/submit_answers",
       params: { spark: { answers: [ 1, 2, 3 ] } },
@@ -171,7 +168,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   # --- GET /sparks/:id/result ---
 
   test "result returns compatibility score and dimensions when spark is completed" do
-    spark = create_completed_spark_for(@alice, @bob)
+    spark = sparks(:alice_spark)
 
     get "/api/v1/sparks/#{spark.id}/result", headers: @alice_headers
 
@@ -182,7 +179,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "result returns 422 when spark is not yet completed" do
-    spark = create_active_spark_for(@alice, @bob)
+    spark = sparks(:active_no_answers)
 
     get "/api/v1/sparks/#{spark.id}/result", headers: @alice_headers
 
@@ -191,7 +188,7 @@ class Api::V1::SparksControllerTest < ApiTestCase
   end
 
   test "result returns 403 when user is not a participant" do
-    spark = create_completed_spark_for(@alice, @bob)
+    spark = sparks(:alice_spark)
 
     get "/api/v1/sparks/#{spark.id}/result",
       headers: auth_headers(users(:charlie))
@@ -213,50 +210,4 @@ class Api::V1::SparksControllerTest < ApiTestCase
 
     assert_response :unauthorized
   end
-
-  private
-
-    def create_pending_spark_for(user)
-      Spark.create!(
-        initiator: user,
-        status: :pending
-      )
-    end
-
-    def create_active_spark_for(initiator, partner)
-      Spark.create!(
-        initiator:  initiator,
-        partner:    partner,
-        status:     :active,
-        started_at: Time.current
-      )
-    end
-
-    def create_completed_spark_for(initiator, partner)
-      spark = Spark.create!(
-        initiator:           initiator,
-        partner:             partner,
-        status:              :completed,
-        started_at:          1.hour.ago,
-        completed_at:        Time.current,
-        initiator_answers:   [ 1, 2, 3 ],
-        partner_answers:     [ 1, 2, 3 ],
-        compatibility_score: 82.5
-      )
-      SparkReward.create!(
-        user:        initiator,
-        spark:       spark,
-        reward_type: :premium_week,
-        status:      :pending,
-        valid_until: 7.days.from_now
-      )
-      SparkReward.create!(
-        user:        partner,
-        spark:       spark,
-        reward_type: :premium_week,
-        status:      :pending,
-        valid_until: 7.days.from_now
-      )
-      spark
-    end
 end

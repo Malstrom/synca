@@ -1,22 +1,69 @@
-# Completed spark — alice initiated, bob joined.
-# Used by JoinSparkServiceTest#returns_spark_not_joinable.
-alice_spark:
+# ── PENDING ──────────────────────────────────────────────────────────────────
+
+# Pending spark — alice initiated, no partner yet.
+# Used by: JoinSparkServiceTest, SubmitSparkAnswersServiceTest#session_not_active,
+#          SparksControllerTest (join tests, submit_answers on non-active).
+alice_pending_spark:
+  initiator: alice
+  status: 0
+  session_code: "JOIN01"
+  qr_token: "990e8400-e29b-41d4-a716-446655440004"
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# Pending spark — charlie initiated, 20 minutes old (stale).
+# Used by: SparkExpireJobTest#expires_stale, SparkTest#stale_scope.
+stale_pending_spark:
+  initiator: charlie
+  status: 0
+  session_code: "999888"
+  qr_token: "660e8400-e29b-41d4-a716-446655440001"
+  created_at: <%= 20.minutes.ago.iso8601 %>
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# Pending spark — bob initiated, created now (not stale).
+# Used by: SparkExpireJobTest#does_not_expire_recent_sparks.
+recent_pending_spark:
+  initiator: bob
+  status: 0
+  session_code: "RECNT1"
+  qr_token: "bb0e8400-e29b-41d4-a716-446655440006"
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# ── ACTIVE ────────────────────────────────────────────────────────────────────
+
+# Active spark — alice initiated, bob joined, no answers yet.
+# Used by: SubmitSparkAnswersServiceTest#stores_answers_without_enqueuing_job,
+#          SparksControllerTest (submit_answers, result#not_yet_completed).
+active_no_answers:
   initiator: alice
   partner: bob
-  status: 2
-  session_code: "123456"
-  qr_token: "550e8400-e29b-41d4-a716-446655440000"
-  started_at: <%= 2.hours.ago.iso8601 %>
-  completed_at: <%= 1.hour.ago.iso8601 %>
-  initiator_answers: []
-  partner_answers: []
-  compatibility_score: 75.0
-  reward_issued_initiator: true
-  reward_issued_partner: true
+  status: 1
+  session_code: "AWTI01"
+  qr_token: "dd0e8400-e29b-41d4-a716-446655440009"
+  started_at: <%= 20.minutes.ago.iso8601 %>
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# Active spark — alice initiated, bob joined, initiator already answered.
+# Used by: SubmitSparkAnswersServiceTest#enqueues_job_when_both_answered,
+#          SparksControllerTest#submit_answers_enqueues_job.
+active_awaiting_partner_answers:
+  initiator: alice
+  partner: bob
+  status: 1
+  session_code: "AWTP01"
+  qr_token: "cc0e8400-e29b-41d4-a716-446655440008"
+  started_at: <%= 20.minutes.ago.iso8601 %>
+  initiator_answers: [1, 2, 3]
+  reward_issued_initiator: false
+  reward_issued_partner: false
 
 # Active spark — alice initiated, bob joined, both answered.
-# Used by SparkScoringJobTest.
-alice_bob_active_spark:
+# Used by: SparkScoringJobTest.
+active_both_answered:
   initiator: alice
   partner: bob
   status: 1
@@ -28,8 +75,27 @@ alice_bob_active_spark:
   reward_issued_initiator: false
   reward_issued_partner: false
 
-# Completed spark — alice initiated, bob joined, rewards NOT yet issued.
-# Used by RewardEngineTest (verifies reward emission on a fresh completed spark).
+# ── COMPLETED ─────────────────────────────────────────────────────────────────
+
+# Completed spark — alice initiated, bob joined. Rewards already issued.
+# Used by: JoinSparkServiceTest#returns_spark_not_joinable,
+#          SparksControllerTest (result tests).
+alice_spark:
+  initiator: alice
+  partner: bob
+  status: 2
+  session_code: "123456"
+  qr_token: "550e8400-e29b-41d4-a716-446655440000"
+  started_at: <%= 2.hours.ago.iso8601 %>
+  completed_at: <%= 1.hour.ago.iso8601 %>
+  initiator_answers: [1, 2, 3]
+  partner_answers: [4, 5, 6]
+  compatibility_score: 75.0
+  reward_issued_initiator: true
+  reward_issued_partner: true
+
+# Completed spark — alice initiated, bob joined. Rewards NOT yet issued.
+# Used by: RewardEngineTest.
 reward_pending_spark:
   initiator: alice
   partner: bob
@@ -44,64 +110,8 @@ reward_pending_spark:
   reward_issued_initiator: false
   reward_issued_partner: false
 
-# Active spark — alice initiated, bob joined.
-# initiator_answers already set; bob (partner) has not answered yet.
-# Used by SubmitSparkAnswersServiceTest#enqueues_job_when_both_answered.
-active_awaiting_partner_answers:
-  initiator: alice
-  partner: bob
-  status: 1
-  session_code: "AWTP01"
-  qr_token: "cc0e8400-e29b-41d4-a716-446655440008"
-  started_at: <%= 20.minutes.ago.iso8601 %>
-  initiator_answers: [1, 2, 3]
-  reward_issued_initiator: false
-  reward_issued_partner: false
-
-# Active spark — alice initiated, bob joined, no answers yet.
-# Used by SubmitSparkAnswersServiceTest#stores_answers_without_enqueuing_job.
-active_no_answers:
-  initiator: alice
-  partner: bob
-  status: 1
-  session_code: "AWTI01"
-  qr_token: "dd0e8400-e29b-41d4-a716-446655440009"
-  started_at: <%= 20.minutes.ago.iso8601 %>
-  reward_issued_initiator: false
-  reward_issued_partner: false
-
-# Pending spark — alice initiated, no partner yet.
-# Used by JoinSparkServiceTest and SubmitSparkAnswersServiceTest#session_not_active.
-alice_pending_spark:
-  initiator: alice
-  status: 0
-  session_code: "JOIN01"
-  qr_token: "990e8400-e29b-41d4-a716-446655440004"
-  reward_issued_initiator: false
-  reward_issued_partner: false
-
-# Stale pending spark — charlie initiated, 20 minutes old.
-# Used by SparkExpireJobTest#expires_stale and SparkTest#stale_scope.
-pending_spark:
-  initiator: charlie
-  status: 0
-  session_code: "999888"
-  qr_token: "660e8400-e29b-41d4-a716-446655440001"
-  created_at: <%= 20.minutes.ago.iso8601 %>
-  reward_issued_initiator: false
-  reward_issued_partner: false
-
-# Recent pending spark — bob initiated, created now (no created_at = Rails uses current time).
-# Used by SparkExpireJobTest#does_not_expire_recent_sparks.
-recent_pending_spark:
-  initiator: bob
-  status: 0
-  session_code: "RECNT1"
-  qr_token: "bb0e8400-e29b-41d4-a716-446655440006"
-  reward_issued_initiator: false
-  reward_issued_partner: false
-
-# Completed spark — dave initiated.
+# Completed spark — dave initiated, charlie joined. Rewards already issued.
+# Used by: (general completed state reference, dave-specific tests).
 dave_spark:
   initiator: dave
   partner: charlie
@@ -110,8 +120,8 @@ dave_spark:
   qr_token: "770e8400-e29b-41d4-a716-446655440002"
   started_at: <%= 3.hours.ago.iso8601 %>
   completed_at: <%= 2.hours.ago.iso8601 %>
-  initiator_answers: []
-  partner_answers: []
+  initiator_answers: [1, 2, 3]
+  partner_answers: [4, 5, 6]
   compatibility_score: 80.0
   reward_issued_initiator: true
   reward_issued_partner: true
