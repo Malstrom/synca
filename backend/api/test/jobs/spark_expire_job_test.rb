@@ -4,7 +4,7 @@ require "test_helper"
 
 class SparkExpireJobTest < ActiveJob::TestCase
   test "expires stale pending and active sparks" do
-    stale_spark = sparks(:pending_spark)  # created_at: 20.minutes.ago
+    stale_spark = sparks(:stale_pending_spark)  # created_at: 20.minutes.ago
 
     assert_changes -> { stale_spark.reload.status }, from: "pending", to: "expired" do
       SparkExpireJob.perform_now
