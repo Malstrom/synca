@@ -3,12 +3,6 @@
 # Issues one SparkReward per participant after a Spark is completed.
 # Idempotent: calling it twice on the same spark is a no-op.
 class RewardEngine
-  REWARD_VALID_DAYS = {
-    premium_week:  7,
-    match_credit:  30,
-    boost:         7
-  }.freeze
-
   def self.call(spark)
     new(spark).call
   end
@@ -32,19 +26,20 @@ class RewardEngine
   private
 
     def issue_reward_for(user)
-      reward_type = resolve_reward_type(user)
+      reward_type  = resolve_reward_type(user)
+      valid_days   = Settings.rewards.valid_days[reward_type]
 
       SparkReward.create!(
         user:        user,
         spark:       @spark,
         reward_type: reward_type,
         status:      :pending,
-        valid_until: REWARD_VALID_DAYS[reward_type].days.from_now
+        valid_until: valid_days.days.from_now
       )
     end
 
     # Free users receive premium_week. Premium logic can be extended here.
-    def resolve_reward_type(user)
+    def resolve_reward_type(_user)
       :premium_week
     end
 end

@@ -6,6 +6,6 @@ class SparkExpireJob < ApplicationJob
   queue_as :spark
 
   def perform
-    Spark.stale.update_all(status: Spark.statuses[:expired])
+    ExpireStaleSparkService.call
   end
 end
