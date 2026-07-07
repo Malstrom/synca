@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_02_160001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,10 +58,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
   create_table "preference_profiles", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.jsonb "visual_embedding"
-    t.integer "travel_style"
     t.jsonb "music_profile"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "sleep_together_importance", comment: "Likert 1-5: how important is sleeping together"
+    t.integer "temperature_preference", comment: "enum: cool=0, warm=1, no_preference=2"
+    t.integer "movement_preference", comment: "enum: very_little=0, moderate=1, a_lot=2, as_much_as_possible=3"
+    t.integer "rhythm_importance", comment: "Likert 1-5: how important is shared daily rhythm"
+    t.integer "self_chronotype", comment: "enum: morning=0, night=1, depends=2"
     t.index ["user_id"], name: "index_preference_profiles_on_user_id", unique: true
   end
 

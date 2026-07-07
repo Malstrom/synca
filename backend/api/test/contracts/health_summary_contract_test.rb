@@ -77,7 +77,8 @@ class HealthSummaryContractTest < ActiveSupport::TestCase
     params[:health_summary][:effective_to] = "2026-01-01"
     result = contract.call(params)
     assert result.failure?
-    assert_includes result.errors.to_h.dig(:health_summary, :effective_to), "must be after effective_from"
+    assert_includes result.errors.to_h.dig(:health_summary, :effective_to),
+      I18n.t("contracts.errors.effective_to.after_effective_from")
   end
 
   # --- chronotype ---

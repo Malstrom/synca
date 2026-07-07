@@ -4,7 +4,7 @@ require "test_helper"
 
 class UpsertPreferencesContractTest < ActiveSupport::TestCase
   test "valid params" do
-    params = {
+    result = UpsertPreferencesContract.new.call(
       preferences: {
         sleep_together_importance: 4,
         temperature_preference: "cool",
@@ -12,75 +12,58 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
         rhythm_importance: 3,
         self_chronotype: "night"
       }
-    }
-
-    result = UpsertPreferencesContract.new.call(params)
+    )
 
     assert result.success?
   end
 
   test "invalid sleep_together_importance" do
-    params = {
-      preferences: {
-        sleep_together_importance: 6
-      }
-    }
-
-    result = UpsertPreferencesContract.new.call(params)
+    result = UpsertPreferencesContract.new.call(
+      preferences: { sleep_together_importance: 6 }
+    )
 
     assert result.failure?
-    assert_equal "must be one of: 1 - 5", result.errors.to_h[:preferences][:sleep_together_importance].first
+    assert_includes result.errors.to_h.dig(:preferences, :sleep_together_importance),
+      I18n.t("contracts.errors.sleep_together_importance.inclusion")
   end
 
   test "invalid temperature_preference" do
-    params = {
-      preferences: {
-        temperature_preference: "invalid"
-      }
-    }
-
-    result = UpsertPreferencesContract.new.call(params)
+    result = UpsertPreferencesContract.new.call(
+      preferences: { temperature_preference: "invalid" }
+    )
 
     assert result.failure?
-    assert_equal "must be one of: cool, warm, no_preference", result.errors.to_h[:preferences][:temperature_preference].first
+    assert_includes result.errors.to_h.dig(:preferences, :temperature_preference),
+      I18n.t("contracts.errors.temperature_preference.inclusion")
   end
 
   test "invalid movement_preference" do
-    params = {
-      preferences: {
-        movement_preference: "invalid"
-      }
-    }
-
-    result = UpsertPreferencesContract.new.call(params)
+    result = UpsertPreferencesContract.new.call(
+      preferences: { movement_preference: "invalid" }
+    )
 
     assert result.failure?
-    assert_equal "must be one of: very_little, moderate, a_lot, as_much_as_possible", result.errors.to_h[:preferences][:movement_preference].first
+    assert_includes result.errors.to_h.dig(:preferences, :movement_preference),
+      I18n.t("contracts.errors.movement_preference.inclusion")
   end
 
   test "invalid rhythm_importance" do
-    params = {
-      preferences: {
-        rhythm_importance: 6
-      }
-    }
-
-    result = UpsertPreferencesContract.new.call(params)
+    result = UpsertPreferencesContract.new.call(
+      preferences: { rhythm_importance: 6 }
+    )
 
     assert result.failure?
-    assert_equal "must be one of: 1 - 5", result.errors.to_h[:preferences][:rhythm_importance].first
+    assert_includes result.errors.to_h.dig(:preferences, :rhythm_importance),
+      I18n.t("contracts.errors.rhythm_importance.inclusion")
   end
 
   test "invalid self_chronotype" do
-    params = {
-      preferences: {
-        self_chronotype: "invalid"
-      }
-    }
-
-    result = UpsertPreferencesContract.new.call(params)
+    result = UpsertPreferencesContract.new.call(
+      preferences: { self_chronotype: "invalid" }
+    )
 
     assert result.failure?
-    assert_equal "must be one of: morning, night, depends", result.errors.to_h[:preferences][:self_chronotype].first
+    assert_includes result.errors.to_h.dig(:preferences, :self_chronotype),
+      I18n.t("contracts.errors.self_chronotype.inclusion")
   end
 end
