@@ -18,7 +18,7 @@ jobs:
         with:
           repository: Malstrom/calvin
           path: calvin
-          token: ${{ secrets.CALVIN_REPO_TOKEN }}
+          token: ${{ secrets.SYNCA_TOKEN }}
 
       - uses: ruby/setup-ruby@v1
         with:
