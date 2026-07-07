@@ -350,7 +350,7 @@ paths:
   # Spark
   # ---------------------------------------------------------------------------
 
-  /spark_sessions:
+  /sparks:
     post:
       tags: [Spark]
       summary: Create a new Spark session
@@ -385,7 +385,7 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
 
-  /spark_sessions/{id}/join:
+  /sparks/{id}/join:
     post:
       tags: [Spark]
       summary: Join an existing Spark session
@@ -422,7 +422,7 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
 
-  /spark_sessions/{id}/submit_answers:
+  /sparks/{id}/submit_answers:
     post:
       tags: [Spark]
       summary: Submit micro-test answers
@@ -457,7 +457,7 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
 
-  /spark_sessions/{id}/result:
+  /sparks/{id}/result:
     get:
       tags: [Spark]
       summary: Get Spark session result
@@ -1010,7 +1010,7 @@ components:
           type: integer
         user_id:
           type: integer
-        spark_session_id:
+        spark_id:
           type: integer
         reward_type:
           type: string
