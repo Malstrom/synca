@@ -24,9 +24,9 @@ en:
 
       # preferences
       sleep_together_importance:
-        inclusion: "must be between 1 and 5"
+        inclusion: "must be one of: 1 - 5"
       rhythm_importance:
-        inclusion: "must be between 1 and 5"
+        inclusion: "must be one of: 1 - 5"
       temperature_preference:
         inclusion: "must be one of: cool, warm, no_preference"
       movement_preference:
