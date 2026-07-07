@@ -1,7 +1,17 @@
-alice_prefs:
-  user: alice
-  travel_style: 2
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-bob_prefs:
+one:
+  user: alice
+  sleep_together_importance: ~
+  temperature_preference: ~
+  movement_preference: ~
+  rhythm_importance: ~
+  self_chronotype: ~
+
+two:
   user: bob
-  travel_style: 1
+  sleep_together_importance: ~
+  temperature_preference: ~
+  movement_preference: ~
+  rhythm_importance: ~
+  self_chronotype: ~
