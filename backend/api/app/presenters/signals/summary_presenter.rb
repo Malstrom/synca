@@ -22,61 +22,61 @@ module Signals
 
     private
 
-    attr_reader :health_summary, :preference_profile
+      attr_reader :health_summary, :preference_profile
 
-    def chronotype_label
-      case health_summary.chronotype
-      when "early_bird" then "Early bird"
-      when "intermediate" then "Flexible"
-      when "night_owl" then "Night owl"
+      def chronotype_label
+        case health_summary.chronotype
+        when "early_bird" then "Early bird"
+        when "intermediate" then "Flexible"
+        when "night_owl" then "Night owl"
+        end
       end
-    end
 
-    def peak_energy_window
-      return nil if health_summary.peak_energy_start_local.nil? || health_summary.peak_energy_end_local.nil?
+      def peak_energy_window
+        return nil if health_summary.peak_energy_start_local.nil? || health_summary.peak_energy_end_local.nil?
 
-      "#{health_summary.peak_energy_start_local.strftime('%H:%M')}–#{health_summary.peak_energy_end_local.strftime('%H:%M')}"
-    end
-
-    def routine_stability_tier
-      case health_summary.routine_stability_index
-      when 0.0..0.4 then "low"
-      when 0.4..0.7 then "medium"
-      else "high"
+        "#{health_summary.peak_energy_start_local.strftime('%H:%M')}–#{health_summary.peak_energy_end_local.strftime('%H:%M')}"
       end
-    end
 
-    def activity_tier
-      health_summary.activity_level
-    end
-
-    def avg_sleep_duration_minutes
-      (health_summary.sleep_duration_avg * 60).to_i
-    end
-
-    def self_report_alignment
-      return nil if preference_profile.nil?
-
-      {
-        aligned: chronotype_aligned?,
-        note: alignment_note
-      }
-    end
-
-    def chronotype_aligned?
-      return true if preference_profile.self_chronotype == "depends"
-
-      case health_summary.chronotype
-      when "early_bird" then preference_profile.self_chronotype == "morning"
-      when "night_owl" then preference_profile.self_chronotype == "night"
-      else false
+      def routine_stability_tier
+        case health_summary.routine_stability_index
+        when 0.0..0.4 then "low"
+        when 0.4..0.7 then "medium"
+        else "high"
+        end
       end
-    end
 
-    def alignment_note
-      return nil if chronotype_aligned?
+      def activity_tier
+        health_summary.activity_level
+      end
 
-      "You declared #{preference_profile.self_chronotype} but your data shows #{health_summary.chronotype}."
-    end
+      def avg_sleep_duration_minutes
+        (health_summary.sleep_duration_avg * 60).to_i
+      end
+
+      def self_report_alignment
+        return nil if preference_profile.nil?
+
+        {
+          aligned: chronotype_aligned?,
+          note: alignment_note
+        }
+      end
+
+      def chronotype_aligned?
+        return true if preference_profile.self_chronotype == "depends"
+
+        case health_summary.chronotype
+        when "early_bird" then preference_profile.self_chronotype == "morning"
+        when "night_owl" then preference_profile.self_chronotype == "night"
+        else false
+        end
+      end
+
+      def alignment_note
+        return nil if chronotype_aligned?
+
+        "You declared #{preference_profile.self_chronotype} but your data shows #{health_summary.chronotype}."
+      end
   end
 end
