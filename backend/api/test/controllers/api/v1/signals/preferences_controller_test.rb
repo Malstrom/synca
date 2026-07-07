@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class Api::V1::Signals::PreferencesControllerTest < ActionDispatch::IntegrationTest
+class Api::V1::Signals::PreferencesControllerTest < ApiTestCase
   test "success" do
     user = users(:alice)
     params = {

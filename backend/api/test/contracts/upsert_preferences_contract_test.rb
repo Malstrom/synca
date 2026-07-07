@@ -29,7 +29,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
     result = UpsertPreferencesContract.new.call(params)
 
     assert result.failure?
-    assert_equal "must be included in 1..5", result.errors.to_h[:preferences][:sleep_together_importance].first
+    assert_equal "must be one of: 1 - 5", result.errors.to_h[:preferences][:sleep_together_importance].first
   end
 
   test "invalid temperature_preference" do
@@ -68,7 +68,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
     result = UpsertPreferencesContract.new.call(params)
 
     assert result.failure?
-    assert_equal "must be included in 1..5", result.errors.to_h[:preferences][:rhythm_importance].first
+    assert_equal "must be one of: 1 - 5", result.errors.to_h[:preferences][:rhythm_importance].first
   end
 
   test "invalid self_chronotype" do
