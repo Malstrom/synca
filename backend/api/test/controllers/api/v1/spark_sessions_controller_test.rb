@@ -15,7 +15,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   test "create returns 201 with session_code, qr_token and pending status" do
     post_json "/api/v1/spark_sessions",
       params: {},
-      headers: @alice_headers
+      headers: @bob_headers # bob has no active session in fixtures
 
     assert_response :created
     assert json[:session_code].present?
@@ -26,7 +26,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   test "create with optional location stores lat and lng" do
     post_json "/api/v1/spark_sessions",
       params: { spark_session: { lat: 55.7558, lng: 37.6176 } },
-      headers: @alice_headers
+      headers: @bob_headers
 
     assert_response :created
     assert_in_delta 55.7558, json[:location_lat], 0.0001
@@ -40,11 +40,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "create returns 422 when user already has an active session" do
-    post_json "/api/v1/spark_sessions",
-      params: {},
-      headers: @alice_headers
-    assert_response :created
-
+    # alice already has alice_pending_spark in fixtures
     post_json "/api/v1/spark_sessions",
       params: {},
       headers: @alice_headers
@@ -56,7 +52,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   # --- POST /spark_sessions/:id/join ---
 
   test "join sets partner, transitions to active and returns 200" do
-    session = create_pending_session_for(@alice)
+    session = spark_sessions(:alice_pending_spark)
 
     post_json "/api/v1/spark_sessions/#{session.id}/join",
       params: { spark_session: { session_code: session.session_code } },
@@ -68,7 +64,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "join with qr_token works" do
-    session = create_pending_session_for(@alice)
+    session = spark_sessions(:alice_pending_spark)
 
     post_json "/api/v1/spark_sessions/#{session.id}/join",
       params: { spark_session: { qr_token: session.qr_token } },
@@ -79,7 +75,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "join with wrong session_code returns 422" do
-    session = create_pending_session_for(@alice)
+    session = spark_sessions(:alice_pending_spark)
 
     post_json "/api/v1/spark_sessions/#{session.id}/join",
       params: { spark_session: { session_code: "000000" } },
@@ -90,7 +86,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "join own session returns 422" do
-    session = create_pending_session_for(@alice)
+    session = spark_sessions(:alice_pending_spark)
 
     post_json "/api/v1/spark_sessions/#{session.id}/join",
       params: { spark_session: { session_code: session.session_code } },
@@ -101,13 +97,11 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "join an already active session returns 422" do
-    session = create_pending_session_for(@alice)
-    session.update!(partner_id: @bob.id, status: :active, started_at: Time.current)
+    session = spark_sessions(:alice_active_spark)
 
-    third_user = users(:charlie)
     post_json "/api/v1/spark_sessions/#{session.id}/join",
       params: { spark_session: { session_code: session.session_code } },
-      headers: auth_headers(third_user)
+      headers: auth_headers(users(:charlie))
 
     assert_response :unprocessable_entity
     assert_equal "session_not_joinable", json.dig(:error, :code)
@@ -116,7 +110,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   # --- POST /spark_sessions/:id/submit_answers ---
 
   test "submit_answers stores initiator answers and returns 200" do
-    session = create_active_session_for(@alice, @bob)
+    session = spark_sessions(:alice_active_spark)
 
     post_json "/api/v1/spark_sessions/#{session.id}/submit_answers",
       params: { spark_session: { answers: [ 1, 2, 3 ] } },
@@ -127,7 +121,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "submit_answers stores partner answers and returns 200" do
-    session = create_active_session_for(@alice, @bob)
+    session = spark_sessions(:alice_active_spark)
 
     post_json "/api/v1/spark_sessions/#{session.id}/submit_answers",
       params: { spark_session: { answers: [ 4, 5, 6 ] } },
@@ -138,8 +132,8 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "submit_answers enqueues SparkScoringJob when both users have answered" do
-    session = create_active_session_for(@alice, @bob)
-    session.update!(initiator_answers: [ 1, 2, 3 ])
+    session = spark_sessions(:alice_active_spark)
+    session.update_columns(initiator_answers: [ 1, 2, 3 ])
 
     assert_enqueued_with(job: SparkScoringJob, args: [ session.id ]) do
       post_json "/api/v1/spark_sessions/#{session.id}/submit_answers",
@@ -149,7 +143,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "submit_answers does not enqueue SparkScoringJob when only one side answered" do
-    session = create_active_session_for(@alice, @bob)
+    session = spark_sessions(:alice_active_spark)
 
     assert_no_enqueued_jobs(only: SparkScoringJob) do
       post_json "/api/v1/spark_sessions/#{session.id}/submit_answers",
@@ -159,7 +153,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "submit_answers on non-active session returns 422" do
-    session = create_pending_session_for(@alice)
+    session = spark_sessions(:alice_pending_spark)
 
     post_json "/api/v1/spark_sessions/#{session.id}/submit_answers",
       params: { spark_session: { answers: [ 1, 2, 3 ] } },
@@ -172,7 +166,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   # --- GET /spark_sessions/:id/result ---
 
   test "result returns compatibility score and dimensions when session is completed" do
-    session = create_completed_session_for(@alice, @bob)
+    session = spark_sessions(:alice_spark)
 
     get "/api/v1/spark_sessions/#{session.id}/result", headers: @alice_headers
 
@@ -183,7 +177,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "result returns 422 when session is not yet completed" do
-    session = create_active_session_for(@alice, @bob)
+    session = spark_sessions(:alice_active_spark)
 
     get "/api/v1/spark_sessions/#{session.id}/result", headers: @alice_headers
 
@@ -192,7 +186,7 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
   end
 
   test "result returns 403 when user is not a participant" do
-    session = create_completed_session_for(@alice, @bob)
+    session = spark_sessions(:alice_spark)
 
     get "/api/v1/spark_sessions/#{session.id}/result",
       headers: auth_headers(users(:charlie))
@@ -214,50 +208,4 @@ class Api::V1::SparkSessionsControllerTest < ApiTestCase
 
     assert_response :unauthorized
   end
-
-  private
-
-    def create_pending_session_for(user)
-      SparkSession.create!(
-        initiator: user,
-        status: :pending
-      )
-    end
-
-    def create_active_session_for(initiator, partner)
-      SparkSession.create!(
-        initiator: initiator,
-        partner:   partner,
-        status:    :active,
-        started_at: Time.current
-      )
-    end
-
-    def create_completed_session_for(initiator, partner)
-      session = SparkSession.create!(
-        initiator:            initiator,
-        partner:              partner,
-        status:               :completed,
-        started_at:           1.hour.ago,
-        completed_at:         Time.current,
-        initiator_answers:    [ 1, 2, 3 ],
-        partner_answers:      [ 1, 2, 3 ],
-        compatibility_score:  82.5
-      )
-      SparkReward.create!(
-        user:          initiator,
-        spark_session: session,
-        reward_type:   :premium_week,
-        status:        :pending,
-        valid_until:   7.days.from_now
-      )
-      SparkReward.create!(
-        user:          partner,
-        spark_session: session,
-        reward_type:   :premium_week,
-        status:        :pending,
-        valid_until:   7.days.from_now
-      )
-      session
-    end
 end

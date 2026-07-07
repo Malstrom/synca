@@ -1,5 +1,5 @@
 # Completed session — alice initiated, bob joined.
-# Used by model tests (both_answered?, valid?, session_code uniqueness).
+# Used by: controller result tests, model tests (both_answered?, valid?, session_code uniqueness).
 alice_spark:
   initiator: alice
   partner: bob
@@ -8,14 +8,37 @@ alice_spark:
   qr_token: "550e8400-e29b-41d4-a716-446655440000"
   started_at: <%= 2.hours.ago.iso8601 %>
   completed_at: <%= 1.hour.ago.iso8601 %>
-  initiator_answers: []
-  partner_answers: []
+  initiator_answers: [1, 2, 3]
+  partner_answers: [1, 2, 3]
   compatibility_score: 75.0
   reward_issued_initiator: true
   reward_issued_partner: true
 
+# Pending session — alice initiated, fresh.
+# Used by: controller join tests, submit_answers-on-non-active test.
+alice_pending_spark:
+  initiator: alice
+  status: 0
+  session_code: "111222"
+  qr_token: "550e8400-e29b-41d4-a716-446655440003"
+  created_at: <%= 1.minute.ago.iso8601 %>
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# Active session — alice initiated, bob joined.
+# Used by: submit_answers tests, result-not-completed test.
+alice_active_spark:
+  initiator: alice
+  partner: bob
+  status: 1
+  session_code: "333444"
+  qr_token: "550e8400-e29b-41d4-a716-446655440004"
+  started_at: <%= 30.minutes.ago.iso8601 %>
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
 # Pending session — charlie initiated, old enough to be stale.
-# Used by SparkSessionTest#stale_scope and #one_active_session_per_initiator.
+# Used by: SparkSessionTest#stale_scope and #one_active_session_per_initiator.
 # charlie is NOT used as initiator in controller/job/service tests so no conflict.
 pending_spark:
   initiator: charlie
