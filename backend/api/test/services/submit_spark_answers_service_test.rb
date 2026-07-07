@@ -10,13 +10,8 @@ class SubmitSparkAnswersServiceTest < ActiveSupport::TestCase
     @bob   = users(:bob)
   end
 
-  test "stores initiator answers and enqueues job when both answered" do
-    spark = Spark.create!(
-      initiator:         @alice,
-      partner:           @bob,
-      status:            :active,
-      initiator_answers: [ 1, 2, 3 ]
-    )
+  test "stores partner answers and enqueues scoring job when both answered" do
+    spark = sparks(:active_awaiting_partner_answers)  # alice answered, bob has not
 
     assert_enqueued_with(job: SparkScoringJob, args: [ spark.id ]) do
       result = SubmitSparkAnswersService.call(
@@ -30,12 +25,8 @@ class SubmitSparkAnswersServiceTest < ActiveSupport::TestCase
     assert_equal [ 4, 5, 6 ], spark.reload.partner_answers
   end
 
-  test "stores initiator answers but does not enqueue job when partner not answered" do
-    spark = Spark.create!(
-      initiator: @alice,
-      partner:   @bob,
-      status:    :active
-    )
+  test "stores initiator answers and does not enqueue job when partner has not answered" do
+    spark = sparks(:active_no_answers)  # neither has answered
 
     assert_no_enqueued_jobs(only: SparkScoringJob) do
       result = SubmitSparkAnswersService.call(
@@ -50,7 +41,7 @@ class SubmitSparkAnswersServiceTest < ActiveSupport::TestCase
   end
 
   test "returns session_not_active when spark is not active" do
-    spark = Spark.create!(initiator: @alice, partner: @bob, status: :pending)
+    spark = sparks(:alice_pending_spark)  # status: pending
 
     result = SubmitSparkAnswersService.call(
       current_user: @alice,

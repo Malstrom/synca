@@ -6,16 +6,7 @@ class RewardEngineTest < ActiveSupport::TestCase
   setup do
     @alice = users(:alice)
     @bob   = users(:bob)
-    @spark = Spark.create!(
-      initiator:           @alice,
-      partner:             @bob,
-      status:              :completed,
-      started_at:          1.hour.ago,
-      completed_at:        Time.current,
-      initiator_answers:   [ 1, 2, 3 ],
-      partner_answers:     [ 4, 5, 6 ],
-      compatibility_score: 80.0
-    )
+    @spark = sparks(:reward_pending_spark)  # completed, rewards not yet issued
   end
 
   test "issues one reward per participant" do

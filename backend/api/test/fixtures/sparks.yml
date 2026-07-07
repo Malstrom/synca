@@ -1,6 +1,5 @@
 # Completed spark — alice initiated, bob joined.
-# Used by model tests and JoinSparkServiceTest#returns_spark_not_joinable
-# (completed is not-pending, so JoinSparkService rejects it).
+# Used by JoinSparkServiceTest#returns_spark_not_joinable.
 alice_spark:
   initiator: alice
   partner: bob
@@ -16,7 +15,7 @@ alice_spark:
   reward_issued_partner: true
 
 # Active spark — alice initiated, bob joined, both answered.
-# Used by SparkScoringJobTest as the clean active state precondition.
+# Used by SparkScoringJobTest.
 alice_bob_active_spark:
   initiator: alice
   partner: bob
@@ -29,8 +28,50 @@ alice_bob_active_spark:
   reward_issued_initiator: false
   reward_issued_partner: false
 
+# Completed spark — alice initiated, bob joined, rewards NOT yet issued.
+# Used by RewardEngineTest (verifies reward emission on a fresh completed spark).
+reward_pending_spark:
+  initiator: alice
+  partner: bob
+  status: 2
+  session_code: "RWDP01"
+  qr_token: "aa0e8400-e29b-41d4-a716-446655440007"
+  started_at: <%= 1.hour.ago.iso8601 %>
+  completed_at: <%= 30.minutes.ago.iso8601 %>
+  initiator_answers: [1, 2, 3]
+  partner_answers: [4, 5, 6]
+  compatibility_score: 80.0
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# Active spark — alice initiated, bob joined.
+# initiator_answers already set; bob (partner) has not answered yet.
+# Used by SubmitSparkAnswersServiceTest#enqueues_job_when_both_answered.
+active_awaiting_partner_answers:
+  initiator: alice
+  partner: bob
+  status: 1
+  session_code: "AWTP01"
+  qr_token: "cc0e8400-e29b-41d4-a716-446655440008"
+  started_at: <%= 20.minutes.ago.iso8601 %>
+  initiator_answers: [1, 2, 3]
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# Active spark — alice initiated, bob joined, no answers yet.
+# Used by SubmitSparkAnswersServiceTest#stores_answers_without_enqueuing_job.
+active_no_answers:
+  initiator: alice
+  partner: bob
+  status: 1
+  session_code: "AWTI01"
+  qr_token: "dd0e8400-e29b-41d4-a716-446655440009"
+  started_at: <%= 20.minutes.ago.iso8601 %>
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
 # Pending spark — alice initiated, no partner yet.
-# Used by JoinSparkServiceTest (join, own spark guard, invalid code).
+# Used by JoinSparkServiceTest and SubmitSparkAnswersServiceTest#session_not_active.
 alice_pending_spark:
   initiator: alice
   status: 0
@@ -39,18 +80,28 @@ alice_pending_spark:
   reward_issued_initiator: false
   reward_issued_partner: false
 
-# Pending spark — charlie initiated, old enough to be stale.
-# Used by SparkTest#stale_scope.
+# Stale pending spark — charlie initiated, 20 minutes old.
+# Used by SparkExpireJobTest#expires_stale and SparkTest#stale_scope.
 pending_spark:
   initiator: charlie
   status: 0
   session_code: "999888"
   qr_token: "660e8400-e29b-41d4-a716-446655440001"
-  created_at: <%= 15.minutes.ago.iso8601 %>
+  created_at: <%= 20.minutes.ago.iso8601 %>
   reward_issued_initiator: false
   reward_issued_partner: false
 
-# Completed spark — dave initiated, used only to have a second completed record.
+# Recent pending spark — bob initiated, created now (no created_at = Rails uses current time).
+# Used by SparkExpireJobTest#does_not_expire_recent_sparks.
+recent_pending_spark:
+  initiator: bob
+  status: 0
+  session_code: "RECNT1"
+  qr_token: "bb0e8400-e29b-41d4-a716-446655440006"
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# Completed spark — dave initiated.
 dave_spark:
   initiator: dave
   partner: charlie
