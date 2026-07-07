@@ -3,8 +3,12 @@
 require "test_helper"
 
 class Api::V1::Signals::PreferencesControllerTest < ApiTestCase
+  setup do
+    @user = users(:alice)
+    @headers = auth_headers(@user)
+  end
+
   test "success" do
-    user = users(:alice)
     params = {
       preferences: {
         sleep_together_importance: 4,
@@ -15,7 +19,7 @@ class Api::V1::Signals::PreferencesControllerTest < ApiTestCase
       }
     }
 
-    patch api_v1_signals_preferences_path, headers: auth_headers(user), params: params
+    patch_json api_v1_signals_preferences_path, params: params, headers: @headers
 
     assert_response :success
     assert_equal params[:preferences][:sleep_together_importance], response.parsed_body["sleep_together_importance"]
@@ -26,44 +30,28 @@ class Api::V1::Signals::PreferencesControllerTest < ApiTestCase
   end
 
   test "partial update does not overwrite existing fields" do
-    user = users(:alice)
-    # alice_prefs fixture has sleep_together_importance: 4, temperature_preference: cool
-    params = {
-      preferences: {
-        sleep_together_importance: 2
-      }
-    }
-
-    patch api_v1_signals_preferences_path, headers: auth_headers(user), params: params
+    # alice_prefs fixture: sleep_together_importance: 4, temperature_preference: cool
+    patch_json api_v1_signals_preferences_path,
+      params: { preferences: { sleep_together_importance: 2 } },
+      headers: @headers
 
     assert_response :success
     assert_equal 2, response.parsed_body["sleep_together_importance"]
-    # temperature_preference should not be cleared
     assert_equal "cool", response.parsed_body["temperature_preference"]
   end
 
   test "validation failed" do
-    user = users(:alice)
-    params = {
-      preferences: {
-        sleep_together_importance: 6
-      }
-    }
-
-    patch api_v1_signals_preferences_path, headers: auth_headers(user), params: params
+    patch_json api_v1_signals_preferences_path,
+      params: { preferences: { sleep_together_importance: 6 } },
+      headers: @headers
 
     assert_response :unprocessable_entity
     assert_equal "validation_failed", response.parsed_body["error"]["code"]
   end
 
   test "unauthorized" do
-    params = {
-      preferences: {
-        sleep_together_importance: 4
-      }
-    }
-
-    patch api_v1_signals_preferences_path, params: params
+    patch_json api_v1_signals_preferences_path,
+      params: { preferences: { sleep_together_importance: 4 } }
 
     assert_response :unauthorized
   end

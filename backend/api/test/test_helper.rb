@@ -63,4 +63,10 @@ class ApiTestCase < ActionDispatch::IntegrationTest
         params: params.to_json,
         headers: { "Content-Type" => "application/json" }.merge(headers)
     end
+
+    def patch_json(path, params: {}, headers: {})
+      patch path,
+        params: params.to_json,
+        headers: { "Content-Type" => "application/json" }.merge(headers)
+    end
 end
