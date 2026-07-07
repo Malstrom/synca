@@ -5,8 +5,8 @@
 # in test files instead of hardcoded strings.
 #
 # Example:
-#   assert_includes errors.dig(:preferences, :sleep_together_importance),
-#     I18n.t("contracts.errors.upsert_preferences.sleep_together_importance.inclusion")
+#   assert_includes result.errors.to_h.dig(:auth, :password),
+#     I18n.t("contracts.errors.guest_registration.password.min_size")
 
 en:
   contracts:
@@ -22,16 +22,20 @@ en:
           inclusion: "must be one of: very_little, moderate, a_lot, as_much_as_possible"
         self_chronotype:
           inclusion: "must be one of: morning, night, depends"
+      guest_registration:
+        auth:
+          email_or_phone: "email or phone is required"
+        email:
+          format: "is not a valid email"
+        password:
+          min_size: "must be at least 8 characters"
       registration:
         email:
-          format: "must be a valid email address"
+          format: "is not a valid email"
           filled: "email is required"
         password:
           min_size: "must be at least 8 characters"
           filled: "password is required"
-      guest_registration:
-        device_id:
-          filled: "device_id is required"
       health_summary:
         effective_from:
           filled: "effective_from is required"

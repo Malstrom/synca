@@ -29,7 +29,8 @@ class GuestRegistrationContractTest < ActiveSupport::TestCase
   test "missing both email and phone returns failure" do
     result = contract.call({ auth: {} })
     assert result.failure?
-    assert_includes result.errors.to_h[:auth], "email or phone is required"
+    assert_includes result.errors.to_h[:auth],
+      I18n.t("contracts.errors.guest_registration.auth.email_or_phone")
   end
 
   test "nil email and nil phone returns failure" do
@@ -42,7 +43,8 @@ class GuestRegistrationContractTest < ActiveSupport::TestCase
   test "invalid email format returns failure" do
     result = contract.call({ auth: { email: "not-an-email" } })
     assert result.failure?
-    assert_includes result.errors.to_h.dig(:auth, :email), "is not a valid email"
+    assert_includes result.errors.to_h.dig(:auth, :email),
+      I18n.t("contracts.errors.guest_registration.email.format")
   end
 
   test "email with no domain returns failure" do
@@ -55,7 +57,8 @@ class GuestRegistrationContractTest < ActiveSupport::TestCase
   test "password shorter than 8 chars returns failure" do
     result = contract.call({ auth: { email: "user@example.com", password: "short" } })
     assert result.failure?
-    assert_includes result.errors.to_h.dig(:auth, :password), "must be at least 8 characters"
+    assert_includes result.errors.to_h.dig(:auth, :password),
+      I18n.t("contracts.errors.guest_registration.password.min_size")
   end
 
   test "password exactly 8 chars returns success" do
