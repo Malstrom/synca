@@ -24,7 +24,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
 
     assert result.failure?
     assert_includes result.errors.to_h.dig(:preferences, :sleep_together_importance),
-      I18n.t("contracts.errors.upsert_preferences.sleep_together_importance.inclusion")
+      I18n.t("contracts.errors.sleep_together_importance.inclusion")
   end
 
   test "invalid temperature_preference" do
@@ -34,7 +34,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
 
     assert result.failure?
     assert_includes result.errors.to_h.dig(:preferences, :temperature_preference),
-      I18n.t("contracts.errors.upsert_preferences.temperature_preference.inclusion")
+      I18n.t("contracts.errors.temperature_preference.inclusion")
   end
 
   test "invalid movement_preference" do
@@ -44,7 +44,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
 
     assert result.failure?
     assert_includes result.errors.to_h.dig(:preferences, :movement_preference),
-      I18n.t("contracts.errors.upsert_preferences.movement_preference.inclusion")
+      I18n.t("contracts.errors.movement_preference.inclusion")
   end
 
   test "invalid rhythm_importance" do
@@ -54,7 +54,7 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
 
     assert result.failure?
     assert_includes result.errors.to_h.dig(:preferences, :rhythm_importance),
-      I18n.t("contracts.errors.upsert_preferences.rhythm_importance.inclusion")
+      I18n.t("contracts.errors.rhythm_importance.inclusion")
   end
 
   test "invalid self_chronotype" do
@@ -64,6 +64,6 @@ class UpsertPreferencesContractTest < ActiveSupport::TestCase
 
     assert result.failure?
     assert_includes result.errors.to_h.dig(:preferences, :self_chronotype),
-      I18n.t("contracts.errors.upsert_preferences.self_chronotype.inclusion")
+      I18n.t("contracts.errors.self_chronotype.inclusion")
   end
 end
