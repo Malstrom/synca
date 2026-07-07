@@ -85,4 +85,4 @@ in the phase file (e.g. `docs/product/phases/phase-0.md § UF-03`).
 
 | File | Description |
 |---|---|
-| [investor/](investor/) | Financial model,  market analysis, litepaper, whitepaper |
+| [investor/](investor/) | Financial model, market analysis, litepaper, whitepaper |
