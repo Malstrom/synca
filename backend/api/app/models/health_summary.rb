@@ -5,7 +5,7 @@ class HealthSummary < ApplicationRecord
 
   enum :chronotype,     { early_bird: 0, intermediate: 1, night_owl: 2 }
   enum :activity_level, { low: 0, medium: 1, high: 2 }
-  enum :recovery_score, { low: 0, medium: 1, high: 2 }, prefix: :recovery
+  enum :recovery_score, { low: 0, medium: 1, high: 2 }
   enum :source,         { apple_health: 0, health_connect: 1 }
 
   scope :active, -> { where(effective_to: nil) }

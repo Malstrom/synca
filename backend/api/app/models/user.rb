@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
+  # validations: false because non-email providers (apple, google, telegram)
+  # never set a password. Presence/length validation for the :email provider
+  # is handled by Dry::Validation contracts (e.g. RegisterContract).
   has_secure_password validations: false
 
   enum :auth_provider, {
@@ -24,6 +27,10 @@ class User < ApplicationRecord
                                foreign_key: :initiator_id,
                                dependent: :destroy,
                                inverse_of: :initiator
+  # dependent: :nullify is intentional: when a User is deleted as a partner,
+  # the Spark record is preserved with partner_id = nil.
+  # ExpireStaleSparkJob is responsible for cleaning up orphaned sparks
+  # in pending/active state.
   has_many :joined_sparks,    class_name: "Spark",
                                foreign_key: :partner_id,
                                dependent: :nullify,
