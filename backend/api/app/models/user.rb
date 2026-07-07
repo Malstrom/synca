@@ -42,8 +42,8 @@ class User < ApplicationRecord
   # Convention: any service that writes User#email MUST call
   # email.downcase before persisting.
 
-  # Uniqueness enforced at DB level (unique indexes on email and phone).
-  # Kept here to surface RecordNotUnique as a structured 422 before hitting the DB.
-  validates :email, uniqueness: { case_sensitive: false }, allow_nil: true
-  validates :phone, uniqueness: true, allow_nil: true
+  # NOTE: no AR uniqueness validations. Uniqueness is enforced at DB level
+  # (unique indexes on email and phone). The writing service (CreateUserService,
+  # UpdateEmailService) is responsible for rescuing ActiveRecord::RecordNotUnique
+  # and returning a structured Failure.
 end
