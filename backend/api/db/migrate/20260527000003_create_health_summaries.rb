@@ -22,5 +22,13 @@ class CreateHealthSummaries < ActiveRecord::Migration[8.0]
     end
 
     add_index :health_summaries, [ :user_id, :effective_from ]
+
+    # Prevents duplicate active summaries per user.
+    # Only one row per user can have effective_to IS NULL (the current active summary).
+    # Historical rows (effective_to IS NOT NULL) are not constrained and can be many.
+    add_index :health_summaries, :user_id,
+              name: "idx_one_active_health_summary_per_user",
+              unique: true,
+              where: "effective_to IS NULL"
   end
 end

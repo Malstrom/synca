@@ -27,8 +27,11 @@ class SparkSession < ApplicationRecord
     initiator_answers.present? && partner_answers.present?
   end
 
+  # TODO(phase-1): return per-dimension breakdown of the compatibility score
+  # once the scoring engine exposes dimension weights.
+  # Shape: { sleep: Float, activity: Float, rhythm: Float }
   def dimensions
-    {}
+    raise NotImplementedError, "#{self.class}#dimensions is not implemented yet (phase 1)"
   end
 
   def self.expiry_minutes
@@ -42,6 +45,10 @@ class SparkSession < ApplicationRecord
       self.qr_token     ||= SecureRandom.uuid
     end
 
+    # Fast-path AR check. The authoritative constraint is the partial UNIQUE index
+    # idx_one_active_spark_per_initiator on the DB — this validation is NOT a
+    # substitute for it. Concurrent requests that bypass this check will fail
+    # at the DB level with a unique violation.
     def one_active_session_per_initiator
       return unless SparkSession.where(initiator_id: initiator_id, status: [ :pending, :active ]).exists?
 
