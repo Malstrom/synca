@@ -13,6 +13,11 @@ Rails.application.routes.draw do
       put  "me/profile",        to: "profile#update"
       put  "me/health_summary", to: "health_summary#update"
 
+      namespace :signals do
+        get "me/summary", to: "summary#show"
+        patch "preferences", to: "preferences#upsert"
+      end
+
       namespace :auth do
         post "register", to: "registrations#create"
         post "login",    to: "sessions#create"
@@ -34,10 +39,6 @@ Rails.application.routes.draw do
         collection do
           post :simulate
         end
-      end
-
-      namespace :signals do
-        patch "preferences", to: "preferences#upsert"
       end
     end
   end
