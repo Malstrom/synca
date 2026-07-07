@@ -58,19 +58,6 @@ module Api
           response_body = JSON.parse(response.body)
           assert_equal "validation_failed", response_body["error"]["code"]
         end
-
-        def test_create_validation_failed
-          invalid_params = {
-            preferences: {
-              sleep_together_importance: 6
-            }
-          }
-          post api_v1_signals_preferences_path, headers: @headers, params: invalid_params
-
-          assert_response :unprocessable_entity
-          response_body = JSON.parse(response.body)
-          assert_equal "validation_failed", response_body["error"]["code"]
-        end
       end
     end
   end
