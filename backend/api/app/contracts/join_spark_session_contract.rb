@@ -1,19 +1,3 @@
-# frozen_string_literal: true
-
-class JoinSparkSessionContract < Dry::Validation::Contract
-  params do
-    required(:spark_session).hash do
-      optional(:session_code).maybe(:string)
-      optional(:qr_token).maybe(:string)
-    end
-  end
-
-  rule(:spark_session) do
-    session_code = value[:session_code]
-    qr_token     = value[:qr_token]
-
-    if (session_code.nil? || session_code.strip.empty?) && (qr_token.nil? || qr_token.strip.empty?)
-      key.failure("either session_code or qr_token must be provided")
-    end
-  end
-end
+# This file has been renamed to join_spark_contract.rb
+# DELETE ME — kept temporarily to avoid git conflicts, remove after merge
+raise "join_spark_session_contract.rb is deprecated — use join_spark_contract.rb"

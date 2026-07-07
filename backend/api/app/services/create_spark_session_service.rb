@@ -1,26 +1,3 @@
-# frozen_string_literal: true
-
-class CreateSparkSessionService
-  include Dry::Monads[:result]
-
-  def self.call(...) = new.call(...)
-
-  def call(current_user:, attrs: {})
-    spark_session = current_user.initiated_spark_sessions.build(map_location_attrs(attrs))
-
-    if spark_session.save
-      Success(spark_session)
-    else
-      Failure([ :validation_failed, spark_session.errors.full_messages.first ])
-    end
-  end
-
-  private
-
-    def map_location_attrs(attrs)
-      result = {}
-      result[:location_lat] = attrs[:lat] if attrs.key?(:lat)
-      result[:location_lng] = attrs[:lng] if attrs.key?(:lng)
-      result
-    end
-end
+# This file has been renamed to create_spark_service.rb
+# DELETE ME — kept temporarily to avoid git conflicts, remove after merge
+raise "create_spark_session_service.rb is deprecated — use create_spark_service.rb"
