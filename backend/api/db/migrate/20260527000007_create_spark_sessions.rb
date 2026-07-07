@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateSparkSessions < ActiveRecord::Migration[8.0]
+class CreateSparks < ActiveRecord::Migration[8.0]
   def change
     create_table :sparks do |t|
       # Two FK on users: use explicit column names instead of t.references
@@ -32,7 +32,7 @@ class CreateSparkSessions < ActiveRecord::Migration[8.0]
     add_index :sparks, :qr_token,     unique: true
     add_index :sparks, :status
 
-    # Prevents race condition in Spark#one_active_spark_per_initiator.
+    # Prevents race condition in one_active_spark_per_initiator validation.
     # Guarantees at DB level that an initiator can have at most one pending/active
     # spark at a time. The AR validation is a fast-path check; this index is the
     # authoritative constraint that makes concurrent requests safe.
