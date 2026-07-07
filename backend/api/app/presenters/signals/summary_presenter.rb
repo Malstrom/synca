@@ -22,54 +22,54 @@ module Signals
 
     private
 
-    attr_reader :health_summary, :preference_profile
+      attr_reader :health_summary, :preference_profile
 
-    def chronotype_label
-      case health_summary.chronotype
-      when "early_bird" then "Early bird"
-      when "intermediate" then "Flexible"
-      when "night_owl" then "Night owl"
+      def chronotype_label
+        case health_summary.chronotype
+        when "early_bird" then "Early bird"
+        when "intermediate" then "Flexible"
+        when "night_owl" then "Night owl"
+        end
       end
-    end
 
-    def peak_energy_window
-      return nil if health_summary.peak_energy_start_local.nil? || health_summary.peak_energy_end_local.nil?
+      def peak_energy_window
+        return nil if health_summary.peak_energy_start_local.nil? || health_summary.peak_energy_end_local.nil?
 
-      "#{health_summary.peak_energy_start_local.strftime('%H:%M')}–#{health_summary.peak_energy_end_local.strftime('%H:%M')}"
-    end
-
-    def routine_stability_tier
-      case health_summary.routine_stability_score
-      when 0.0..0.4 then "low"
-      when 0.4..0.7 then "medium"
-      else "high"
+        "#{health_summary.peak_energy_start_local.strftime('%H:%M')}–#{health_summary.peak_energy_end_local.strftime('%H:%M')}"
       end
-    end
 
-    def activity_tier
-      health_summary.activity_level
-    end
-
-    def avg_sleep_duration_minutes
-      health_summary.avg_sleep_duration_minutes
-    end
-
-    def self_report_alignment
-      return nil if preference_profile.nil?
-
-      if preference_profile.self_chronotype == "depends"
-        { aligned: true }
-      else
-        aligned = preference_profile.self_chronotype == health_summary.chronotype
-        aligned ? { aligned: true } : { aligned: false, note: alignment_note }
+      def routine_stability_tier
+        case health_summary.routine_stability_score
+        when 0.0..0.4 then "low"
+        when 0.4..0.7 then "medium"
+        else "high"
+        end
       end
-    end
 
-    def alignment_note
-      case preference_profile.self_chronotype
-      when "morning" then "You declared morning but your data shows #{health_summary.chronotype}."
-      when "night" then "You declared night but your data shows #{health_summary.chronotype}."
+      def activity_tier
+        health_summary.activity_level
       end
-    end
+
+      def avg_sleep_duration_minutes
+        health_summary.avg_sleep_duration_minutes
+      end
+
+      def self_report_alignment
+        return nil if preference_profile.nil?
+
+        if preference_profile.self_chronotype == "depends"
+          { aligned: true }
+        else
+          aligned = preference_profile.self_chronotype == health_summary.chronotype
+          aligned ? { aligned: true } : { aligned: false, note: alignment_note }
+        end
+      end
+
+      def alignment_note
+        case preference_profile.self_chronotype
+        when "morning" then "You declared morning but your data shows #{health_summary.chronotype}."
+        when "night" then "You declared night but your data shows #{health_summary.chronotype}."
+        end
+      end
   end
 end
