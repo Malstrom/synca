@@ -6,10 +6,10 @@ module Api
       class PreferencesController < ApplicationController
         include Dry::Monads[:result]
 
-        # POST /api/v1/signals/preferences
-        def create
+        # PATCH /api/v1/signals/preferences
+        def upsert
           contract_result = UpsertPreferencesContract.new.call(
-            params.to_unsafe_h.deep_symbolize_keys
+            preferences: params[:preferences]&.to_unsafe_h&.deep_symbolize_keys
           )
 
           return render_contract_errors(contract_result) if contract_result.failure?
@@ -21,7 +21,7 @@ module Api
 
           case result
           in Success[ preference_profile ]
-            render_success({ preferences: PreferencesSerializer.new(preference_profile).serializable_hash })
+            render_success(PreferencesSerializer.new(preference_profile).serializable_hash)
           in Failure[ :validation_failed, message ]
             render_error(code: "validation_failed", message: message)
           end

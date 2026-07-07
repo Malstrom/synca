@@ -14,8 +14,10 @@ class UpsertPreferencesService
 
   def call
     preference_profile = PreferenceProfile.find_or_initialize_by(user: current_user)
-    preference_profile.assign_attributes(attrs)
-    return Failure[:validation_failed, preference_profile.errors.full_messages.join(", ")] unless preference_profile.save
+    preference_profile.with_lock do
+      preference_profile.assign_attributes(attrs)
+      return Failure[:validation_failed, preference_profile.errors.full_messages.join(", ")] unless preference_profile.save
+    end
 
     Success(preference_profile)
   end
