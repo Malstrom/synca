@@ -111,7 +111,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
     t.boolean "reward_issued_partner", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["initiator_id"], name: "idx_one_active_spark_per_initiator", unique: true, where: "(status = ANY (ARRAY[0, 1]))"
     t.index ["initiator_id"], name: "index_sparks_on_initiator_id"
     t.index ["partner_id"], name: "index_sparks_on_partner_id"
     t.index ["qr_token"], name: "index_sparks_on_qr_token", unique: true
