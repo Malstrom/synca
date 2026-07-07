@@ -3,13 +3,13 @@
 class SparkScoringJob < ApplicationJob
   queue_as :spark
 
-  def perform(spark_session_id)
-    spark_session = SparkSession.find_by(id: spark_session_id)
-    return unless spark_session
-    return if spark_session.completed?
+  def perform(spark_id)
+    spark = Spark.find_by(id: spark_id)
+    return unless spark
+    return if spark.completed?
 
-    initiator_health = spark_session.initiator.health_summary
-    partner_health   = spark_session.partner.health_summary
+    initiator_health = spark.initiator.health_summary
+    partner_health   = spark.partner.health_summary
 
     compatibility_result = if initiator_health && partner_health
       CompatibilityService.call(initiator_health, partner_health)
@@ -19,12 +19,12 @@ class SparkScoringJob < ApplicationJob
       )
     end
 
-    spark_session.update!(
+    spark.update!(
       status:              :completed,
       completed_at:        Time.current,
       compatibility_score: compatibility_result.total
     )
 
-    RewardEngine.call(spark_session)
+    RewardEngine.call(spark)
   end
 end

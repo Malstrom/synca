@@ -2,7 +2,7 @@
 
 class CreateSparkSessions < ActiveRecord::Migration[8.0]
   def change
-    create_table :spark_sessions do |t|
+    create_table :sparks do |t|
       # Two FK on users: use explicit column names instead of t.references
       t.bigint :initiator_id, null: false
       t.bigint :partner_id,   null: true
@@ -23,20 +23,20 @@ class CreateSparkSessions < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_foreign_key :spark_sessions, :users, column: :initiator_id
-    add_foreign_key :spark_sessions, :users, column: :partner_id
+    add_foreign_key :sparks, :users, column: :initiator_id
+    add_foreign_key :sparks, :users, column: :partner_id
 
-    add_index :spark_sessions, :initiator_id
-    add_index :spark_sessions, :partner_id
-    add_index :spark_sessions, :session_code, unique: true
-    add_index :spark_sessions, :qr_token,     unique: true
-    add_index :spark_sessions, :status
+    add_index :sparks, :initiator_id
+    add_index :sparks, :partner_id
+    add_index :sparks, :session_code, unique: true
+    add_index :sparks, :qr_token,     unique: true
+    add_index :sparks, :status
 
-    # Prevents race condition in SparkSession#one_active_session_per_initiator.
+    # Prevents race condition in Spark#one_active_spark_per_initiator.
     # Guarantees at DB level that an initiator can have at most one pending/active
-    # session at a time. The AR validation is a fast-path check; this index is the
+    # spark at a time. The AR validation is a fast-path check; this index is the
     # authoritative constraint that makes concurrent requests safe.
-    add_index :spark_sessions, :initiator_id,
+    add_index :sparks, :initiator_id,
               name: "idx_one_active_spark_per_initiator",
               unique: true,
               where: "status IN (0, 1)"

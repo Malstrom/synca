@@ -1,0 +1,42 @@
+# Completed spark — alice initiated, bob joined.
+# Used by model tests (both_answered?, valid?, session_code uniqueness).
+alice_spark:
+  initiator: alice
+  partner: bob
+  status: 2
+  session_code: "123456"
+  qr_token: "550e8400-e29b-41d4-a716-446655440000"
+  started_at: <%= 2.hours.ago.iso8601 %>
+  completed_at: <%= 1.hour.ago.iso8601 %>
+  initiator_answers: []
+  partner_answers: []
+  compatibility_score: 75.0
+  reward_issued_initiator: true
+  reward_issued_partner: true
+
+# Pending spark — charlie initiated, old enough to be stale.
+# Used by SparkTest#stale_scope and #one_active_spark_per_initiator.
+# charlie is NOT used as initiator in controller/job/service tests so no conflict.
+pending_spark:
+  initiator: charlie
+  status: 0
+  session_code: "999888"
+  qr_token: "660e8400-e29b-41d4-a716-446655440001"
+  created_at: <%= 15.minutes.ago.iso8601 %>
+  reward_issued_initiator: false
+  reward_issued_partner: false
+
+# Completed spark — dave initiated, used only to have a second completed record.
+dave_spark:
+  initiator: dave
+  partner: charlie
+  status: 2
+  session_code: "777666"
+  qr_token: "770e8400-e29b-41d4-a716-446655440002"
+  started_at: <%= 3.hours.ago.iso8601 %>
+  completed_at: <%= 2.hours.ago.iso8601 %>
+  initiator_answers: []
+  partner_answers: []
+  compatibility_score: 80.0
+  reward_issued_initiator: true
+  reward_issued_partner: true

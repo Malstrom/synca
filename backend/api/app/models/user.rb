@@ -20,14 +20,14 @@ class User < ApplicationRecord
   has_one  :preference_profile, dependent: :destroy
   has_many :match_participants,  dependent: :destroy
   has_many :matches,             through: :match_participants
-  has_many :initiated_spark_sessions, class_name: "SparkSession",
-                                       foreign_key: :initiator_id,
-                                       dependent: :destroy,
-                                       inverse_of: :initiator
-  has_many :joined_spark_sessions,    class_name: "SparkSession",
-                                       foreign_key: :partner_id,
-                                       dependent: :nullify,
-                                       inverse_of: :partner
+  has_many :initiated_sparks, class_name: "Spark",
+                               foreign_key: :initiator_id,
+                               dependent: :destroy,
+                               inverse_of: :initiator
+  has_many :joined_sparks,    class_name: "Spark",
+                               foreign_key: :partner_id,
+                               dependent: :nullify,
+                               inverse_of: :partner
   has_many :spark_rewards, dependent: :destroy
 
   before_save :normalize_email
