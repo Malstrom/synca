@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_02_160001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -61,6 +61,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_02_160000) do
     t.jsonb "music_profile"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "sleep_together_importance"
+    t.integer "temperature_preference"
+    t.integer "movement_preference"
+    t.integer "rhythm_importance"
+    t.integer "self_chronotype"
     t.index ["user_id"], name: "index_preference_profiles_on_user_id", unique: true
   end
 
