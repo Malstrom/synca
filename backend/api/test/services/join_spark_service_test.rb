@@ -11,7 +11,7 @@ class JoinSparkServiceTest < ActiveSupport::TestCase
   end
 
   test "joins pending spark with valid session_code" do
-    spark = Spark.create!(initiator: @alice, status: :pending)
+    spark = sparks(:alice_pending_spark)
 
     result = JoinSparkService.call(
       current_user: @bob,
@@ -28,7 +28,7 @@ class JoinSparkServiceTest < ActiveSupport::TestCase
   end
 
   test "returns cannot_join_own_spark when initiator tries to join" do
-    spark = Spark.create!(initiator: @alice, status: :pending)
+    spark = sparks(:alice_pending_spark)
 
     result = JoinSparkService.call(
       current_user: @alice,
@@ -42,7 +42,7 @@ class JoinSparkServiceTest < ActiveSupport::TestCase
   end
 
   test "returns spark_not_joinable when spark is not pending" do
-    spark = Spark.create!(initiator: @alice, status: :active)
+    spark = sparks(:alice_active_spark_for_join)
 
     result = JoinSparkService.call(
       current_user: @bob,
@@ -56,7 +56,7 @@ class JoinSparkServiceTest < ActiveSupport::TestCase
   end
 
   test "returns invalid_code when code/token do not match" do
-    spark = Spark.create!(initiator: @alice, status: :pending)
+    spark = sparks(:alice_pending_spark)
 
     result = JoinSparkService.call(
       current_user: @bob,
