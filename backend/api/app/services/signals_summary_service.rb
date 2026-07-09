@@ -49,9 +49,9 @@ class SignalsSummaryService
     end
 
     def self_report_alignment(health_summary)
-      return nil unless health_summary.preference_profile&.self_chronotype
+      return nil unless user.preference_profile&.self_chronotype
 
-      self_chronotype = health_summary.preference_profile.self_chronotype
+      self_chronotype = user.preference_profile.self_chronotype
       aligned = self_chronotype == "depends" ||
                 Chronotype.observed_from_self(self_chronotype) == health_summary.chronotype
 
