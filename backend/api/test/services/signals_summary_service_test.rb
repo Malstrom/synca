@@ -35,6 +35,7 @@ class SignalsSummaryServiceTest < ActiveSupport::TestCase
     @health.update!(effective_to: Time.current)
 
     result = SignalsSummaryService.call(user: @user)
+    assert result.failure?
     assert_pattern { result => Failure[:no_signals, _] }
   end
 
@@ -42,6 +43,7 @@ class SignalsSummaryServiceTest < ActiveSupport::TestCase
     @health.update!(chronotype: nil)
 
     result = SignalsSummaryService.call(user: @user)
+    assert result.failure?
     assert_pattern { result => Failure[:no_signals, _] }
   end
 end
