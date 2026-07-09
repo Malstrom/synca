@@ -35,8 +35,8 @@ class Api::V1::Signals::SummaryControllerTest < ActionDispatch::IntegrationTest
     get api_v1_signals_me_summary_path, headers: @headers
 
     assert_response :not_found
-    assert_equal "no_signals",                         response.parsed_body["code"]
-    assert_equal I18n.t("signals_summary.no_signals"), response.parsed_body["message"]
+    assert_equal "no_signals",                         response.parsed_body.dig("error", "code")
+    assert_equal I18n.t("signals_summary.no_signals"), response.parsed_body.dig("error", "message")
   end
 
   test "GET /api/v1/signals/me/summary without auth returns 401" do
