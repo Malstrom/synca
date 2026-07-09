@@ -1,14 +1,25 @@
 name: Calvin RAG Ingestion
 
 on:
+  # Trigger 1: docs aggiornate su main
   push:
     branches: [main]
     paths:
       - "docs/**"
 
+  # Trigger 2: PR approvata
+  pull_request_review:
+    types: [submitted]
+
 jobs:
   ingest:
     runs-on: ubuntu-latest
+
+    # Per il trigger pull_request_review: solo se stato == approved
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request_review' && github.event.review.state == 'approved')
+
     steps:
       - name: Checkout synca
         uses: actions/checkout@v4
@@ -36,7 +47,9 @@ jobs:
         run: bundle install
         working-directory: calvin/bin
 
-      - name: Run ingestion
+      # Ingest docs (solo su push a docs/**)
+      - name: Run ingestion — docs
+        if: github.event_name == 'push'
         working-directory: calvin
         env:
           BUNDLE_GEMFILE: ${{ github.workspace }}/calvin/bin/Gemfile
@@ -44,4 +57,20 @@ jobs:
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GITHUB_TOKEN:         ${{ secrets.SYNCA_TOKEN }}
-        run: bundle exec ruby bin/ingest.rb --repo Malstrom/synca
+        run: bundle exec ruby bin/ingest.rb --repo Malstrom/synca --only docs
+
+      # Ingest singola PR approvata
+      - name: Run ingestion — PR approved
+        if: github.event_name == 'pull_request_review'
+        working-directory: calvin
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/calvin/bin/Gemfile
+          MISTRAL_API_KEY:      ${{ secrets.MISTRAL_API_KEY }}
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GITHUB_TOKEN:         ${{ secrets.SYNCA_TOKEN }}
+        run: |
+          bundle exec ruby bin/ingest.rb \
+            --repo Malstrom/synca \
+            --only pr \
+            --pr ${{ github.event.pull_request.number }}
