@@ -108,6 +108,9 @@ group :development do
 
   # Interactive API documentation (Scalar UI)
   gem "scalar_ruby"
+
+  # N+1 query detection — raises in test, logs in development
+  gem "bullet"
 end
 
 # ─── Development & Test ───────────────────────────────

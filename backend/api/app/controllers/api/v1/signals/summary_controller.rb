@@ -9,7 +9,7 @@ module Api
         def show
           case SignalsSummaryService.call(user: current_user)
           in Success[record]
-            render_success({ summary: SignalsSummarySerializer.new(record).as_json })
+            render_success({ summary: SignalsSummarySerializer.new(record).serializable_hash })
           in Failure[:no_signals, message]
             render_error(code: "no_signals", message: message, status: :not_found)
           end

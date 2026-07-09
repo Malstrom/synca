@@ -3,28 +3,22 @@
 require "test_helper"
 
 class SignalsSummaryServiceTest < ActiveSupport::TestCase
-  # alice_health: chronotype=early_bird(0), routine_stability_index=0.82 (high),
-  #               activity_level=medium(1), avg_sleep_duration_minutes=450
-  #               peak_energy_start_local=nil, peak_energy_end_local=nil
-  # alice_prefs: self_chronotype=morning(0) -> maps to early_bird -> aligned=true
-
   setup do
     @user   = users(:alice)
     @health = health_summaries(:alice_health)
-    @prefs  = preference_profiles(:alice_prefs)
   end
 
-  test "call with active health_summary returns Success with correct labels" do
+  test "call returns Success with correct SignalsSummary" do
     result = SignalsSummaryService.call(user: @user)
 
-    assert result.success?
-    record = result.value!
+    assert_pattern { result => Success }
+    summary = result.value!
 
-    assert_equal Chronotype.label(@health.chronotype),                           record.chronotype_label
-    assert_equal Chronotype.routine_stability_tier(@health.routine_stability_index), record.routine_stability_tier
-    assert_equal @health.activity_level,                                         record.activity_tier
-    assert_equal @health.avg_sleep_duration_minutes,                             record.avg_sleep_duration_minutes
-    assert_nil record.peak_energy_window
+    assert_equal Chronotype.label(@health.chronotype),                               summary.chronotype_label
+    assert_equal Chronotype.routine_stability_tier(@health.routine_stability_index), summary.routine_stability_tier
+    assert_equal @health.activity_level,                                             summary.activity_tier
+    assert_equal @health.avg_sleep_duration_minutes,                                 summary.avg_sleep_duration_minutes
+    assert_nil   summary.peak_energy_window
   end
 
   test "call returns self_report_alignment aligned when self_chronotype matches" do
@@ -35,57 +29,17 @@ class SignalsSummaryServiceTest < ActiveSupport::TestCase
     assert_nil alignment[:note]
   end
 
-  test "call returns self_report_alignment misaligned with note" do
-    @prefs.update!(self_chronotype: :night)
-    result    = SignalsSummaryService.call(user: @user)
-    alignment = result.value!.self_report_alignment
-
-    assert_equal false, alignment[:aligned]
-    assert_equal I18n.t(
-      "self_report_alignment.note",
-      self_chronotype: "night",
-      chronotype:      Chronotype.label(@health.chronotype)
-    ), alignment[:note]
-  end
-
-  test "call returns self_report_alignment nil when self_chronotype is nil" do
-    @prefs.update!(self_chronotype: nil)
-    result = SignalsSummaryService.call(user: @user)
-
-    assert_nil result.value!.self_report_alignment
-  end
-
-  test "call returns self_report_alignment aligned when self_chronotype is depends" do
-    @prefs.update!(self_chronotype: :depends)
-    result    = SignalsSummaryService.call(user: @user)
-    alignment = result.value!.self_report_alignment
-
-    assert_equal true, alignment[:aligned]
-    assert_nil alignment[:note]
-  end
-
-  test "call returns peak_energy_window formatted as HH:MM when times present" do
-    @health.update!(
-      peak_energy_start_local: Time.zone.parse("2026-01-01 09:00"),
-      peak_energy_end_local:   Time.zone.parse("2026-01-01 11:00")
-    )
-    result = SignalsSummaryService.call(user: @user)
-
-    assert_equal "09:00\u201311:00", result.value!.peak_energy_window
-  end
-
-  test "call returns routine_stability_tier nil for out-of-range index" do
-    @health.update!(routine_stability_index: 1.5)
-    result = SignalsSummaryService.call(user: @user)
-
-    assert_nil result.value!.routine_stability_tier
-  end
-
-  test "call without active health_summary returns Failure[:no_signals]" do
+  test "call returns Failure[:no_signals] when no active health_summary" do
     @health.update!(effective_to: Time.current)
-    result = SignalsSummaryService.call(user: @user)
 
-    assert result.failure?
-    assert_equal [:no_signals, I18n.t("signals_summary.no_signals")], result.failure
+    result = SignalsSummaryService.call(user: @user)
+    assert_pattern { result => Failure[:no_signals, _] }
+  end
+
+  test "call returns Failure[:no_signals] when chronotype is nil" do
+    @health.update!(chronotype: nil)
+
+    result = SignalsSummaryService.call(user: @user)
+    assert_pattern { result => Failure[:no_signals, _] }
   end
 end

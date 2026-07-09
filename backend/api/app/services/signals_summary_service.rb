@@ -17,12 +17,20 @@ class SignalsSummaryService
   end
 
   def initialize(user:)
-    @user = user
+    # Eager-load both associations in a single query to avoid N+1.
+    # health_summary uses the active-only scope (effective_to IS NULL).
+    @user = user.class
+                .includes(:health_summary, :preference_profile)
+                .find(user.id)
   end
 
   def call
     health_summary = user.health_summary
     return Failure[:no_signals, I18n.t("signals_summary.no_signals")] unless health_summary
+
+    # chronotype is nullable — guard before delegating to Chronotype.label
+    # which raises ArgumentError on nil.
+    return Failure[:no_signals, I18n.t("signals_summary.no_signals")] unless health_summary.chronotype
 
     Success(
       SignalsSummary.new(
@@ -52,6 +60,10 @@ class SignalsSummaryService
       return nil unless user.preference_profile&.self_chronotype
 
       self_chronotype = user.preference_profile.self_chronotype
+
+      # "depends" means the user has no strong preference — treat as always aligned
+      # regardless of the observed chronotype. This is an explicit product decision:
+      # do not penalise users who declared flexibility.
       aligned = self_chronotype == "depends" ||
                 Chronotype.observed_from_self(self_chronotype) == health_summary.chronotype
 
