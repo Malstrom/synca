@@ -4,7 +4,7 @@ module Api
   module V1
     module Signals
       class SummaryController < ApplicationController
-        before_action :authenticate_user!
+        include Dry::Monads[:result]
 
         def show
           case SignalsSummaryService.call(user: current_user)
