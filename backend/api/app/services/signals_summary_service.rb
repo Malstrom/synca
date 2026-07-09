@@ -1,15 +1,5 @@
 # frozen_string_literal: true
 
-SignalsSummary = Struct.new(
-  :chronotype_label,
-  :peak_energy_window,
-  :routine_stability_tier,
-  :activity_tier,
-  :avg_sleep_duration_minutes,
-  :self_report_alignment,
-  keyword_init: true
-)
-
 class SignalsSummaryService
   include Dry::Monads[:result]
 
@@ -27,12 +17,12 @@ class SignalsSummaryService
 
     Success(
       SignalsSummary.new(
-        chronotype_label: chronotype_label(health_summary.chronotype),
-        peak_energy_window: peak_energy_window(health_summary),
-        routine_stability_tier: routine_stability_tier(health_summary.routine_stability_index),
-        activity_tier: health_summary.activity_level,
+        chronotype_label:           Chronotype.label(health_summary.chronotype),
+        peak_energy_window:         peak_energy_window(health_summary),
+        routine_stability_tier:     Chronotype.routine_stability_tier(health_summary.routine_stability_index),
+        activity_tier:              health_summary.activity_level,
         avg_sleep_duration_minutes: health_summary.avg_sleep_duration_minutes,
-        self_report_alignment: self_report_alignment(health_summary)
+        self_report_alignment:      self_report_alignment(health_summary)
       )
     )
   end
@@ -40,15 +30,6 @@ class SignalsSummaryService
   private
 
     attr_reader :user
-
-    def chronotype_label(chronotype)
-      case chronotype
-      when "early_bird"   then "Early bird"
-      when "intermediate" then "Flexible"
-      when "night_owl"    then "Night owl"
-      else raise ArgumentError, "Unknown chronotype: #{chronotype.inspect}"
-      end
-    end
 
     def peak_energy_window(health_summary)
       start_time = health_summary.peak_energy_start_local
@@ -58,35 +39,20 @@ class SignalsSummaryService
       "#{start_time.strftime('%H:%M')}\u2013#{end_time.strftime('%H:%M')}"
     end
 
-    def routine_stability_tier(routine_stability_index)
-      case routine_stability_index
-      when 0.0...0.4 then "low"
-      when 0.4...0.7 then "medium"
-      when 0.7..1.0  then "high"
-      else nil
-      end
-    end
-
     def self_report_alignment(health_summary)
       return nil unless health_summary.preference_profile&.self_chronotype
 
       self_chronotype = health_summary.preference_profile.self_chronotype
-      aligned = self_chronotype == "depends" || chronotype_mapping(self_chronotype) == health_summary.chronotype
+      aligned = self_chronotype == "depends" ||
+                Chronotype.observed_from_self(self_chronotype) == health_summary.chronotype
 
       {
         aligned: aligned,
         note: aligned ? nil : I18n.t(
           "self_report_alignment.note",
           self_chronotype: self_chronotype,
-          chronotype: chronotype_label(health_summary.chronotype)
+          chronotype:      Chronotype.label(health_summary.chronotype)
         )
       }
-    end
-
-    def chronotype_mapping(self_chronotype)
-      case self_chronotype
-      when "morning" then "early_bird"
-      when "night"   then "night_owl"
-      end
     end
 end
