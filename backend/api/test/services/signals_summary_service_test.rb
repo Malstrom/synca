@@ -3,6 +3,8 @@
 require "test_helper"
 
 class SignalsSummaryServiceTest < ActiveSupport::TestCase
+  include Dry::Monads[:result]
+
   setup do
     @user   = users(:alice)
     @health = health_summaries(:alice_health)
