@@ -7,7 +7,7 @@ class Api::V1::Auth::ActivationsControllerTest < ActionDispatch::IntegrationTest
     @user = users(:guest_user)
     @token = JwtService.encode(
       user_id: @user.id,
-      purpose: 'activation',
+      purpose: "activation",
       exp: 72.hours.from_now.to_i
     )
   end
@@ -40,7 +40,7 @@ class Api::V1::Auth::ActivationsControllerTest < ActionDispatch::IntegrationTest
   test "reject expired token" do
     expired_token = JwtService.encode(
       user_id: @user.id,
-      purpose: 'activation',
+      purpose: "activation",
       exp: 1.hour.ago.to_i
     )
 
@@ -54,7 +54,7 @@ class Api::V1::Auth::ActivationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "reject already active account" do
-    @user.update!(account_type: 'active')
+    @user.update!(account_type: "active")
 
     post api_v1_auth_activate_path, params: {
       token: @token,

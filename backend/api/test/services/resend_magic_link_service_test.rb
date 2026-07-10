@@ -11,7 +11,7 @@ class ResendMagicLinkServiceTest < ActiveSupport::TestCase
     result = ResendMagicLinkService.call(email: @user.email)
 
     assert result.success?
-    assert_equal I18n.t('magic_link.resent'), result.value!
+    assert_equal I18n.t("magic_link.resent"), result.value!
   end
 
   test "rate limit resend attempts" do
@@ -26,6 +26,6 @@ class ResendMagicLinkServiceTest < ActiveSupport::TestCase
     result = ResendMagicLinkService.call(email: "nonexistent@example.com")
 
     assert result.success?
-    assert_equal I18n.t('magic_link.resent'), result.value!
+    assert_equal I18n.t("magic_link.resent"), result.value!
   end
 end

@@ -7,7 +7,7 @@ class ActivateGuestServiceTest < ActiveSupport::TestCase
     @user = users(:guest_user)
     @token = JwtService.encode(
       user_id: @user.id,
-      purpose: 'activation',
+      purpose: "activation",
       exp: 72.hours.from_now.to_i
     )
   end
@@ -31,7 +31,7 @@ class ActivateGuestServiceTest < ActiveSupport::TestCase
   end
 
   test "reject already active account" do
-    @user.update!(account_type: 'active')
+    @user.update!(account_type: "active")
     result = ActivateGuestService.call(token: @token, display_name: "Test User")
 
     assert result.failure?

@@ -11,7 +11,7 @@ class Api::V1::Auth::MagicLinksControllerTest < ActionDispatch::IntegrationTest
     post api_v1_auth_resend_magic_link_path, params: { email: @user.email }
 
     assert_response :success
-    assert_equal I18n.t('magic_link.resent'), json_response["message"]
+    assert_equal I18n.t("magic_link.resent"), json_response["message"]
   end
 
   test "rate limit resend attempts" do
@@ -27,6 +27,6 @@ class Api::V1::Auth::MagicLinksControllerTest < ActionDispatch::IntegrationTest
     post api_v1_auth_resend_magic_link_path, params: { email: "nonexistent@example.com" }
 
     assert_response :success
-    assert_equal I18n.t('magic_link.resent'), json_response["message"]
+    assert_equal I18n.t("magic_link.resent"), json_response["message"]
   end
 end
