@@ -27,7 +27,7 @@ class SignalsSummaryService
       SignalsSummary.new(
         chronotype_label:           Chronotype.label(health_summary.chronotype),
         peak_energy_window:         peak_energy_window(health_summary),
-        routine_stability_tier:     Chronotype.routine_stability_tier(health_summary.routine_stability_index),
+        routine_stability_tier:     routine_stability_tier(health_summary),
         activity_tier:              health_summary.activity_level,
         avg_sleep_duration_minutes: health_summary.avg_sleep_duration_minutes,
         self_report_alignment:      self_report_alignment(health_summary)
@@ -47,14 +47,26 @@ class SignalsSummaryService
       "#{start_time.strftime('%H:%M')}\u2013#{end_time.strftime('%H:%M')}"
     end
 
+    # Returns nil when routine_stability_index is nil (not yet computed).
+    # Chronotype.routine_stability_tier returns nil for out-of-range values —
+    # acceptable: the consumer renders nil as "unavailable".
+    def routine_stability_tier(health_summary)
+      return nil unless health_summary.routine_stability_index
+
+      Chronotype.routine_stability_tier(health_summary.routine_stability_index)
+    end
+
+    # Always returns the same shape: { aligned:, note: }
+    # aligned: nil means "no preference declared" — distinct from true/false.
     def self_report_alignment(health_summary)
-      return nil unless user.preference_profile&.self_chronotype
+      unless user.preference_profile&.self_chronotype
+        return { aligned: nil, note: nil }
+      end
 
       self_chronotype = user.preference_profile.self_chronotype
 
-      # "depends" means the user has no strong preference — treat as always aligned
-      # regardless of the observed chronotype. This is an explicit product decision:
-      # do not penalise users who declared flexibility.
+      # "depends" means the user has no strong preference — treat as always aligned.
+      # Explicit product decision: do not penalise users who declared flexibility.
       aligned = self_chronotype == "depends" ||
                 Chronotype.observed_from_self(self_chronotype) == health_summary.chronotype
 
