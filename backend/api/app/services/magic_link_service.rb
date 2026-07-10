@@ -4,6 +4,8 @@
 class MagicLinkService
   include Dry::Monads[:result]
 
+  ACTIVATION_EXP = 72.hours
+
   def self.call(...) = new.call(...)
 
   def call(user:)
@@ -19,9 +21,8 @@ class MagicLinkService
 
   def generate_token(user)
     JwtService.encode(
-      user_id: user.id,
-      purpose: 'activation',
-      exp: 72.hours.from_now.to_i
+      { user_id: user.id, purpose: 'activation' },
+      exp: ACTIVATION_EXP
     )
   end
 end

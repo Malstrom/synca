@@ -7,25 +7,38 @@ class ActivateGuestService
   def self.call(...) = new.call(...)
 
   def call(token:, display_name:)
-    payload = JwtService.decode(token)
+    payload = decode_token(token)
+    return payload if payload.failure?
 
-    case payload
+    case payload.value!
     in { user_id:, purpose: 'activation' }
       user = User.includes(:profile).find(user_id)
 
       if user.account_type != 'guest'
-        Failure([ :account_already_active, I18n.t('contracts.errors.account_type.already_active') ])
+        Failure([:account_already_active, I18n.t('contracts.errors.account_type.already_active')])
       elsif user.magic_link_token.nil?
-        Failure([ :token_already_used, I18n.t('contracts.errors.magic_link_token.already_used') ])
+        Failure([:token_already_used, I18n.t('contracts.errors.magic_link_token.already_used')])
       else
         activate_user(user, display_name)
       end
     else
-      Failure([ :invalid_token, I18n.t('contracts.errors.magic_link_token.invalid') ])
+      Failure([:invalid_token, I18n.t('contracts.errors.magic_link_token.invalid')])
     end
   end
 
   private
+
+  def decode_token(token)
+    raw = JwtService.decode_with_status(token)
+    case raw
+    in { status: :expired, payload: _ }
+      Failure([:token_expired, I18n.t('contracts.errors.magic_link_token.expired')])
+    in { status: :invalid }
+      Failure([:invalid_token, I18n.t('contracts.errors.magic_link_token.invalid')])
+    in { status: :ok, payload: payload }
+      Success(payload)
+    end
+  end
 
   def activate_user(user, display_name)
     user.transaction do
@@ -40,6 +53,6 @@ class ActivateGuestService
       Success(tokens.merge(account_type: 'active'))
     end
   rescue ActiveRecord::RecordInvalid => e
-    Failure([ :validation_failed, e.message ])
+    Failure([:validation_failed, e.message])
   end
 end

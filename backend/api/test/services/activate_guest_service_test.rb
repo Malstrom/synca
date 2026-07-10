@@ -5,11 +5,7 @@ require "test_helper"
 class ActivateGuestServiceTest < ActiveSupport::TestCase
   setup do
     @user = users(:guest_user)
-    @token = JwtService.encode(
-      user_id: @user.id,
-      purpose: "activation",
-      exp: 72.hours.from_now.to_i
-    )
+    @token = MagicLinkService.call(user: @user).value!
   end
 
   test "activate guest account successfully" do
@@ -17,9 +13,20 @@ class ActivateGuestServiceTest < ActiveSupport::TestCase
 
     assert result.success?
     assert_equal "active", @user.reload.account_type
-    assert_equal "Test User", @user.profile.display_name
+    assert_equal "Test User", @user.profile.reload.display_name
     assert_not_nil result.value!["access_token"]
     assert_not_nil result.value!["refresh_token"]
+  end
+
+  test "reject expired token" do
+    expired_token = JwtService.encode(
+      { user_id: @user.id, purpose: "activation" },
+      exp: 1.second
+    )
+    result = travel_to(2.seconds.from_now) { ActivateGuestService.call(token: expired_token, display_name: "Test User") }
+
+    assert result.failure?
+    assert_equal :token_expired, result.failure.first
   end
 
   test "reject already used token" do

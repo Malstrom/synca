@@ -5,11 +5,7 @@ require "test_helper"
 class Api::V1::Auth::ActivationsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = users(:guest_user)
-    @token = JwtService.encode(
-      user_id: @user.id,
-      purpose: "activation",
-      exp: 72.hours.from_now.to_i
-    )
+    @token = MagicLinkService.call(user: @user).value!
   end
 
   test "activate guest account with valid token" do
@@ -20,9 +16,9 @@ class Api::V1::Auth::ActivationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "active", @user.reload.account_type
-    assert_equal "Test User", @user.profile.display_name
-    assert_not_nil json_response["access_token"]
-    assert_not_nil json_response["refresh_token"]
+    assert_equal "Test User", @user.profile.reload.display_name
+    assert_not_nil json_response["activation"]["access_token"]
+    assert_not_nil json_response["activation"]["refresh_token"]
   end
 
   test "reject already used token" do
@@ -39,15 +35,15 @@ class Api::V1::Auth::ActivationsControllerTest < ActionDispatch::IntegrationTest
 
   test "reject expired token" do
     expired_token = JwtService.encode(
-      user_id: @user.id,
-      purpose: "activation",
-      exp: 1.hour.ago.to_i
+      { user_id: @user.id, purpose: "activation" },
+      exp: 1.second
     )
-
-    post api_v1_auth_activate_path, params: {
-      token: expired_token,
-      profile: { display_name: "Test User" }
-    }
+    travel_to 2.seconds.from_now do
+      post api_v1_auth_activate_path, params: {
+        token: expired_token,
+        profile: { display_name: "Test User" }
+      }
+    end
 
     assert_response :unprocessable_entity
     assert_equal "token_expired", json_response["code"]

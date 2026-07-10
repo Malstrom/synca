@@ -11,10 +11,12 @@ class ResendMagicLinkService
   def call(email:)
     user = User.find_by(email: email)
 
-    if user&.account_type == 'guest' && !rate_limited?(user)
-      generate_and_send_token(user)
-      Success(I18n.t('magic_link.resent'))
+    return Success(I18n.t('magic_link.resent')) unless user&.account_type == 'guest'
+
+    if rate_limited?(user)
+      Failure([:rate_limited, I18n.t('magic_link.rate_limited')])
     else
+      generate_and_send_token(user)
       Success(I18n.t('magic_link.resent'))
     end
   end
@@ -26,7 +28,9 @@ class ResendMagicLinkService
   end
 
   def generate_and_send_token(user)
-    token = MagicLinkService.call(user: user).value!
+    result = MagicLinkService.call(user: user)
+    return if result.failure?
+
     # TODO: Implement email sending logic
   end
 end

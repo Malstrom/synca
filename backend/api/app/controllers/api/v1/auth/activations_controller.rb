@@ -11,8 +11,9 @@ module Api
             token: params[:token],
             display_name: params.dig(:profile, :display_name)
           )
-          in Success(tokens)
-            render_success(tokens)
+          in Success(user_data)
+            serializer = ActivationSerializer.new(OpenStruct.new(user_data))
+            render_success({ activation: serializer.as_json })
           in Failure([:token_expired, message])
             render_error(:unprocessable_entity, message, code: "token_expired")
           in Failure([:token_already_used, message])

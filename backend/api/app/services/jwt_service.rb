@@ -20,6 +20,21 @@ class JwtService
     nil
   end
 
+  # Returns { status: :ok, payload: hash } | { status: :expired, payload: hash } | { status: :invalid }
+  def self.decode_with_status(token)
+    decoded = JWT.decode(token, SECRET, true, { algorithm: ALGORITHM })
+    { status: :ok, payload: decoded.first }
+  rescue JWT::ExpiredSignature
+    begin
+      decoded = JWT.decode(token, SECRET, false, { algorithm: ALGORITHM })
+      { status: :expired, payload: decoded.first }
+    rescue JWT::DecodeError
+      { status: :invalid }
+    end
+  rescue JWT::DecodeError
+    { status: :invalid }
+  end
+
   def self.access_token(user)
     encode({ sub: user.id, type: "access" })
   end
