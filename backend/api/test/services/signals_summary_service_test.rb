@@ -13,7 +13,7 @@ class SignalsSummaryServiceTest < ActiveSupport::TestCase
   test "call returns Success with correct SignalsSummary" do
     result = SignalsSummaryService.call(user: @user)
 
-    assert_pattern { result => Success }
+    assert result.success?
     summary = result.value!
 
     assert_equal Chronotype.label(@health.chronotype),                               summary.chronotype_label
@@ -28,6 +28,15 @@ class SignalsSummaryServiceTest < ActiveSupport::TestCase
     alignment = result.value!.self_report_alignment
 
     assert_equal true, alignment[:aligned]
+    assert_nil alignment[:note]
+  end
+
+  test "call returns self_report_alignment with aligned nil when no self_chronotype declared" do
+    result    = SignalsSummaryService.call(user: users(:bob))
+    alignment = result.value!.self_report_alignment
+
+    assert result.success?
+    assert_nil alignment[:aligned]
     assert_nil alignment[:note]
   end
 
