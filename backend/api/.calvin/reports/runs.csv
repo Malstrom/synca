@@ -50,3 +50,4 @@ run_at,workflow,ref,model,prompt_tokens,completion_tokens,total_tokens,cost_usd,
 2026-07-07T22:53:30Z,calvin,101,codestral-latest,6458,2025,8483,0.00376,success,30,,,7,2113
 2026-07-07T23:10:03Z,calvin,101,codestral-latest,6459,1979,8438,0.003719,success,8,,,5,2113
 2026-07-07T23:17:15Z,calvin,101,codestral-latest,6459,2762,9221,0.004424,success,8,,,6,2113
+2026-07-10T00:46:32Z,calvin,102,codestral-latest,4635,3293,7928,0.004354,failure,8,,,,3171
