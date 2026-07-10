@@ -1,57 +1,16 @@
-# Contract validation error messages.
-#
-# Centralizes all dry-validation error strings so tests never assert
-# raw framework output. Keys are organized by field name, not by contract,
-# since the same field/rule combination is shared across multiple contracts.
-#
-# Usage in tests:
-#   assert_includes result.errors.to_h.dig(:auth, :password),
-#     I18n.t("contracts.errors.password.min_size")
-
 en:
   contracts:
     errors:
-      # auth / registration
-      email:
-        format: "is not a valid email"
-        filled: "email is required"
-      email_or_phone: "email or phone is required"
-      password:
-        min_size: "must be at least 8 characters"
-        filled: "password is required"
-      device_id:
-        filled: "device_id is required"
+      token:
+        invalid: "Invalid or expired token"
+        already_used: "This activation link has already been used"
+      account:
+        already_active: "Account is already active"
+      magic_link:
+        rate_limit: "Please wait before requesting another activation link"
+      profile:
+        display_name:
+          blank: "Display name can't be blank"
+          too_long: "Display name is too long (maximum is 50 characters)"
 
-      # preferences
-      sleep_together_importance:
-        inclusion: "must be one of: 1 - 5"
-      rhythm_importance:
-        inclusion: "must be one of: 1 - 5"
-      temperature_preference:
-        inclusion: "must be one of: cool, warm, no_preference"
-      movement_preference:
-        inclusion: "must be one of: very_little, moderate, a_lot, as_much_as_possible"
-      self_chronotype:
-        inclusion: "must be one of: morning, night, depends"
-
-      # health summary
-      effective_from:
-        filled: "effective_from is required"
-      effective_to:
-        after_effective_from: "must be after effective_from"
-      chronotype:
-        inclusion: "must be one of: early_bird, intermediate, night_owl"
-      activity_level:
-        inclusion: "must be one of: low, medium, high"
-      recovery_score:
-        inclusion: "must be one of: low, medium, high"
-
-      # profile
-      gender:
-        inclusion: "must be a valid gender value"
-      birth_date:
-        format: "must be a valid date"
-
-      # spark
-      session_code:
-        format: "must be a 6-digit code"
+---

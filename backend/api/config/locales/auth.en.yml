@@ -1,0 +1,6 @@
+en:
+  auth:
+    magic_link:
+      resent: "If your email is registered, a new activation link has been sent."
+
+---
