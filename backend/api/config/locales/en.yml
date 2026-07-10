@@ -1,5 +1,10 @@
 en:
-  signals_summary:
-    no_signals: "No health data found. Connect Apple Health to see your profile."
-  self_report_alignment:
-    note: "You declared %{self_chronotype} but your data shows %{chronotype}."
+  errors:
+    account_already_active: "Account is already active"
+    invalid_token: "Invalid token"
+    invalid_purpose: "Token purpose must be 'activation'"
+    token_expired: "Token has expired"
+    token_mismatch: "Token does not match user"
+    token_already_used: "Token has already been used"
+    rate_limited: "Please wait before requesting another link"
+    validation_failed: "Validation failed"
