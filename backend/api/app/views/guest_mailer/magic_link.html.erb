@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <p>Hello <%= @user.email %>,</p>
+    <p>Click the link below to activate your Synca account:</p>
+    <p><a href="<%= deep_link_base_url %>/activate?token=<%= @token %>">Activate Account</a></p>
+  </body>
+</html>
