@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <h1><%= I18n.t("guest_mailer.magic_link.heading") %></h1>
+    <p><%= I18n.t("guest_mailer.magic_link.body", email: @user.email) %></p>
+    <p><%= link_to I18n.t("guest_mailer.magic_link.link_text"), "#{deep_link_base_url}/activate?token=#{@token}" %></p>
+  </body>
+</html>
