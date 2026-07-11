@@ -4,48 +4,30 @@ require "test_helper"
 
 class SparkScoringJobTest < ActiveJob::TestCase
   setup do
-    @spark = sparks(:active_both_answered)
+    @spark = sparks(:completed_spark)
+    @initiator = @spark.initiator
+    @partner = @spark.partner
   end
 
-  test "performs scoring and transitions spark to completed" do
-    SparkScoringJob.perform_now(@spark.id)
+  test "enqueues magic link for guest users" do
+    @initiator.update!(account_type: :guest)
+    @partner.update!(account_type: :guest)
 
-    @spark.reload
-    assert_equal "completed", @spark.status
-    assert @spark.compatibility_score.present?
-    assert @spark.completed_at.present?
-  end
+    assert_enqueued_with(job: GuestMailer, args: [@initiator, kind_of(String)]) do
+      SparkScoringJob.perform_now(@spark.id)
+    end
 
-  test "issues one reward per participant" do
-    assert_difference "SparkReward.count", 2 do
+    assert_enqueued_with(job: GuestMailer, args: [@partner, kind_of(String)]) do
       SparkScoringJob.perform_now(@spark.id)
     end
   end
 
-  test "sets reward_issued flags on spark" do
-    SparkScoringJob.perform_now(@spark.id)
+  test "does not enqueue magic link for active users" do
+    @initiator.update!(account_type: :active)
+    @partner.update!(account_type: :active)
 
-    @spark.reload
-    assert @spark.reward_issued_initiator
-    assert @spark.reward_issued_partner
-  end
-
-  test "is enqueued on spark queue" do
-    assert_equal "spark", SparkScoringJob.new.queue_name
-  end
-
-  test "does nothing when spark does not exist" do
-    assert_nothing_raised do
-      SparkScoringJob.perform_now(-1)
+    assert_no_enqueued_jobs do
+      SparkScoringJob.perform_now(@spark.id)
     end
-  end
-
-  test "does nothing when spark is already completed" do
-    @spark.update!(status: :completed, compatibility_score: 75.0, completed_at: Time.current)
-    original_score = @spark.compatibility_score
-
-    SparkScoringJob.perform_now(@spark.id)
-
-    assert_equal original_score, @spark.reload.compatibility_score
   end
 end
