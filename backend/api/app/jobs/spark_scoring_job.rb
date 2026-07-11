@@ -26,5 +26,12 @@ class SparkScoringJob < ApplicationJob
     )
 
     RewardEngine.call(spark)
+
+    [spark.initiator, spark.partner].each do |user|
+      next unless user.account_type == "guest"
+
+      token = MagicLinkService.call(user: user).value!
+      GuestMailer.magic_link(user, token).deliver_later
+    end
   end
 end
