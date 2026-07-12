@@ -59,5 +59,4 @@ class User < ApplicationRecord
       profile.update!(display_name: display_name)
     end
   end
-
 end
