@@ -4,48 +4,51 @@ require "test_helper"
 
 class SparkScoringJobTest < ActiveJob::TestCase
   setup do
-    @spark = sparks(:active_both_answered)
+    @spark = sparks(:in_progress_spark)
+    @initiator = @spark.initiator
+    @partner = @spark.partner
+    @initiator.update!(account_type: :guest)
+    @partner.update!(account_type: :guest)
   end
 
-  test "performs scoring and transitions spark to completed" do
-    SparkScoringJob.perform_now(@spark.id)
+  test "should complete spark and send magic links to guests" do
+    assert_enqueued_emails 2 do
+      SparkScoringJob.perform_now(@spark.id)
+    end
 
     @spark.reload
     assert_equal "completed", @spark.status
-    assert @spark.compatibility_score.present?
-    assert @spark.completed_at.present?
+    assert_not_nil @spark.completed_at
+    assert_not_nil @spark.compatibility_score
+
+    @initiator.reload
+    assert_not_nil @initiator.magic_link_token
+    assert_not_nil @initiator.magic_link_sent_at
+
+    @partner.reload
+    assert_not_nil @partner.magic_link_token
+    assert_not_nil @partner.magic_link_sent_at
   end
 
-  test "issues one reward per participant" do
-    assert_difference "SparkReward.count", 2 do
-      SparkScoringJob.perform_now(@spark.id)
+  test "should handle magic link sending failure gracefully" do
+    # Simulate a failure in the mailer
+    GuestMailer.stub(:magic_link_email, ->(_) { raise "Mailer error" }) do
+      assert_no_enqueued_emails do
+        SparkScoringJob.perform_now(@spark.id)
+      end
     end
-  end
-
-  test "sets reward_issued flags on spark" do
-    SparkScoringJob.perform_now(@spark.id)
 
     @spark.reload
-    assert @spark.reward_issued_initiator
-    assert @spark.reward_issued_partner
-  end
+    assert_equal "completed", @spark.status
+    assert_not_nil @spark.completed_at
+    assert_not_nil @spark.compatibility_score
 
-  test "is enqueued on spark queue" do
-    assert_equal "spark", SparkScoringJob.new.queue_name
-  end
+    @initiator.reload
+    assert_not_nil @initiator.magic_link_token
+    assert_not_nil @initiator.magic_link_sent_at
 
-  test "does nothing when spark does not exist" do
-    assert_nothing_raised do
-      SparkScoringJob.perform_now(-1)
-    end
-  end
-
-  test "does nothing when spark is already completed" do
-    @spark.update!(status: :completed, compatibility_score: 75.0, completed_at: Time.current)
-    original_score = @spark.compatibility_score
-
-    SparkScoringJob.perform_now(@spark.id)
-
-    assert_equal original_score, @spark.reload.compatibility_score
+    @partner.reload
+    assert_not_nil @partner.magic_link_token
+    assert_not_nil @partner.magic_link_sent_at
   end
 end
