@@ -1,17 +1,25 @@
 name: Calvin RAG Ingestion
 
 on:
-  # Trigger: PR mergiata su main
+  # Trigger 1: PR mergiata su main
   pull_request:
     types: [closed]
     branches: [main]
+
+  # Trigger 2: label 'ingest' aggiunta a qualsiasi PR aperta
+  pull_request_target:
+    types: [labeled]
 
 jobs:
   ingest:
     runs-on: ubuntu-latest
 
-    # Solo se la PR è stata mergiata (non chiusa senza merge)
-    if: github.event.pull_request.merged == true
+    # Esegue se:
+    #   a) PR mergiata su main, OPPURE
+    #   b) label 'ingest' aggiunta alla PR
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'pull_request_target' && github.event.label.name == 'ingest')
 
     steps:
       - name: Checkout synca
@@ -40,7 +48,6 @@ jobs:
         run: bundle install
         working-directory: calvin/bin
 
-      # Ingest regole dalla PR mergiata (solo bullet checkati nel commento <!-- calvin:rules -->)
       - name: Run ingestion — PR rules
         working-directory: calvin
         env:
