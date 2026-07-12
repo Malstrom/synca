@@ -1,5 +1,20 @@
 en:
-  signals_summary:
-    no_signals: "No health data found. Connect Apple Health to see your profile."
-  self_report_alignment:
-    note: "You declared %{self_chronotype} but your data shows %{chronotype}."
+  services:
+    magic_link:
+      account_already_active: "Account is already active"
+      rate_limited: "Magic link already sent recently"
+      token_not_found: "Token not found"
+      token_expired: "Token has expired"
+  controllers:
+    auth:
+      activations:
+        token_not_found: "Token not found"
+        token_expired: "Token has expired"
+        account_already_active: "Account is already active"
+      magic_links:
+        rate_limited: "Too many requests"
+        success: "If your email is registered, a new link has been sent."
+  mailers:
+    guest:
+      magic_link:
+        subject: "Activate your account"
