@@ -1,49 +1,35 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
-  # validations: false because non-email providers (apple, google, telegram)
-  # never set a password. Presence/length validation for the :email provider
-  # is handled by Dry::Validation contracts (e.g. RegisterContract).
-  has_secure_password validations: false
+  has_many :initiated_sparks, class_name: "Spark", foreign_key: :initiator_id, dependent: :destroy, inverse_of: :initiator
+  has_many :spark_participants, dependent: :destroy, inverse_of: :user
+  has_many :sparks, through: :spark_participants
+  has_many :matches, dependent: :destroy, inverse_of: :user
+  has_many :match_participants, dependent: :destroy, inverse_of: :user
+  has_many :preference_profiles, dependent: :destroy, inverse_of: :user
+  has_one  :profile, dependent: :destroy, inverse_of: :user
+  has_one  :health_summary, dependent: :destroy, inverse_of: :user
 
-  enum :auth_provider, {
-    email:    0,
-    apple:    1,
-    google:   2,
-    telegram: 3
-  }
+  has_secure_password
 
-  enum :account_type, {
-    guest: 0,
-    active: 1
-  }
+  enum :auth_provider, { email: 0, google: 1, apple: 2 }, prefix: true
+  enum :account_type, { guest: 0, active: 1 }, prefix: true
 
-  has_one  :profile,            dependent: :destroy
-  has_one  :health_summary,     -> { where(effective_to: nil) }, dependent: :destroy
-  has_one  :preference_profile, dependent: :destroy
-  has_many :match_participants,  dependent: :destroy
-  has_many :matches,             through: :match_participants
-  has_many :initiated_sparks, class_name: "Spark",
-                               foreign_key: :initiator_id,
-                               dependent: :destroy,
-                               inverse_of: :initiator
-  # dependent: :nullify is intentional: when a User is deleted as a partner,
-  # the Spark record is preserved with partner_id = nil.
-  # ExpireStaleSparkJob is responsible for cleaning up orphaned sparks
-  # in pending/active state.
-  has_many :joined_sparks,    class_name: "Spark",
-                               foreign_key: :partner_id,
-                               dependent: :nullify,
-                               inverse_of: :partner
-  has_many :spark_rewards, dependent: :destroy
+  def generate_magic_link_token!
+    update!(
+      magic_link_token: SecureRandom.urlsafe_base64(32),
+      magic_link_sent_at: Time.current
+    )
+  end
 
-  # NOTE: no callbacks. Email normalization is the responsibility of the
-  # calling service (e.g. CreateUserService, UpdateEmailService).
-  # Convention: any service that writes User#email MUST call
-  # email.downcase before persisting.
+  def magic_link_expired?
+    magic_link_sent_at.nil? || magic_link_sent_at < Settings.magic_link.ttl_hours.hours.ago
+  end
 
-  # NOTE: no AR uniqueness validations. Uniqueness is enforced at DB level
-  # (unique indexes on email and phone). The writing service (CreateUserService,
-  # UpdateEmailService) is responsible for rescuing ActiveRecord::RecordNotUnique
-  # and returning a structured Failure.
+  def activate!(display_name:)
+    transaction do
+      update!(account_type: :active, magic_link_token: nil)
+      profile.update!(display_name: display_name)
+    end
+  end
 end
