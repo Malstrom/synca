@@ -26,5 +26,17 @@ class SparkScoringJob < ApplicationJob
     )
 
     RewardEngine.call(spark)
+
+    # Send magic link to guest participants
+    [spark.initiator, spark.partner].each do |user|
+      next unless user.account_type == "guest"
+
+      case MagicLinkService.call(user: user)
+      in Success(user)
+        GuestMailer.magic_link_email(user).deliver_later
+      in Failure(_)
+        # Ignore failure to send email
+      end
+    end
   end
 end
