@@ -9,7 +9,7 @@ class GuestMailer < ApplicationMailer
 
   private
 
-  def magic_link_url(token:)
-    "#{ENV['FRONTEND_URL']}/activate?token=#{token}"
-  end
+    def magic_link_url(token:)
+      "#{ENV['FRONTEND_URL']}/activate?token=#{token}"
+    end
 end
