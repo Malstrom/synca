@@ -33,16 +33,16 @@ module Api
 
         private
 
-        def activate_user(user:, display_name:)
-          user.transaction do
-            user.update!(account_type: :active, magic_link_token: nil)
-            user.profile.update!(display_name: display_name)
-          end
+          def activate_user(user:, display_name:)
+            user.transaction do
+              user.update!(account_type: :active, magic_link_token: nil)
+              user.profile.update!(display_name: display_name)
+            end
 
-          Success(user)
-        rescue ActiveRecord::RecordInvalid => e
-          Failure([:validation_failed, e.message])
-        end
+            Success(user)
+          rescue ActiveRecord::RecordInvalid => e
+            Failure([:validation_failed, e.message])
+          end
       end
     end
   end

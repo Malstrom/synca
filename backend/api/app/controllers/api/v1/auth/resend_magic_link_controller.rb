@@ -23,9 +23,9 @@ module Api
 
         private
 
-        def rate_limited?(user)
-          user.magic_link_sent_at && user.magic_link_sent_at > 5.minutes.ago
-        end
+          def rate_limited?(user)
+            user.magic_link_sent_at && user.magic_link_sent_at > 5.minutes.ago
+          end
       end
     end
   end
