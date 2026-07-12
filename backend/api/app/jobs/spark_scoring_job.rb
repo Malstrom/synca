@@ -26,5 +26,21 @@ class SparkScoringJob < ApplicationJob
     )
 
     RewardEngine.call(spark)
+
+    # Send magic link to guest participants
+    spark.participants.each do |participant|
+      next unless participant.user.account_type_guest?
+
+      case MagicLinkService.call(user: participant.user)
+      in Success(user)
+        GuestMailer.magic_link_email(user).deliver_later
+      in Failure([:rate_limited, _])
+        # Log but don't fail the job
+        Rails.logger.info("Magic link not sent to #{participant.user.email}: rate limited")
+      in Failure([:error, msg])
+        # Log but don't fail the job
+        Rails.logger.error("Failed to send magic link to #{participant.user.email}: #{msg}")
+      end
+    end
   end
 end
