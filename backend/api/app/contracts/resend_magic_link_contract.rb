@@ -11,7 +11,7 @@ class ResendMagicLinkContract < Dry::Validation::Contract
 
   private
 
-  def valid_email?(email)
-    email.match?(URI::MailTo::EMAIL_REGEXP)
-  end
+    def valid_email?(email)
+      email.match?(URI::MailTo::EMAIL_REGEXP)
+    end
 end

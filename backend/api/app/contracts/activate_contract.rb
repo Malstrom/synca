@@ -18,14 +18,14 @@ class ActivateContract < Dry::Validation::Contract
 
   private
 
-  def valid_token?(token)
-    user = User.find_by(magic_link_token: token)
-    return false unless user
+    def valid_token?(token)
+      user = User.find_by(magic_link_token: token)
+      return false unless user
 
-    user.magic_link_sent_at && user.magic_link_sent_at > 72.hours.ago
-  end
+      user.magic_link_sent_at && user.magic_link_sent_at > 72.hours.ago
+    end
 
-  def valid_profile?(profile)
-    profile[:display_name].present?
-  end
+    def valid_profile?(profile)
+      profile[:display_name].present?
+    end
 end
