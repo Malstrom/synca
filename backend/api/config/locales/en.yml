@@ -1,5 +1,15 @@
 en:
-  signals_summary:
-    no_signals: "No health data found. Connect Apple Health to see your profile."
-  self_report_alignment:
-    note: "You declared %{self_chronotype} but your data shows %{chronotype}."
+  guest_mailer:
+    magic_link:
+      subject: "Activate your account"
+      heading: "Activate your account"
+      body: "Click the link below to activate your account and set your display name."
+      cta: "Activate account"
+  services:
+    magic_link:
+      account_already_active: "Account is already active"
+      rate_limited: "Magic link already sent recently"
+      token_not_found: "Token not found"
+      token_expired: "Token has expired"
+      token_already_used: "Token has already been used"
+      resend_success: "If your email is registered, a new link has been sent."
