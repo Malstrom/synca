@@ -64,37 +64,37 @@ class MagicLinkService
 
   private
 
-  attr_reader :user
+    attr_reader :user
 
-  def find_user_by_token(token:)
-    user = User.includes(:profile).find_by(magic_link_token: token)
-    return Failure([:not_found, I18n.t("services.magic_link.token_not_found")]) if user.nil?
+    def find_user_by_token(token:)
+      user = User.includes(:profile).find_by(magic_link_token: token)
+      return Failure([:not_found, I18n.t("services.magic_link.token_not_found")]) if user.nil?
 
-    Success(user)
-  end
+      Success(user)
+    end
 
-  def find_user_by_email(email:)
-    user = User.includes(:profile).find_by(email: email.downcase)
-    Success(user || User.new(email: email.downcase))
-  end
+    def find_user_by_email(email:)
+      user = User.includes(:profile).find_by(email: email.downcase)
+      Success(user || User.new(email: email.downcase))
+    end
 
-  def validate_user(user:)
-    return Failure([:account_already_active, I18n.t("services.magic_link.account_already_active")]) if user.active?
-    return Failure([:token_expired, I18n.t("services.magic_link.token_expired")]) if user.magic_link_expired?
-    return Failure([:token_already_used, I18n.t("services.magic_link.token_already_used")]) if user.magic_link_already_used?
+    def validate_user(user:)
+      return Failure([:account_already_active, I18n.t("services.magic_link.account_already_active")]) if user.active?
+      return Failure([:token_expired, I18n.t("services.magic_link.token_expired")]) if user.magic_link_expired?
+      return Failure([:token_already_used, I18n.t("services.magic_link.token_already_used")]) if user.magic_link_already_used?
 
-    Success(user)
-  end
+      Success(user)
+    end
 
-  def validate_profile(profile:)
-    return Failure([:invalid_profile, I18n.t("services.magic_link.invalid_profile")]) unless profile.key?(:display_name)
+    def validate_profile(profile:)
+      return Failure([:invalid_profile, I18n.t("services.magic_link.invalid_profile")]) unless profile.key?(:display_name)
 
-    Success(profile)
-  end
+      Success(profile)
+    end
 
-  def validate_resend(user:)
-    return Failure([:rate_limited, I18n.t("services.magic_link.rate_limited")]) if user.magic_link_sent_at&.> Settings.magic_link.rate_limit_minutes.minutes.ago
+    def validate_resend(user:)
+      return Failure([:rate_limited, I18n.t("services.magic_link.rate_limited")]) if user.magic_link_sent_at&.> Settings.magic_link.rate_limit_minutes.minutes.ago
 
-    Success(user)
-  end
+      Success(user)
+    end
 end
