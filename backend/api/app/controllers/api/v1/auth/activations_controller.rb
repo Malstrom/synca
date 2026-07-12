@@ -10,22 +10,22 @@ module Api
           user = User.find_by(magic_link_token: params[:token])
 
           if user.nil?
-            render json: { error: 'Token not found' }, status: :not_found
+            render json: { error: "Token not found" }, status: :not_found
             return
           end
 
           if user.active?
-            render json: { error: 'Account already active' }, status: :unprocessable_entity
+            render json: { error: "Account already active" }, status: :unprocessable_entity
             return
           end
 
           if user.magic_link_sent_at < 72.hours.ago
-            render json: { error: 'Token expired' }, status: :unprocessable_entity
+            render json: { error: "Token expired" }, status: :unprocessable_entity
             return
           end
 
           if user.magic_link_token.nil?
-            render json: { error: 'Token already used' }, status: :unprocessable_entity
+            render json: { error: "Token already used" }, status: :unprocessable_entity
             return
           end
 
@@ -43,8 +43,8 @@ module Api
           render json: {
             access_token: tokens[:access_token],
             refresh_token: tokens[:refresh_token],
-            token_type: 'Bearer',
-            account_type: 'active'
+            token_type: "Bearer",
+            account_type: "active"
           }, status: :ok
         end
       end
