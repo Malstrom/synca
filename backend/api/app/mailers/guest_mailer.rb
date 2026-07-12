@@ -9,7 +9,7 @@ class GuestMailer < ApplicationMailer
 
   private
 
-  def magic_link_url(token)
-    "#{Rails.application.config.action_mailer.default_url_options[:host]}/activate?token=#{token}"
-  end
+    def magic_link_url(token)
+      "#{Rails.application.config.action_mailer.default_url_options[:host]}/activate?token=#{token}"
+    end
 end
