@@ -1,0 +1,7 @@
+en:
+  activate:
+    errors:
+      token_not_found: "Token not found"
+      token_expired: "Token expired"
+      token_already_used: "Token already used"
+      account_already_active: "Account already active"

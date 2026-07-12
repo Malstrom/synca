@@ -1,0 +1,4 @@
+en:
+  guest_mailer:
+    magic_link:
+      subject: "Your activation link"

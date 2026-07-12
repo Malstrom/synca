@@ -1,0 +1,3 @@
+en:
+  resend_magic_link:
+    success: "If your email is registered, a new link has been sent."
