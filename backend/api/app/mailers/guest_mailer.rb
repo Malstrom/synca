@@ -13,7 +13,7 @@ class GuestMailer < ApplicationMailer
 
   private
 
-  def magic_link_url(token:)
-    "#{Rails.application.routes.url_helpers.root_url}activate?token=#{token}"
-  end
+    def magic_link_url(token:)
+      "#{Rails.application.routes.url_helpers.root_url}activate?token=#{token}"
+    end
 end
