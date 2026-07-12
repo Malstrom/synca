@@ -1,0 +1,12 @@
+en:
+  services:
+    magic_link:
+      not_found: "Token not found"
+      token_expired: "Token has expired"
+      token_already_used: "Token has already been used"
+      account_already_active: "Account is already active"
+      rate_limited: "Please wait before requesting another magic link"
+      resend_success: "If your email is registered, a new link has been sent."
+  guest_mailer:
+    magic_link:
+      subject: "Your activation link"
