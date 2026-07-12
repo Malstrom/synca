@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <h1><%= I18n.t("mailers.guest_mailer.magic_link.greeting", name: @user.profile&.display_name || "Guest") %></h1>
+    <p><%= I18n.t("mailers.guest_mailer.magic_link.instruction") %></p>
+    <p><%= link_to I18n.t("mailers.guest_mailer.magic_link.activate"), @magic_link_url %></p>
+  </body>
+</html>

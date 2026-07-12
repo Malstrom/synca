@@ -1,0 +1,5 @@
+<%= I18n.t("mailers.guest_mailer.magic_link.greeting", name: @user.profile&.display_name || "Guest") %>
+
+<%= I18n.t("mailers.guest_mailer.magic_link.instruction") %>
+
+<%= I18n.t("mailers.guest_mailer.magic_link.activate") %>: <%= @magic_link_url %>
