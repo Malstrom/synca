@@ -57,9 +57,9 @@ class MagicLinkService
 
   private
 
-  attr_reader :user, :token, :display_name
+    attr_reader :user, :token, :display_name
 
-  def rate_limited?
-    user.magic_link_sent_at&.> Settings.magic_link.rate_limit_minutes.minutes.ago
-  end
+    def rate_limited?
+      user.magic_link_sent_at&.> Settings.magic_link.rate_limit_minutes.minutes.ago
+    end
 end
