@@ -26,5 +26,17 @@ class SparkScoringJob < ApplicationJob
     )
 
     RewardEngine.call(spark)
+
+    # Send magic link to guest participants
+    spark.participants.each do |participant|
+      next unless participant.guest?
+
+      case MagicLinkService.call(user: participant)
+      in Success(user)
+        GuestMailer.magic_link_email(user).deliver_later
+      in Failure([:account_already_active, _])
+        # Do nothing, guest account already active
+      end
+    end
   end
 end
