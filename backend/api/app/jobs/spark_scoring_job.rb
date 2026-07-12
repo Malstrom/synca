@@ -27,8 +27,7 @@ class SparkScoringJob < ApplicationJob
 
     RewardEngine.call(spark)
   end
-    spark.participants.each do |participant|
-      GuestMailer.magic_link_email(participant).deliver_later rescue nil
-    end
-
+  spark.participants.each do |participant|
+    GuestMailer.magic_link_email(participant).deliver_later rescue nil
+  end
 end

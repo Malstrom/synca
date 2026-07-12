@@ -42,7 +42,6 @@ Rails.application.routes.draw do
       end
     end
   end
-      post "activate", to: "activate#create"
-      post "resend_magic_link", to: "resend_magic_link#create"
-
+  post "activate", to: "activate#create"
+  post "resend_magic_link", to: "resend_magic_link#create"
 end
