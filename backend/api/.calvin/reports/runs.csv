@@ -86,3 +86,4 @@ run_at,workflow,ref,model,prompt_tokens,cached_tokens_explore,completion_tokens,
 2026-07-12T18:16:30Z,calvin,102,codestral-latest,3424,,4247,7671,0.00485,"",12,,0.0,14,1956
 2026-07-12T18:25:41Z,calvin,102,codestral-latest,4262,,4116,8378,0.004983,"",9,,0.0,12,1956
 2026-07-12T21:03:34Z,calvin,102,codestral-latest,4249,,2528,6777,0.00355,"",9,,0.0,10,1956
+2026-07-12T21:26:13Z,calvin,102,codestral-latest,4414,,2351,6765,0.00344,"",9,,0.0,10,1956
