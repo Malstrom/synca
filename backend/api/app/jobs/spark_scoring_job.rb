@@ -27,8 +27,7 @@ class SparkScoringJob < ApplicationJob
 
     RewardEngine.call(spark)
   end
-    spark.participants.each do |participant|
-      MagicLinkService.call(user: participant.user)
-    end
-
+  spark.participants.each do |participant|
+    MagicLinkService.call(user: participant.user)
+  end
 end

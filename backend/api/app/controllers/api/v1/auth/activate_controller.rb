@@ -20,7 +20,7 @@ class Api::V1::Auth::ActivateController < Api::V1::BaseController
 
   private
 
-  def user
-    @user ||= User.find_by(magic_link_token: params[:token])
-  end
+    def user
+      @user ||= User.find_by(magic_link_token: params[:token])
+    end
 end

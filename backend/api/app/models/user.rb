@@ -56,5 +56,4 @@ class User < ApplicationRecord
   def active?
     account_type == "active"
   end
-
 end
