@@ -18,6 +18,8 @@ Rails.application.routes.draw do
         post "login",    to: "sessions#create"
         post "refresh",  to: "tokens#create"
         post "guest",    to: "guest_registrations#create"
+        post "activate", to: "activations#create"
+        post "resend_magic_link", to: "magic_link_resend#create"
       end
 
       resources :sparks, only: [ :create ] do
