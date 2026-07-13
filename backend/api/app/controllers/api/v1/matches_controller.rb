@@ -12,7 +12,7 @@ module Api
         if contract_result.failure?
           return render_error(
             code: "missing_params",
-            message: "user_id and other_user_id are required",
+            message: I18n.t("errors.matches.missing_params"),
             status: :unprocessable_entity
           )
         end
