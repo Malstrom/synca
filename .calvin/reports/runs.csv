@@ -1,0 +1,2 @@
+run_at,workflow,ref,model,prompt_tokens,cached_tokens_explore,completion_tokens,total_tokens,cost_usd,status,explore_turns,tests_written,writer_errors,temperature,files_written,issue_length
+2026-07-13T13:05:50Z,calvin,238,codestral-latest,4082,,449,4531,0.001629,"",15,,,0.0,1,4969
