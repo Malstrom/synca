@@ -10,7 +10,7 @@ module Api
         in Success(result)
           render_success(MatchSimulationSerializer.new(result).serialize)
         in Failure[:contract_invalid, result]
-          render_contract_errors(result)
+          render_error(code: "missing_params", message: result.errors.to_h.values.flatten.first, status: :unprocessable_entity)
         in Failure[:not_found, message]
           render_error(code: "not_found", message: message, status: :not_found)
         end

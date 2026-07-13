@@ -22,10 +22,18 @@ class JoinSparkService
       unless @spark.pending?
 
     attrs = contract_result.to_h[:spark]
-    return Failure[:invalid_code, I18n.t("errors.sparks.invalid_code")] \
-      if attrs[:code].present? && @spark.code != attrs[:code]
+    session_code = attrs[:session_code]
+    qr_token     = attrs[:qr_token]
 
-    @spark.update!(partner: @current_user, status: :active)
-    Success[@spark]
+    if session_code.present?
+      return Failure[:invalid_code, I18n.t("errors.sparks.invalid_code")] \
+        if @spark.session_code != session_code
+    elsif qr_token.present?
+      return Failure[:invalid_code, I18n.t("errors.sparks.invalid_code")] \
+        if @spark.qr_token != qr_token
+    end
+
+    @spark.update!(partner: @current_user, status: :active, started_at: Time.current)
+    Success(@spark)
   end
 end
