@@ -3,6 +3,8 @@
 require "test_helper"
 
 class LoginServiceTest < ActiveSupport::TestCase
+  include Dry::Monads[:result]
+
   setup do
     @password = "secret123"
     @user = users(:alice)
