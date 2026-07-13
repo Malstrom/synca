@@ -1,37 +1,28 @@
 # frozen_string_literal: true
 
+# Creates a new Spark for the current user.
+# Runs CreateSparkContract internally — callers pass raw params.
 class CreateSparkService
   include Dry::Monads[:result]
 
-  def self.call(...) = new.call(...)
+  def self.call(**args) = new(**args).call
 
-  def call(current_user:, attrs: {})
-    spark = current_user.initiated_sparks.build(
-      session_code: generate_session_code,
-      qr_token:     SecureRandom.uuid,
-      **map_location_attrs(attrs)
-    )
-
-    if spark.save
-      Success(spark)
-    else
-      Failure([ :validation_failed, spark.errors.full_messages.first ])
-    end
+  def initialize(current_user:, params:)
+    @current_user = current_user
+    @params       = params
   end
 
-  private
+  def call
+    contract_result = CreateSparkContract.new.call(@params)
+    return Failure[:contract_invalid, contract_result] if contract_result.failure?
 
-    def generate_session_code
-      loop do
-        code = SecureRandom.random_number(10**6).to_s.rjust(6, "0")
-        break code unless Spark.exists?(session_code: code)
-      end
-    end
+    attrs = contract_result.to_h.fetch(:spark, {})
+    spark = @current_user.initiated_sparks.build(attrs)
 
-    def map_location_attrs(attrs)
-      result = {}
-      result[:location_lat] = attrs[:lat] if attrs.key?(:lat)
-      result[:location_lng] = attrs[:lng] if attrs.key?(:lng)
-      result
+    if spark.save
+      Success[spark]
+    else
+      Failure[:validation_failed, spark.errors.full_messages.join(", ")]
     end
+  end
 end

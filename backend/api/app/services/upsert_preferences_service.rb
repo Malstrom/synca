@@ -1,28 +1,30 @@
 # frozen_string_literal: true
 
+# Creates or updates the PreferenceProfile for the current user.
+# Runs UpsertPreferencesContract internally — callers pass raw params.
 class UpsertPreferencesService
   include Dry::Monads[:result]
 
-  def self.call(current_user:, attrs:)
-    new(current_user: current_user, attrs: attrs).call
-  end
+  def self.call(**args) = new(**args).call
 
-  def initialize(current_user:, attrs:)
+  def initialize(current_user:, params:)
     @current_user = current_user
-    @attrs = attrs
+    @params       = params
   end
 
   def call
-    preference_profile = PreferenceProfile.find_or_initialize_by(user: current_user)
-    preference_profile.with_lock do
-      preference_profile.assign_attributes(attrs)
-      return Failure[:validation_failed, preference_profile.errors.full_messages.join(", ")] unless preference_profile.save
-    end
+    contract_result = UpsertPreferencesContract.new.call(
+      preferences: @params.dig("preferences") || @params.dig(:preferences) || {}
+    )
+    return Failure[:contract_invalid, contract_result] if contract_result.failure?
 
-    Success(preference_profile)
+    result = UpsertPreferencesService.upsert!(
+      current_user: @current_user,
+      attrs: contract_result.to_h[:preferences]
+    )
+
+    Success[result]
+  rescue ActiveRecord::RecordInvalid => e
+    Failure[:validation_failed, e.message]
   end
-
-  private
-
-    attr_reader :current_user, :attrs
 end
