@@ -8,22 +8,14 @@ module Api
 
         # POST /api/v1/auth/register
         def create
-          result = RegistrationContract.new.call(params.to_unsafe_h)
-          return render_contract_errors(result) if result.failure?
-
-          user = User.create!(
-            email:         result[:auth][:email]&.downcase,
-            phone:         result[:auth][:phone],
-            password:      result[:auth][:password],
-            provider_uid:  result[:auth][:provider_uid],
-            auth_provider: result[:auth][:auth_provider]
-          )
-
-          render_created(auth_response(user))
-        rescue ActiveRecord::RecordInvalid => e
-          render_validation_errors(e.record)
-        rescue ActiveRecord::RecordNotUnique
-          render_error(code: "validation_failed", message: "email has already been taken", field: "email")
+          case RegisterUserService.call(params: params.to_unsafe_h)
+          in Success(user)
+            render_created(auth_response(user))
+          in Failure[:email_taken, message]
+            render_error(code: "email_taken", message: message, field: "email", status: :unprocessable_entity)
+          in Failure[:validation_failed, result]
+            render_contract_errors(result)
+          end
         end
       end
     end
