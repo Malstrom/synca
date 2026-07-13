@@ -32,12 +32,15 @@ class RegistrationContract < Dry::Validation::Contract
     key.failure(I18n.t("contracts.errors.auth_provider.invalid")) unless valid
   end
 
-  # Email is required only when auth_provider resolves to "email" (string or integer 0)
+  # Email is required only when auth_provider resolves to "email".
+  # Accepts both string ("email") and integer (0) representations.
+  # Guard: only treat numeric strings as integers — "apple".to_i == 0 is a Ruby gotcha.
   rule(:auth) do
     next if schema_error?(:auth)
     auth     = values.to_h[:auth]
-    provider = auth[:auth_provider]
-    email_provider = provider.to_s == "email" || provider.to_i == User.auth_providers["email"]
+    provider = auth[:auth_provider].to_s
+    email_provider = provider == "email" ||
+                     (provider.match?(/\A\d+\z/) && provider.to_i == User.auth_providers["email"])
     next unless email_provider
     key([:auth, :email]).failure(I18n.t("contracts.errors.email.required")) if auth[:email].blank?
   end
