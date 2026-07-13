@@ -5,10 +5,10 @@ require "test_helper"
 module Api
   module V1
     module Auth
-      class SessionsControllerTest < ActionDispatch::IntegrationTest
+      class SessionsControllerTest < ApiTestCase
         setup do
           @password = "secret123"
-          @user = users(:one)
+          @user = users(:alice)
           @user.update!(password: @password)
         end
 
@@ -20,9 +20,9 @@ module Api
                as: :json
 
           assert_response :ok
-          assert_includes response.parsed_body.keys, "access_token"
-          assert_includes response.parsed_body.keys, "refresh_token"
-          assert_equal @user.email, response.parsed_body.dig("user", "email")
+          assert json[:access_token].present?
+          assert json[:refresh_token].present?
+          assert_equal @user.email, json.dig(:user, :email)
         end
 
         test "returns 401 on wrong password" do
@@ -31,7 +31,7 @@ module Api
                as: :json
 
           assert_response :unauthorized
-          assert_equal "invalid_credentials", response.parsed_body.dig("error", "code")
+          assert_equal "invalid_credentials", json.dig(:error, :code)
         end
 
         test "returns 401 when user does not exist" do
@@ -40,7 +40,7 @@ module Api
                as: :json
 
           assert_response :unauthorized
-          assert_equal "invalid_credentials", response.parsed_body.dig("error", "code")
+          assert_equal "invalid_credentials", json.dig(:error, :code)
         end
 
         test "returns 422 when email is missing" do
@@ -49,7 +49,7 @@ module Api
                as: :json
 
           assert_response :unprocessable_entity
-          assert_equal "validation_failed", response.parsed_body.dig("error", "code")
+          assert_equal "validation_failed", json.dig(:error, :code)
         end
 
         test "returns 422 when password is missing" do
@@ -58,7 +58,7 @@ module Api
                as: :json
 
           assert_response :unprocessable_entity
-          assert_equal "validation_failed", response.parsed_body.dig("error", "code")
+          assert_equal "validation_failed", json.dig(:error, :code)
         end
       end
     end
