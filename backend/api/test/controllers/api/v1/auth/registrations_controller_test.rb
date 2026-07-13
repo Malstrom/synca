@@ -26,7 +26,7 @@ class Api::V1::Auth::RegistrationsControllerTest < ApiTestCase
       params: { auth: { email: users(:alice).email, password: "password123", auth_provider: 0 } }
 
     assert_response :unprocessable_entity
-    assert_equal "validation_failed", json.dig(:error, :code)
+    assert_equal "email_taken", json.dig(:error, :code)
   end
 
   test "register without email returns 422" do

@@ -1,0 +1,6 @@
+en:
+  errors:
+    matches:
+      missing_params: "user_id and other_user_id are required"
+      not_found: "Match not found"
+      forbidden: "You are not a participant of this match"

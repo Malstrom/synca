@@ -15,12 +15,15 @@ en:
       email:
         format: "is not a valid email"
         filled: "email is required"
+        required: "is required for email auth provider"
       email_or_phone: "email or phone is required"
       password:
         min_size: "must be at least 8 characters"
         filled: "password is required"
       device_id:
         filled: "device_id is required"
+      auth_provider:
+        invalid: "is not a valid auth provider"
 
       # preferences
       sleep_together_importance:

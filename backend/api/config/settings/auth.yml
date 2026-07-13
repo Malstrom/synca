@@ -1,0 +1,5 @@
+auth:
+  access_token_ttl:    <%= 1.hour.to_i %>
+  refresh_token_ttl:   <%= 30.days.to_i %>
+  guest_token_ttl:     <%= 30.days.to_i %>
+  min_password_length: 8

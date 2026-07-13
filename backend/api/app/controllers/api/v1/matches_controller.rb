@@ -12,7 +12,7 @@ module Api
         if contract_result.failure?
           return render_error(
             code: "missing_params",
-            message: "user_id and other_user_id are required",
+            message: I18n.t("errors.matches.missing_params"),
             status: :unprocessable_entity
           )
         end
@@ -20,7 +20,7 @@ module Api
         case SimulateMatchService.call(**contract_result.to_h.symbolize_keys)
         in Success(result)
           render_success(MatchSimulationSerializer.new(result).serialize)
-        in Failure[ :not_found, message ]
+        in Failure[:not_found, message]
           render_error(code: "not_found", message: message, status: :not_found)
         end
       end
@@ -31,31 +31,8 @@ module Api
           .includes(match_participants: { user: :profile })
           .order(created_at: :desc)
 
-        render_success({
-          matches: matches.map { |match| serialize_match(match) }
-        })
+        render_success({ matches: MatchSerializer.new(matches).as_json })
       end
-
-      private
-
-        def serialize_match(match)
-          {
-            id:                  match.id,
-            status:              match.status,
-            compatibility_score: match.compatibility_score,
-            accepted_at:         match.accepted_at,
-            participants:        match.match_participants.map { |participant| serialize_participant(participant) }
-          }
-        end
-
-        def serialize_participant(participant)
-          profile = participant.user.profile
-          {
-            user_id: participant.user_id,
-            role:    participant.role,
-            profile: profile ? { display_name: profile.display_name } : nil
-          }
-        end
     end
   end
 end

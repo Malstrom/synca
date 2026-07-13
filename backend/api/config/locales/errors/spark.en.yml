@@ -1,0 +1,9 @@
+en:
+  errors:
+    spark:
+      spark_not_completed: "Spark scoring is not yet complete"
+      not_participant: "You are not a participant of this spark"
+      spark_not_joinable: "This spark is no longer joinable"
+      cannot_join_own_spark: "You cannot join your own spark"
+      invalid_code: "Invalid session code"
+      session_not_active: "This spark session is not active"

@@ -1,0 +1,17 @@
+# Auth domain error messages.
+#
+# Used by auth services (LoginService, RegisterUserService, etc.)
+# to build Failure[:code, I18n.t(...)] tuples.
+#
+# Usage:
+#   Failure[:invalid_credentials, I18n.t("errors.auth.invalid_credentials")]
+
+en:
+  errors:
+    auth:
+      invalid_credentials: "Invalid email or password"
+      invalid_token:        "Invalid or expired refresh token"
+      email_taken:          "Email has already been taken"
+      email_already_active: "An active account with this email already exists"
+      user_not_found:       "User not found"
+      registration_failed:  "Registration failed"
