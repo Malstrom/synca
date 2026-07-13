@@ -3,9 +3,10 @@
 module Api
   module V1
     class SparksController < ApplicationController
+      include Dry::Monads[:result]
+
       before_action :set_spark, only: [ :join, :submit_answers, :result ]
 
-      # POST /api/v1/sparks
       def create
         case CreateSparkService.call(current_user: current_user, params: params.to_unsafe_h)
         in Success[spark]
@@ -17,7 +18,6 @@ module Api
         end
       end
 
-      # POST /api/v1/sparks/:id/join
       def join
         case JoinSparkService.call(current_user: current_user, spark: @spark, params: params.to_unsafe_h)
         in Success[spark]
@@ -33,7 +33,6 @@ module Api
         end
       end
 
-      # POST /api/v1/sparks/:id/submit_answers
       def submit_answers
         case SubmitSparkAnswersService.call(current_user: current_user, spark: @spark, params: params.to_unsafe_h)
         in Success[spark]
@@ -45,7 +44,6 @@ module Api
         end
       end
 
-      # GET /api/v1/sparks/:id/result
       def result
         case SparkResultService.call(spark: @spark, current_user: current_user)
         in Success[data]

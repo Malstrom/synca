@@ -3,12 +3,10 @@
 module Api
   module V1
     class HealthSummaryController < ApplicationController
-      # PUT /api/v1/me/health_summary
+      include Dry::Monads[:result]
+
       def update
-        case UpdateHealthSummaryService.call(
-          current_user: current_user,
-          params: params.to_unsafe_h
-        )
+        case UpdateHealthSummaryService.call(current_user: current_user, params: params.to_unsafe_h)
         in Success[health_summary]
           render_success({ health_summary: HealthSummarySerializer.new(health_summary).serializable_hash })
         in Failure[:contract_invalid, result]

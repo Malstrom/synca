@@ -3,7 +3,8 @@
 module Api
   module V1
     class SparkRewardsController < ApplicationController
-      # GET /api/v1/spark_rewards
+      include Dry::Monads[:result]
+
       def index
         case ListSparkRewardsService.call(current_user: current_user)
         in Success[rewards]

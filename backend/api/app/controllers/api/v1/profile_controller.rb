@@ -3,12 +3,10 @@
 module Api
   module V1
     class ProfileController < ApplicationController
-      # PUT /api/v1/me/profile
+      include Dry::Monads[:result]
+
       def update
-        case UpdateProfileService.call(
-          current_user: current_user,
-          params: params.to_unsafe_h
-        )
+        case UpdateProfileService.call(current_user: current_user, params: params.to_unsafe_h)
         in Success[profile]
           render_success({ profile: ProfileSerializer.new(profile).serializable_hash })
         in Failure[:contract_invalid, result]

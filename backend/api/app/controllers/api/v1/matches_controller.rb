@@ -3,7 +3,8 @@
 module Api
   module V1
     class MatchesController < ApplicationController
-      # POST /api/v1/matches/simulate
+      include Dry::Monads[:result]
+
       def simulate
         case SimulateMatchService.call(params: params.to_unsafe_h)
         in Success[result]
@@ -15,7 +16,6 @@ module Api
         end
       end
 
-      # GET /api/v1/matches
       def index
         case ListMatchesService.call(current_user: current_user)
         in Success[matches]
