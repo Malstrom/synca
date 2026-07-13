@@ -4,7 +4,7 @@
 # Called internally by LoginService — never instantiated in a controller.
 class LoginContract < Dry::Validation::Contract
   EMAIL_REGEXP        = URI::MailTo::EMAIL_REGEXP
-  MIN_PASSWORD_LENGTH = Rails.application.config_for(:settings).dig("auth", "min_password_length")
+  MIN_PASSWORD_LENGTH = Settings.auth.min_password_length
 
   params do
     required(:auth).hash do
