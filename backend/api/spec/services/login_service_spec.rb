@@ -42,16 +42,18 @@ RSpec.describe LoginService do
     end
 
     context "contract validation" do
-      it "returns Failure[:validation_failed] when email is missing" do
+      it "returns Failure[:validation_failed] with a dry-validation result when email is missing" do
         result = described_class.call(params: { auth: { password: password } })
         expect(result).to be_failure
         expect(result.failure.first).to eq(:validation_failed)
+        expect(result.failure.last).to respond_to(:errors)
       end
 
       it "returns Failure[:validation_failed] when password is too short" do
         result = call(pw: "short")
         expect(result).to be_failure
         expect(result.failure.first).to eq(:validation_failed)
+        expect(result.failure.last).to respond_to(:errors)
       end
     end
   end

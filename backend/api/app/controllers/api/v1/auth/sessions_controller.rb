@@ -13,8 +13,8 @@ module Api
           case LoginService.call(params: params.to_unsafe_h)
           in Success(user)
             render_success(auth_response(user))
-          in Failure[:validation_failed, errors]
-            render_contract_errors_from_hash(errors)
+          in Failure[:validation_failed, contract]
+            render_contract_errors(contract)
           in Failure[:invalid_credentials, message]
             render_error(code: "invalid_credentials", message: message, status: :unauthorized)
           end

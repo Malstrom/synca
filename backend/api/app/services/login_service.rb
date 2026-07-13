@@ -4,8 +4,8 @@
 #
 # Returns:
 #   Success(user)                              — credentials valid
-#   Failure[:validation_failed, errors_hash]  — contract validation failed
-#   Failure[:invalid_credentials, message]    — user not found or wrong password
+#   Failure[:validation_failed, contract]      — contract validation failed (dry-validation result)
+#   Failure[:invalid_credentials, message]     — user not found or wrong password
 class LoginService
   include Dry::Monads[:result]
 
@@ -17,7 +17,7 @@ class LoginService
 
   def call
     contract = LoginContract.new.call(@params)
-    return Failure[:validation_failed, contract.errors.to_h] if contract.failure?
+    return Failure[:validation_failed, contract] if contract.failure?
 
     user = User.find_by(email: contract[:auth][:email].downcase)
     unless user&.authenticate(contract[:auth][:password])
