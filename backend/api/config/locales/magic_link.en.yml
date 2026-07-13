@@ -1,0 +1,14 @@
+en:
+  guest_mailer:
+    magic_link:
+      subject: "Your activation link"
+      body: "Click the link below to activate your account:"
+      link_text: "Activate Account"
+  services:
+    magic_link:
+      token_not_found: "Token not found"
+      token_expired: "Token has expired"
+      token_already_used: "Token has already been used"
+      account_already_active: "Account is already active"
+      rate_limited: "Please wait before requesting another link"
+      resend_success: "If your email is registered, a new link has been sent."
