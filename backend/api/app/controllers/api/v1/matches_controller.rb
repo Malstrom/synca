@@ -31,7 +31,7 @@ module Api
           .includes(match_participants: { user: :profile })
           .order(created_at: :desc)
 
-        render_success({ matches: serialize_collection(matches, MatchSerializer) })
+        render_success({ matches: MatchSerializer.new(matches).serialize })
       end
     end
   end
