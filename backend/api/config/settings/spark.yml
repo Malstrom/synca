@@ -1,5 +1,6 @@
 spark:
   expiry_minutes: 15
+  fallback_score: 50.0
 
 # Valid state transitions (enforced by services, not a state machine gem):
 #   pending  -> active    (JoinSparkService)

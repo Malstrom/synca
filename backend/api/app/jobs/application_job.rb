@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
 class ApplicationJob < ActiveJob::Base
-  # Automatically retry jobs that encountered a deadlock
-  # retry_on ActiveRecord::Deadlocked
+  # Retry on transient DB lock errors with exponential backoff.
+  # Safe because all jobs must be idempotent.
+  # Attempts value must match Settings.jobs.retry_attempts in config/settings/jobs.yml.
+  retry_on ActiveRecord::Deadlocked,      wait: :polynomially_longer, attempts: 5
+  retry_on ActiveRecord::LockWaitTimeout, wait: :polynomially_longer, attempts: 5
 
-  # Most jobs are safe to ignore if the underlying records are no longer available
-  # discard_on ActiveJob::DeserializationError
+  # Discard jobs whose AR record was deleted between enqueue and execution.
+  discard_on ActiveJob::DeserializationError
 end

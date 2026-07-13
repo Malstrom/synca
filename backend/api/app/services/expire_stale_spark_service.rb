@@ -6,6 +6,9 @@
 # Uses find_each to ensure each Spark goes through a proper update
 # rather than a raw SQL update_all, maintaining auditability and
 # future hook points (e.g. push notifications on expiry).
+#
+# Idempotent: with_lock + re-check inside lock prevents double-expire
+# on parallel runs or retries.
 class ExpireStaleSparkService
   def self.call
     new.call
@@ -13,7 +16,11 @@ class ExpireStaleSparkService
 
   def call
     Spark.stale.find_each do |spark|
-      spark.update!(status: :expired)
+      spark.with_lock do
+        next if spark.completed? || spark.expired?
+
+        spark.update!(status: :expired)
+      end
     end
   end
 end
