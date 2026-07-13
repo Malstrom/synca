@@ -1,0 +1,4 @@
+auth:
+  access_token_ttl:  3600      # seconds — 1 hour
+  refresh_token_ttl: 2592000   # seconds — 30 days
+  guest_token_ttl:   2592000   # seconds — 30 days
