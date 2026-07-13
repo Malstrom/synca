@@ -46,4 +46,8 @@ class User < ApplicationRecord
   # (unique indexes on email and phone). The writing service (CreateUserService,
   # UpdateEmailService) is responsible for rescuing ActiveRecord::RecordNotUnique
   # and returning a structured Failure.
+
+  def magic_link_expired?
+    magic_link_sent_at && magic_link_sent_at < 72.hours.ago
+  end
 end
