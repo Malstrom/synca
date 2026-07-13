@@ -32,13 +32,11 @@ class RegistrationContract < Dry::Validation::Contract
     key.failure(I18n.t("contracts.errors.auth_provider.invalid")) unless valid
   end
 
+  # Email is required only when auth_provider is "email"
   rule(:auth) do
     next if schema_error?(:auth)
     auth = values.to_h[:auth]
-    provider = auth[:auth_provider]
-    is_email_provider = User.auth_providers.key?("email") &&
-                        (provider.to_s == "email" || provider.to_i == User.auth_providers["email"])
-    next unless is_email_provider
+    next unless auth[:auth_provider].to_s == "email"
     key([:auth, :email]).failure(I18n.t("contracts.errors.email.required")) if auth[:email].blank?
   end
 end
