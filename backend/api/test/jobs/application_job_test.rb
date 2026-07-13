@@ -17,7 +17,9 @@ class ApplicationJobTest < ActiveJob::TestCase
 
   class AlwaysDeserializationErrorJob < ApplicationJob
     def perform
-      raise ActiveJob::DeserializationError.new(StandardError.new("record not found"))
+      raise StandardError, "record gone"
+    rescue
+      raise ActiveJob::DeserializationError
     end
   end
 
@@ -33,14 +35,14 @@ class ApplicationJobTest < ActiveJob::TestCase
     SuccessJob.performed = false
   end
 
-  test "retries on Deadlocked up to configured attempts" do
-    assert_raises(ActiveRecord::Deadlocked) do
+  test "retries on Deadlocked" do
+    assert_enqueued_with(job: AlwaysDeadlockJob) do
       AlwaysDeadlockJob.perform_now
     end
   end
 
-  test "retries on LockWaitTimeout up to configured attempts" do
-    assert_raises(ActiveRecord::LockWaitTimeout) do
+  test "retries on LockWaitTimeout" do
+    assert_enqueued_with(job: AlwaysLockTimeoutJob) do
       AlwaysLockTimeoutJob.perform_now
     end
   end
