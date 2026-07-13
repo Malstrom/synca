@@ -1,0 +1,14 @@
+en:
+  services:
+    magic_link:
+      token_not_found: "Token not found"
+      token_expired: "Token has expired"
+      token_already_used: "Token has already been used"
+      account_already_active: "Account is already active"
+      rate_limited: "Too many requests. Please try again later."
+      resend_success: "If your email is registered, a new link has been sent."
+      already_active: "Account is already active"
+  mailers:
+    guest_mailer:
+      magic_link:
+        subject: "Activate your account"

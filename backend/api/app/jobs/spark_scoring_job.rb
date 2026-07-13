@@ -26,5 +26,27 @@ class SparkScoringJob < ApplicationJob
     )
 
     RewardEngine.call(spark)
+
+    case MagicLinkService.call(user: spark.initiator)
+    in Success(_)
+      # Magic link sent successfully
+    in Failure([:rate_limited, _])
+      # Skip: rate limited
+    in Failure([:already_active, _])
+      # Skip: account already active
+    in Failure([:error, msg])
+      Rails.logger.error("Failed to send magic link: #{msg}")
+    end
+
+    case MagicLinkService.call(user: spark.partner)
+    in Success(_)
+      # Magic link sent successfully
+    in Failure([:rate_limited, _])
+      # Skip: rate limited
+    in Failure([:already_active, _])
+      # Skip: account already active
+    in Failure([:error, msg])
+      Rails.logger.error("Failed to send magic link: #{msg}")
+    end
   end
 end
