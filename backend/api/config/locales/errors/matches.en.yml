@@ -1,0 +1,5 @@
+en:
+  errors:
+    matches:
+      not_found: "Match not found"
+      forbidden: "You are not a participant of this match"
