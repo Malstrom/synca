@@ -5,8 +5,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "test/fixtures/**"
-      - "test/test_helper.rb"
+      - "backend/api/test/fixtures/**"
+      - "backend/api/test/test_helper.rb"
 
   # Trigger manuale: ingest iniziale o forzato
   # Vai su Actions > Calvin ingest fixtures > Run workflow
@@ -40,7 +40,7 @@ jobs:
           else
             # Push automatico: solo i file cambiati nel commit
             CHANGED=$(git -C $GITHUB_WORKSPACE diff --name-only ${{ github.event.before }} ${{ github.sha }} \
-              | grep -E '^test/fixtures/.*\.yml$|^test/test_helper\.rb$' \
+              | grep -E '^backend/api/test/fixtures/.*\.yml$|^backend/api/test/test_helper\.rb$' \
               | paste -sd ',' -)
             if [ -z "$CHANGED" ]; then
               echo "Nessun file rilevante cambiato, skip."
