@@ -4,6 +4,7 @@
 # Called internally by LoginService — never instantiated in a controller.
 class LoginContract < Dry::Validation::Contract
   EMAIL_REGEXP = URI::MailTo::EMAIL_REGEXP
+  MIN_PASSWORD_LENGTH = 8
 
   params do
     required(:auth).hash do
@@ -19,6 +20,6 @@ class LoginContract < Dry::Validation::Contract
 
   rule(auth: :password) do
     next if schema_error?(:auth)
-    key.failure(I18n.t("contracts.errors.password.min_size")) if value.length < 8
+    key.failure(I18n.t("contracts.errors.password.min_size")) if value.length < MIN_PASSWORD_LENGTH
   end
 end

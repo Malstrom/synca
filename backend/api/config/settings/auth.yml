@@ -1,4 +1,4 @@
 auth:
-  access_token_ttl:  3600      # seconds — 1 hour
-  refresh_token_ttl: 2592000   # seconds — 30 days
-  guest_token_ttl:   2592000   # seconds — 30 days
+  access_token_ttl:  <%= 1.hour.to_i %>
+  refresh_token_ttl: <%= 30.days.to_i %>
+  guest_token_ttl:   <%= 30.days.to_i %>
