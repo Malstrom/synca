@@ -4,6 +4,8 @@ module Api
   module V1
     module Auth
       class RegistrationsController < ApplicationController
+        include Dry::Monads[:result]
+
         skip_before_action :authenticate_user!
 
         # POST /api/v1/auth/register
