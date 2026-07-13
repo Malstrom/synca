@@ -19,16 +19,19 @@ class LoginServiceTest < ActiveSupport::TestCase
 
   test "returns Success(user) on valid credentials" do
     assert_pattern { call => Success(^@user) }
+    pass
   end
 
   test "is case-insensitive on email" do
     assert_pattern { call(email: @user.email.upcase) => Success }
+    pass
   end
 
   # --- Invalid credentials ---
 
   test "returns Failure[:invalid_credentials] on wrong password" do
     assert_pattern { call(pw: "wrongpassword") => Failure[:invalid_credentials, _] }
+    pass
   end
 
   test "Failure[:invalid_credentials] carries the i18n message" do
@@ -38,6 +41,7 @@ class LoginServiceTest < ActiveSupport::TestCase
 
   test "returns Failure[:invalid_credentials] when user does not exist" do
     assert_pattern { call(email: "nobody@example.com") => Failure[:invalid_credentials, _] }
+    pass
   end
 
   # --- Contract validation ---
