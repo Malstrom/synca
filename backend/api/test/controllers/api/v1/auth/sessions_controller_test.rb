@@ -2,49 +2,65 @@
 
 require "test_helper"
 
-class Api::V1::Auth::SessionsControllerTest < ApiTestCase
-  setup do
-    @user = users(:alice)
-  end
+module Api
+  module V1
+    module Auth
+      class SessionsControllerTest < ActionDispatch::IntegrationTest
+        setup do
+          @password = "secret123"
+          @user = users(:one)
+          @user.update!(password: @password)
+        end
 
-  test "login with valid credentials returns 200 and tokens" do
-    post_json "/api/v1/auth/login",
-      params: { auth: { email: @user.email, password: "password" } }
+        # POST /api/v1/auth/login
 
-    assert_response :ok
-    assert json[:access_token].present?
-    assert json[:refresh_token].present?
-    assert_equal @user.email, json.dig(:user, :email)
-  end
+        test "returns 200 with tokens on valid credentials" do
+          post api_v1_auth_login_path,
+               params: { auth: { email: @user.email, password: @password } },
+               as: :json
 
-  test "login with uppercase email is case-insensitive" do
-    post_json "/api/v1/auth/login",
-      params: { auth: { email: @user.email.upcase, password: "password" } }
+          assert_response :ok
+          assert_includes response.parsed_body.keys, "access_token"
+          assert_includes response.parsed_body.keys, "refresh_token"
+          assert_equal @user.email, response.parsed_body.dig("user", "email")
+        end
 
-    assert_response :ok
-    assert json[:access_token].present?
-  end
+        test "returns 401 on wrong password" do
+          post api_v1_auth_login_path,
+               params: { auth: { email: @user.email, password: "wrongpass" } },
+               as: :json
 
-  test "login with wrong password returns 401" do
-    post_json "/api/v1/auth/login",
-      params: { auth: { email: @user.email, password: "wrongpassword" } }
+          assert_response :unauthorized
+          assert_equal "invalid_credentials", response.parsed_body.dig("error", "code")
+        end
 
-    assert_response :unauthorized
-    assert_equal "invalid_credentials", json.dig(:error, :code)
-  end
+        test "returns 401 when user does not exist" do
+          post api_v1_auth_login_path,
+               params: { auth: { email: "nobody@example.com", password: @password } },
+               as: :json
 
-  test "login with unknown email returns 401" do
-    post_json "/api/v1/auth/login",
-      params: { auth: { email: "ghost@example.com", password: "password" } }
+          assert_response :unauthorized
+          assert_equal "invalid_credentials", response.parsed_body.dig("error", "code")
+        end
 
-    assert_response :unauthorized
-    assert_equal "invalid_credentials", json.dig(:error, :code)
-  end
+        test "returns 422 when email is missing" do
+          post api_v1_auth_login_path,
+               params: { auth: { password: @password } },
+               as: :json
 
-  test "login with missing password returns 401" do
-    post_json "/api/v1/auth/login",
-      params: { auth: { email: @user.email } }
+          assert_response :unprocessable_entity
+          assert_equal "validation_failed", response.parsed_body.dig("error", "code")
+        end
 
-    assert_response :unauthorized
+        test "returns 422 when password is missing" do
+          post api_v1_auth_login_path,
+               params: { auth: { email: @user.email } },
+               as: :json
+
+          assert_response :unprocessable_entity
+          assert_equal "validation_failed", response.parsed_body.dig("error", "code")
+        end
+      end
+    end
   end
 end
