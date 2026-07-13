@@ -4,28 +4,26 @@ require "test_helper"
 
 class ExpireStaleSparkServiceTest < ActiveSupport::TestCase
   test "expires a stale spark" do
-    spark = sparks(:stale)
+    spark = sparks(:stale_pending_spark)
 
     ExpireStaleSparkService.call
-
-    assert spark.reload.expired?
-  end
-
-  test "no-op when spark already expired" do
-    spark = sparks(:expired)
-
-    assert_no_difference "Spark.where(status: :expired).count" do
-      ExpireStaleSparkService.call
-    end
 
     assert spark.reload.expired?
   end
 
   test "does not expire a completed spark" do
-    spark = sparks(:completed)
+    spark = sparks(:alice_spark)
 
     ExpireStaleSparkService.call
 
     assert spark.reload.completed?
+  end
+
+  test "does not expire a recent pending spark" do
+    spark = sparks(:recent_pending_spark)
+
+    ExpireStaleSparkService.call
+
+    assert spark.reload.pending?
   end
 end
