@@ -13,5 +13,6 @@ class CreateSparkRewards < ActiveRecord::Migration[8.0]
     end
 
     add_index :spark_rewards, [ :user_id, :status ]
+    add_index :spark_rewards, [ :user_id, :spark_id ], unique: true
   end
 end
