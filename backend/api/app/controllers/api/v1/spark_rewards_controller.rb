@@ -3,13 +3,13 @@
 module Api
   module V1
     class SparkRewardsController < ApplicationController
-      # GET /api/v1/spark_rewards
-      def index
-        rewards = current_user.spark_rewards.order(created_at: :desc)
+      include Dry::Monads[:result]
 
-        render_success({
-          rewards: rewards.map { |reward| SparkRewardSerializer.new(reward).serialize }
-        })
+      def index
+        case ListSparkRewardsService.call(current_user: current_user)
+        in Success[rewards]
+          render_success({ rewards: rewards.map { |r| SparkRewardSerializer.new(r).serialize } })
+        end
       end
     end
   end

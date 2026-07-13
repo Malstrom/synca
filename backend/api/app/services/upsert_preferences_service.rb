@@ -3,26 +3,25 @@
 class UpsertPreferencesService
   include Dry::Monads[:result]
 
-  def self.call(current_user:, attrs:)
-    new(current_user: current_user, attrs: attrs).call
-  end
+  def self.call(...) = new(...).call
 
-  def initialize(current_user:, attrs:)
+  def initialize(current_user:, params:)
     @current_user = current_user
-    @attrs = attrs
+    @params       = params
   end
 
   def call
-    preference_profile = PreferenceProfile.find_or_initialize_by(user: current_user)
-    preference_profile.with_lock do
-      preference_profile.assign_attributes(attrs)
-      return Failure[:validation_failed, preference_profile.errors.full_messages.join(", ")] unless preference_profile.save
+    contract_result = UpsertPreferencesContract.new.call(
+      preferences: @params.dig("preferences") || @params.dig(:preferences) || {}
+    )
+    return Failure[:contract_invalid, contract_result] if contract_result.failure?
+
+    preference_profile = @current_user.preference_profile || @current_user.build_preference_profile
+
+    if preference_profile.update(contract_result.to_h[:preferences])
+      Success(preference_profile)
+    else
+      Failure[:validation_failed, preference_profile.errors.full_messages.join(", ")]
     end
-
-    Success(preference_profile)
   end
-
-  private
-
-    attr_reader :current_user, :attrs
 end

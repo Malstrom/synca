@@ -7,31 +7,23 @@ module Api
 
       before_action :set_spark, only: [ :join, :submit_answers, :result ]
 
-      # POST /api/v1/sparks
       def create
-        contract_result = CreateSparkContract.new.call(params.to_unsafe_h)
-        return render_contract_errors(contract_result) if contract_result.failure?
-
-        case CreateSparkService.call(current_user: current_user, attrs: contract_result.to_h.fetch(:spark, {}))
+        case CreateSparkService.call(current_user: current_user, params: params.to_unsafe_h)
         in Success(spark)
           render_created(SparkSerializer.new(spark).serialize)
+        in Failure[:contract_invalid, result]
+          render_contract_errors(result)
         in Failure[:validation_failed, message]
           render_error(code: "validation_failed", message: message)
         end
       end
 
-      # POST /api/v1/sparks/:id/join
       def join
-        contract_result = JoinSparkContract.new.call(params.to_unsafe_h)
-        return render_contract_errors(contract_result) if contract_result.failure?
-
-        case JoinSparkService.call(
-          current_user: current_user,
-          spark: @spark,
-          attrs: contract_result.to_h[:spark]
-        )
+        case JoinSparkService.call(current_user: current_user, spark: @spark, params: params.to_unsafe_h)
         in Success(spark)
           render_success(SparkSerializer.new(spark).serialize)
+        in Failure[:contract_invalid, result]
+          render_contract_errors(result)
         in Failure[:cannot_join_own_spark, message]
           render_error(code: "cannot_join_own_spark", message: message, status: :unprocessable_entity)
         in Failure[:spark_not_joinable, message]
@@ -41,24 +33,17 @@ module Api
         end
       end
 
-      # POST /api/v1/sparks/:id/submit_answers
       def submit_answers
-        contract_result = SubmitSparkAnswersContract.new.call(params.to_unsafe_h)
-        return render_contract_errors(contract_result) if contract_result.failure?
-
-        case SubmitSparkAnswersService.call(
-          current_user: current_user,
-          spark: @spark,
-          answers: contract_result.to_h[:spark][:answers]
-        )
+        case SubmitSparkAnswersService.call(current_user: current_user, spark: @spark, params: params.to_unsafe_h)
         in Success(spark)
           render_success({ status: spark.status })
+        in Failure[:contract_invalid, result]
+          render_contract_errors(result)
         in Failure[:session_not_active, message]
           render_error(code: "session_not_active", message: message, status: :unprocessable_entity)
         end
       end
 
-      # GET /api/v1/sparks/:id/result
       def result
         case SparkResultService.call(spark: @spark, current_user: current_user)
         in Success(data)

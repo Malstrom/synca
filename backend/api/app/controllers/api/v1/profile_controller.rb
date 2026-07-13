@@ -5,19 +5,15 @@ module Api
     class ProfileController < ApplicationController
       include Dry::Monads[:result]
 
-      # PUT /api/v1/me/profile
       def update
-        contract_result = ProfileContract.new.call(profile: params[:profile]&.to_unsafe_h || {})
-
-        return render_contract_errors(contract_result) if contract_result.failure?
-
-        profile = current_user.profile || current_user.build_profile
-
-        unless profile.update(contract_result.to_h[:profile])
-          return render_validation_errors(profile)
+        case UpdateProfileService.call(current_user: current_user, params: params.to_unsafe_h)
+        in Success[profile]
+          render_success({ profile: ProfileSerializer.new(profile).serializable_hash })
+        in Failure[:contract_invalid, result]
+          render_contract_errors(result)
+        in Failure[:validation_failed, message]
+          render_error(code: "validation_failed", message: message)
         end
-
-        render_success({ profile: ProfileSerializer.new(profile).serializable_hash })
       end
     end
   end
