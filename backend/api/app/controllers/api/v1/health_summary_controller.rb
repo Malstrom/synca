@@ -7,7 +7,7 @@ module Api
 
       def update
         case UpdateHealthSummaryService.call(current_user: current_user, params: params.to_unsafe_h)
-        in Success[health_summary]
+        in Success(health_summary)
           render_success({ health_summary: HealthSummarySerializer.new(health_summary).serializable_hash })
         in Failure[:contract_invalid, result]
           render_contract_errors(result)

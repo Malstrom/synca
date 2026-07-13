@@ -18,7 +18,7 @@ class UpdateHealthSummaryService
     summary = @current_user.health_summary || @current_user.build_health_summary
 
     if summary.update(attrs)
-      Success[summary]
+      Success(summary)
     else
       Failure[:validation_failed, summary.errors.full_messages.join(", ")]
     end

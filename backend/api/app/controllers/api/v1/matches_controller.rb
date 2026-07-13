@@ -7,7 +7,7 @@ module Api
 
       def simulate
         case SimulateMatchService.call(params: params.to_unsafe_h)
-        in Success[result]
+        in Success(result)
           render_success(MatchSimulationSerializer.new(result).serialize)
         in Failure[:contract_invalid, result]
           render_contract_errors(result)
@@ -18,7 +18,7 @@ module Api
 
       def index
         case ListMatchesService.call(current_user: current_user)
-        in Success[matches]
+        in Success(matches)
           render_success({ matches: MatchSerializer.new(matches).as_json })
         end
       end

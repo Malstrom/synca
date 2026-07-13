@@ -19,7 +19,7 @@ class UpsertPreferencesService
     preference_profile = @current_user.preference_profile || @current_user.build_preference_profile
 
     if preference_profile.update(contract_result.to_h[:preferences])
-      Success[preference_profile]
+      Success(preference_profile)
     else
       Failure[:validation_failed, preference_profile.errors.full_messages.join(", ")]
     end

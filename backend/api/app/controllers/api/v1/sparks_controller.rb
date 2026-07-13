@@ -9,7 +9,7 @@ module Api
 
       def create
         case CreateSparkService.call(current_user: current_user, params: params.to_unsafe_h)
-        in Success[spark]
+        in Success(spark)
           render_created(SparkSerializer.new(spark).serialize)
         in Failure[:contract_invalid, result]
           render_contract_errors(result)
@@ -20,7 +20,7 @@ module Api
 
       def join
         case JoinSparkService.call(current_user: current_user, spark: @spark, params: params.to_unsafe_h)
-        in Success[spark]
+        in Success(spark)
           render_success(SparkSerializer.new(spark).serialize)
         in Failure[:contract_invalid, result]
           render_contract_errors(result)
@@ -35,7 +35,7 @@ module Api
 
       def submit_answers
         case SubmitSparkAnswersService.call(current_user: current_user, spark: @spark, params: params.to_unsafe_h)
-        in Success[spark]
+        in Success(spark)
           render_success({ status: spark.status })
         in Failure[:contract_invalid, result]
           render_contract_errors(result)
@@ -46,7 +46,7 @@ module Api
 
       def result
         case SparkResultService.call(spark: @spark, current_user: current_user)
-        in Success[data]
+        in Success(data)
           render_success(data)
         in Failure[:spark_not_completed, message]
           render_error(code: "spark_not_completed", message: message, status: :unprocessable_entity)
