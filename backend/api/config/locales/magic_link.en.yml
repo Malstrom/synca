@@ -1,0 +1,17 @@
+en:
+  guest_mailer:
+    magic_link:
+      subject: "Activate your account"
+  services:
+    magic_link:
+      account_already_active: "Account is already active"
+      rate_limited: "Magic link can only be resent every 5 minutes"
+  controllers:
+    magic_links:
+      resend_success: "If your email is registered, a new link has been sent."
+      rate_limited: "Magic link can only be resent every 5 minutes"
+    activations:
+      not_found: "Token not found"
+      token_expired: "Token has expired"
+      token_already_used: "Token has already been used"
+      account_already_active: "Account is already active"

@@ -1,30 +1,23 @@
 # frozen_string_literal: true
 
 class SparkScoringJob < ApplicationJob
-  queue_as :spark
+  queue_as :default
 
-  def perform(spark_id)
-    spark = Spark.find_by(id: spark_id)
-    return unless spark
-    return if spark.completed?
+  def perform(spark_id:)
+    spark = Spark.includes(:initiator, :partner).find(spark_id)
 
-    initiator_health = spark.initiator.health_summary
-    partner_health   = spark.partner.health_summary
-
-    compatibility_result = if initiator_health && partner_health
-      CompatibilityService.call(initiator_health, partner_health)
-    else
-      CompatibilityService::Result.new(
-        total: 50.0, sleep: 50.0, activity: 50.0, lifestyle: 50.0, preferences: 50.0
-      )
+    case MagicLinkService.call(user: spark.initiator) if spark.initiator.guest?
+    in Success(user)
+      GuestMailer.magic_link_email(user).deliver_later
+    in Failure([:rate_limited, _])
+      Rails.logger.info("Magic link rate limited for user #{spark.initiator_id}")
     end
 
-    spark.update!(
-      status:              :completed,
-      completed_at:        Time.current,
-      compatibility_score: compatibility_result.total
-    )
-
-    RewardEngine.call(spark)
+    case MagicLinkService.call(user: spark.partner) if spark.partner&.guest?
+    in Success(user)
+      GuestMailer.magic_link_email(user).deliver_later
+    in Failure([:rate_limited, _])
+      Rails.logger.info("Magic link rate limited for user #{spark.partner_id}")
+    end
   end
 end

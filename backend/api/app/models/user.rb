@@ -46,4 +46,19 @@ class User < ApplicationRecord
   # (unique indexes on email and phone). The writing service (CreateUserService,
   # UpdateEmailService) is responsible for rescuing ActiveRecord::RecordNotUnique
   # and returning a structured Failure.
+
+  def generate_magic_link_token!
+    update!(
+      magic_link_token: SecureRandom.urlsafe_base64(32),
+      magic_link_sent_at: Time.current
+    )
+  end
+
+  def magic_link_expired?
+    magic_link_sent_at.nil? || magic_link_sent_at < Settings.magic_link.ttl_hours.hours.ago
+  end
+
+  def magic_link_used?
+    magic_link_token.nil?
+  end
 end
