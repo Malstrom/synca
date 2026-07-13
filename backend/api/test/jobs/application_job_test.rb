@@ -3,7 +3,6 @@
 require "test_helper"
 
 class ApplicationJobTest < ActiveJob::TestCase
-  # Concrete subclass used only in these tests.
   class AlwaysDeadlockJob < ApplicationJob
     def perform
       raise ActiveRecord::Deadlocked
@@ -34,13 +33,13 @@ class ApplicationJobTest < ActiveJob::TestCase
     SuccessJob.performed = false
   end
 
-  test "retries on Deadlocked up to 5 attempts" do
+  test "retries on Deadlocked up to configured attempts" do
     assert_raises(ActiveRecord::Deadlocked) do
       AlwaysDeadlockJob.perform_now
     end
   end
 
-  test "retries on LockWaitTimeout up to 5 attempts" do
+  test "retries on LockWaitTimeout up to configured attempts" do
     assert_raises(ActiveRecord::LockWaitTimeout) do
       AlwaysLockTimeoutJob.perform_now
     end

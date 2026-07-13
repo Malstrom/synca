@@ -1,0 +1,3 @@
+# Background job retry configuration.
+# Applied globally in ApplicationJob.
+retry_attempts: 5
