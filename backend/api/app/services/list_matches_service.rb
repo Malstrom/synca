@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-# Returns all matches for the current user, eager-loading participants.
 class ListMatchesService
   include Dry::Monads[:result]
 
-  def self.call(**args) = new(**args).call
+  def self.call(...) = new(...).call
 
   def initialize(current_user:)
     @current_user = current_user

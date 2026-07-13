@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
-# Creates a new Spark for the current user.
-# Runs CreateSparkContract internally — callers pass raw params.
 class CreateSparkService
   include Dry::Monads[:result]
 
-  def self.call(**args) = new(**args).call
+  def self.call(...) = new(...).call
 
   def initialize(current_user:, params:)
     @current_user = current_user

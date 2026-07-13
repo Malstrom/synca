@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
-# Updates (or creates) the Profile for the current user.
-# Runs ProfileContract internally — callers pass raw params.
 class UpdateProfileService
   include Dry::Monads[:result]
 
-  def self.call(**args) = new(**args).call
+  def self.call(...) = new(...).call
 
   def initialize(current_user:, params:)
     @current_user = current_user

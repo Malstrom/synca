@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
-# Allows a user to join an existing Spark.
-# Runs JoinSparkContract internally — callers pass raw params.
 class JoinSparkService
   include Dry::Monads[:result]
 
-  def self.call(**args) = new(**args).call
+  def self.call(...) = new(...).call
 
   def initialize(current_user:, spark:, params:)
     @current_user = current_user
