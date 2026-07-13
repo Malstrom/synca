@@ -1,0 +1,10 @@
+en:
+  services:
+    magic_link:
+      token_expired: "Token has expired"
+      account_already_active: "Account is already active"
+      rate_limited: "Please wait before requesting a new magic link"
+  mailers:
+    guest:
+      magic_link:
+        subject: "Your magic link to activate your account"

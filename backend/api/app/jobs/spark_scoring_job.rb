@@ -26,5 +26,16 @@ class SparkScoringJob < ApplicationJob
     )
 
     RewardEngine.call(spark)
+
+    # Send magic link to guest participants
+    [spark.initiator, spark.partner].each do |user|
+      next unless user.guest?
+
+      begin
+        MagicLinkService.call(user: user)
+      rescue StandardError => e
+        Rails.logger.error("Failed to send magic link to user #{user.id}: #{e.message}")
+      end
+    end
   end
 end
