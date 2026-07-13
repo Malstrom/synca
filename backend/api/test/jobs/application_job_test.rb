@@ -5,19 +5,19 @@ require "test_helper"
 class ApplicationJobTest < ActiveJob::TestCase
   class AlwaysDeadlockJob < ApplicationJob
     def perform
-      raise ActiveRecord::Deadlocked
+      raise ActiveRecord::Deadlocked, "deadlock detected"
     end
   end
 
   class AlwaysLockTimeoutJob < ApplicationJob
     def perform
-      raise ActiveRecord::LockWaitTimeout
+      raise ActiveRecord::LockWaitTimeout, "lock wait timeout"
     end
   end
 
   class AlwaysDeserializationErrorJob < ApplicationJob
     def perform
-      raise ActiveJob::DeserializationError
+      raise ActiveJob::DeserializationError.new(StandardError.new("record not found"))
     end
   end
 

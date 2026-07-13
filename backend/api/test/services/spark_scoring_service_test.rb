@@ -32,14 +32,15 @@ class SparkScoringServiceTest < ActiveSupport::TestCase
     assert_equal Settings.spark.fallback_score, @spark.compatibility_score
   end
 
-  test "calls RewardEngine after scoring" do
-    RewardEngine.expects(:call).once
-    SparkScoringService.call(@spark.id)
+  test "issues rewards for both participants" do
+    assert_difference "SparkReward.count", 2 do
+      SparkScoringService.call(@spark.id)
+    end
   end
 
   test "double call scores spark only once" do
     2.times { SparkScoringService.call(@spark.id) }
 
-    assert_equal 1, SparkReward.where(spark: @spark).count / 2
+    assert_equal 2, SparkReward.where(spark: @spark).count
   end
 end

@@ -3,8 +3,11 @@
 require "test_helper"
 
 class SparkExpireJobTest < ActiveJob::TestCase
-  test "delegates to ExpireStaleSparkService" do
-    ExpireStaleSparkService.expects(:call).once
+  test "expires stale sparks" do
+    spark = sparks(:stale_pending_spark)
+
     SparkExpireJob.perform_now
+
+    assert spark.reload.expired?
   end
 end
