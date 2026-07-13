@@ -18,7 +18,7 @@ class LoginServiceTest < ActiveSupport::TestCase
   # --- Success ---
 
   test "returns Success(user) on valid credentials" do
-    assert_pattern { call => Success(@user) }
+    assert_pattern { call => Success(^@user) }
   end
 
   test "is case-insensitive on email" do
