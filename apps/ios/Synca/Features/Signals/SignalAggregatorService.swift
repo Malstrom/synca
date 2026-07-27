@@ -8,7 +8,12 @@ import HealthKit
 /// No `HKSample` ever leaves this type: `aggregate()` returns a `HealthSummary`
 /// containing only derived numbers/labels, which is what gets sent to
 /// `PUT /me/health_summary`.
-@MainActor
+///
+/// Not `@MainActor`: this does async I/O (HealthKit queries), not UI work, and
+/// marking it `@MainActor` while `SignalsViewModel` default-constructs one as a
+/// parameter default caused "Call to main actor-isolated initializer in a
+/// synchronous nonisolated context" — default-argument expressions don't
+/// inherit the enclosing initializer's actor isolation.
 final class SignalAggregatorService {
     private let healthStore: HealthKitProtocol
     private let aggregationWindowDays = 30
