@@ -1,5 +1,21 @@
 import Foundation
 
+// MARK: - Request body types
+//
+// These can't be declared as local `struct`s inside the methods below: Swift
+// disallows nested type declarations inside a protocol extension's methods
+// (they're implicitly generic over `Self`) — "Type '...' cannot be nested in
+// generic function '...'". Hence top-level, file-private types instead.
+
+private struct GuestSessionAuthPayload: Encodable { let email: String? }
+private struct GuestSessionRequestBody: Encodable { let auth: GuestSessionAuthPayload }
+
+private struct ClaimEmailAuthPayload: Encodable { let email: String }
+private struct ClaimEmailRequestBody: Encodable { let auth: ClaimEmailAuthPayload }
+
+private struct ActivateProfilePayload: Encodable { let displayName: String }
+private struct ActivateRequestBody: Encodable { let profile: ActivateProfilePayload }
+
 /// Typed calls for every endpoint the app needs, on top of the generic
 /// `APIClient.request(_:)`. Keeps path strings and request/response envelopes out of
 /// ViewModels. Mirrors docs/api/openapi.yaml exactly — including the endpoints
@@ -13,12 +29,10 @@ extension APIClientProtocol {
     /// this is the "needed" half described in openapi.yaml; today's
     /// `GuestRegistrationContract` rejects an empty body.
     func createGuestSession(email: String? = nil) async throws -> GuestAuthResponse {
-        struct Auth: Encodable { let email: String? }
-        struct Body: Encodable { let auth: Auth }
         let endpoint = APIEndpoint(
             path: "auth/guest",
             method: .post,
-            body: Body(auth: Auth(email: email)),
+            body: GuestSessionRequestBody(auth: GuestSessionAuthPayload(email: email)),
             requiresAuth: false
         )
         return try await request(endpoint)
@@ -26,17 +40,21 @@ extension APIClientProtocol {
 
     /// `POST /auth/guest/claim_email` — "Save your results" screen.
     func claimEmail(_ email: String) async throws -> User {
-        struct Auth: Encodable { let email: String }
-        struct Body: Encodable { let auth: Auth }
-        let endpoint = APIEndpoint(path: "auth/guest/claim_email", method: .post, body: Body(auth: Auth(email: email)))
+        let endpoint = APIEndpoint(
+            path: "auth/guest/claim_email",
+            method: .post,
+            body: ClaimEmailRequestBody(auth: ClaimEmailAuthPayload(email: email))
+        )
         return try await request(endpoint)
     }
 
     /// `POST /auth/activate` — "Almost there" screen.
     func activate(displayName: String) async throws -> AuthResponse {
-        struct ProfilePayload: Encodable { let displayName: String }
-        struct Body: Encodable { let profile: ProfilePayload }
-        let endpoint = APIEndpoint(path: "auth/activate", method: .post, body: Body(profile: ProfilePayload(displayName: displayName)))
+        let endpoint = APIEndpoint(
+            path: "auth/activate",
+            method: .post,
+            body: ActivateRequestBody(profile: ActivateProfilePayload(displayName: displayName))
+        )
         return try await request(endpoint)
     }
 
