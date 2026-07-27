@@ -86,76 +86,76 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		000000000000000000100003 /* AppRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRouter.swift; sourceTree = "<group>"; };
-		000000000000000000100006 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		000000000000000000100008 /* SyncaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncaApp.swift; sourceTree = "<group>"; };
-		00000000000000000010000A /* ActivationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationView.swift; sourceTree = "<group>"; };
-		00000000000000000010000E /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000100010 /* SaveResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveResultsView.swift; sourceTree = "<group>"; };
-		000000000000000000100012 /* DashboardContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardContainerView.swift; sourceTree = "<group>"; };
-		000000000000000000100015 /* DashboardHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardHomeView.swift; sourceTree = "<group>"; };
-		000000000000000000100017 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000100019 /* SyncaTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncaTabBar.swift; sourceTree = "<group>"; };
-		00000000000000000010001B /* MatchDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchDetailView.swift; sourceTree = "<group>"; };
-		00000000000000000010001E /* MatchDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchDetailViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000100020 /* MatchListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchListView.swift; sourceTree = "<group>"; };
-		000000000000000000100022 /* MatchListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchListViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000100024 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		000000000000000000100027 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000100029 /* AvatarPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarPlaceholder.swift; sourceTree = "<group>"; };
-		00000000000000000010002C /* Color+Synca.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Color+Synca.swift; sourceTree = "<group>"; };
-		00000000000000000010002E /* CompatibilityRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompatibilityRing.swift; sourceTree = "<group>"; };
-		000000000000000000100030 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorView.swift; sourceTree = "<group>"; };
-		000000000000000000100032 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
-		000000000000000000100034 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
-		000000000000000000100036 /* SyncaButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncaButton.swift; sourceTree = "<group>"; };
-		000000000000000000100038 /* SyncaCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncaCard.swift; sourceTree = "<group>"; };
-		00000000000000000010003A /* SyncaTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncaTag.swift; sourceTree = "<group>"; };
-		00000000000000000010003C /* SyncaTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncaTextField.swift; sourceTree = "<group>"; };
-		00000000000000000010003E /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
-		000000000000000000100040 /* ConnectHealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectHealthView.swift; sourceTree = "<group>"; };
-		000000000000000000100043 /* HealthKitProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitProtocol.swift; sourceTree = "<group>"; };
-		000000000000000000100045 /* SignalAggregatorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalAggregatorService.swift; sourceTree = "<group>"; };
-		000000000000000000100047 /* SignalsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalsViewModel.swift; sourceTree = "<group>"; };
-		000000000000000000100049 /* GenerateQRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerateQRView.swift; sourceTree = "<group>"; };
-		00000000000000000010004C /* GenerateSparkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerateSparkViewModel.swift; sourceTree = "<group>"; };
-		00000000000000000010004E /* QRCameraScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCameraScannerView.swift; sourceTree = "<group>"; };
-		000000000000000000100050 /* ScanQRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanQRView.swift; sourceTree = "<group>"; };
-		000000000000000000100052 /* SparkFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkFlowView.swift; sourceTree = "<group>"; };
-		000000000000000000100054 /* SparkProximityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkProximityService.swift; sourceTree = "<group>"; };
-		000000000000000000100056 /* SparkQuestionnaire.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkQuestionnaire.swift; sourceTree = "<group>"; };
-		000000000000000000100058 /* SparkQuestionnaireView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkQuestionnaireView.swift; sourceTree = "<group>"; };
-		00000000000000000010005A /* SparkResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkResultView.swift; sourceTree = "<group>"; };
-		00000000000000000010005C /* SparkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkViewModel.swift; sourceTree = "<group>"; };
-		00000000000000000010005E /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIError.swift; sourceTree = "<group>"; };
-		000000000000000000100061 /* AuthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSession.swift; sourceTree = "<group>"; };
-		000000000000000000100063 /* HealthSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSummary.swift; sourceTree = "<group>"; };
-		000000000000000000100065 /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Match.swift; sourceTree = "<group>"; };
-		000000000000000000100067 /* PreferenceProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceProfile.swift; sourceTree = "<group>"; };
-		000000000000000000100069 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profile.swift; sourceTree = "<group>"; };
-		00000000000000000010006B /* SparkResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkResult.swift; sourceTree = "<group>"; };
-		00000000000000000010006D /* SparkReward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkReward.swift; sourceTree = "<group>"; };
-		00000000000000000010006F /* SparkSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkSession.swift; sourceTree = "<group>"; };
-		000000000000000000100071 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
-		000000000000000000100073 /* APIClient+Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient+Endpoints.swift; sourceTree = "<group>"; };
-		000000000000000000100076 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
-		000000000000000000100078 /* JSONCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONCoding.swift; sourceTree = "<group>"; };
-		00000000000000000010007A /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
-		00000000000000000010007C /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
-		00000000000000000010007E /* AuthViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModelTests.swift; sourceTree = "<group>"; };
-		000000000000000000100080 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainServiceTests.swift; sourceTree = "<group>"; };
-		000000000000000000100082 /* MockAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockAPIClient.swift; sourceTree = "<group>"; };
-		000000000000000000100085 /* MockHealthKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHealthKitStore.swift; sourceTree = "<group>"; };
-		000000000000000000100087 /* MockKeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockKeychainService.swift; sourceTree = "<group>"; };
-		000000000000000000100089 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockURLProtocol.swift; sourceTree = "<group>"; };
-		00000000000000000010008B /* SignalAggregatorServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalAggregatorServiceTests.swift; sourceTree = "<group>"; };
-		00000000000000000010008D /* SparkProximityServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkProximityServiceTests.swift; sourceTree = "<group>"; };
-		00000000000000000010008F /* SparkViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkViewModelTests.swift; sourceTree = "<group>"; };
-		000000000000000000100091 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		000000000000000000100093 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		000000000000000000100094 /* Synca.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Synca.entitlements; sourceTree = "<group>"; };
-		000000000000000000100095 /* Synca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Synca.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		000000000000000000100096 /* SyncaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SyncaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000100003 /* AppRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppRouter.swift"; sourceTree = "<group>"; };
+		000000000000000000100006 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RootView.swift"; sourceTree = "<group>"; };
+		000000000000000000100008 /* SyncaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SyncaApp.swift"; sourceTree = "<group>"; };
+		00000000000000000010000A /* ActivationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ActivationView.swift"; sourceTree = "<group>"; };
+		00000000000000000010000E /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AuthViewModel.swift"; sourceTree = "<group>"; };
+		000000000000000000100010 /* SaveResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SaveResultsView.swift"; sourceTree = "<group>"; };
+		000000000000000000100012 /* DashboardContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DashboardContainerView.swift"; sourceTree = "<group>"; };
+		000000000000000000100015 /* DashboardHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DashboardHomeView.swift"; sourceTree = "<group>"; };
+		000000000000000000100017 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DashboardViewModel.swift"; sourceTree = "<group>"; };
+		000000000000000000100019 /* SyncaTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SyncaTabBar.swift"; sourceTree = "<group>"; };
+		00000000000000000010001B /* MatchDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MatchDetailView.swift"; sourceTree = "<group>"; };
+		00000000000000000010001E /* MatchDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MatchDetailViewModel.swift"; sourceTree = "<group>"; };
+		000000000000000000100020 /* MatchListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MatchListView.swift"; sourceTree = "<group>"; };
+		000000000000000000100022 /* MatchListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MatchListViewModel.swift"; sourceTree = "<group>"; };
+		000000000000000000100024 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileView.swift"; sourceTree = "<group>"; };
+		000000000000000000100027 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProfileViewModel.swift"; sourceTree = "<group>"; };
+		000000000000000000100029 /* AvatarPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AvatarPlaceholder.swift"; sourceTree = "<group>"; };
+		00000000000000000010002C /* Color+Synca.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Color+Synca.swift"; sourceTree = "<group>"; };
+		00000000000000000010002E /* CompatibilityRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CompatibilityRing.swift"; sourceTree = "<group>"; };
+		000000000000000000100030 /* ErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ErrorView.swift"; sourceTree = "<group>"; };
+		000000000000000000100032 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoadingView.swift"; sourceTree = "<group>"; };
+		000000000000000000100034 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Spacing.swift"; sourceTree = "<group>"; };
+		000000000000000000100036 /* SyncaButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SyncaButton.swift"; sourceTree = "<group>"; };
+		000000000000000000100038 /* SyncaCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SyncaCard.swift"; sourceTree = "<group>"; };
+		00000000000000000010003A /* SyncaTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SyncaTag.swift"; sourceTree = "<group>"; };
+		00000000000000000010003C /* SyncaTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SyncaTextField.swift"; sourceTree = "<group>"; };
+		00000000000000000010003E /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Typography.swift"; sourceTree = "<group>"; };
+		000000000000000000100040 /* ConnectHealthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ConnectHealthView.swift"; sourceTree = "<group>"; };
+		000000000000000000100043 /* HealthKitProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HealthKitProtocol.swift"; sourceTree = "<group>"; };
+		000000000000000000100045 /* SignalAggregatorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SignalAggregatorService.swift"; sourceTree = "<group>"; };
+		000000000000000000100047 /* SignalsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SignalsViewModel.swift"; sourceTree = "<group>"; };
+		000000000000000000100049 /* GenerateQRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GenerateQRView.swift"; sourceTree = "<group>"; };
+		00000000000000000010004C /* GenerateSparkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GenerateSparkViewModel.swift"; sourceTree = "<group>"; };
+		00000000000000000010004E /* QRCameraScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "QRCameraScannerView.swift"; sourceTree = "<group>"; };
+		000000000000000000100050 /* ScanQRView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ScanQRView.swift"; sourceTree = "<group>"; };
+		000000000000000000100052 /* SparkFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkFlowView.swift"; sourceTree = "<group>"; };
+		000000000000000000100054 /* SparkProximityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkProximityService.swift"; sourceTree = "<group>"; };
+		000000000000000000100056 /* SparkQuestionnaire.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkQuestionnaire.swift"; sourceTree = "<group>"; };
+		000000000000000000100058 /* SparkQuestionnaireView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkQuestionnaireView.swift"; sourceTree = "<group>"; };
+		00000000000000000010005A /* SparkResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkResultView.swift"; sourceTree = "<group>"; };
+		00000000000000000010005C /* SparkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkViewModel.swift"; sourceTree = "<group>"; };
+		00000000000000000010005E /* APIError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIError.swift"; sourceTree = "<group>"; };
+		000000000000000000100061 /* AuthSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AuthSession.swift"; sourceTree = "<group>"; };
+		000000000000000000100063 /* HealthSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HealthSummary.swift"; sourceTree = "<group>"; };
+		000000000000000000100065 /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Match.swift"; sourceTree = "<group>"; };
+		000000000000000000100067 /* PreferenceProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PreferenceProfile.swift"; sourceTree = "<group>"; };
+		000000000000000000100069 /* Profile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Profile.swift"; sourceTree = "<group>"; };
+		00000000000000000010006B /* SparkResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkResult.swift"; sourceTree = "<group>"; };
+		00000000000000000010006D /* SparkReward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkReward.swift"; sourceTree = "<group>"; };
+		00000000000000000010006F /* SparkSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkSession.swift"; sourceTree = "<group>"; };
+		000000000000000000100071 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User.swift"; sourceTree = "<group>"; };
+		000000000000000000100073 /* APIClient+Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIClient+Endpoints.swift"; sourceTree = "<group>"; };
+		000000000000000000100076 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIClient.swift"; sourceTree = "<group>"; };
+		000000000000000000100078 /* JSONCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "JSONCoding.swift"; sourceTree = "<group>"; };
+		00000000000000000010007A /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeychainService.swift"; sourceTree = "<group>"; };
+		00000000000000000010007C /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIClientTests.swift"; sourceTree = "<group>"; };
+		00000000000000000010007E /* AuthViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AuthViewModelTests.swift"; sourceTree = "<group>"; };
+		000000000000000000100080 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeychainServiceTests.swift"; sourceTree = "<group>"; };
+		000000000000000000100082 /* MockAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockAPIClient.swift"; sourceTree = "<group>"; };
+		000000000000000000100085 /* MockHealthKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockHealthKitStore.swift"; sourceTree = "<group>"; };
+		000000000000000000100087 /* MockKeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockKeychainService.swift"; sourceTree = "<group>"; };
+		000000000000000000100089 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockURLProtocol.swift"; sourceTree = "<group>"; };
+		00000000000000000010008B /* SignalAggregatorServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SignalAggregatorServiceTests.swift"; sourceTree = "<group>"; };
+		00000000000000000010008D /* SparkProximityServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkProximityServiceTests.swift"; sourceTree = "<group>"; };
+		00000000000000000010008F /* SparkViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkViewModelTests.swift"; sourceTree = "<group>"; };
+		000000000000000000100091 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets.xcassets"; sourceTree = "<group>"; };
+		000000000000000000100093 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info.plist"; sourceTree = "<group>"; };
+		000000000000000000100094 /* Synca.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Synca.entitlements"; sourceTree = "<group>"; };
+		000000000000000000100095 /* Synca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Synca.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000100096 /* SyncaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SyncaTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -183,7 +183,7 @@
 				000000000000000000100093 /* Info.plist */,
 				000000000000000000100094 /* Synca.entitlements */,
 			);
-			path = Resources;
+			path = "Resources";
 			sourceTree = "<group>";
 		};
 		000000000000000000100004 /* App */ = {
@@ -193,7 +193,7 @@
 				000000000000000000100006 /* RootView.swift */,
 				000000000000000000100008 /* SyncaApp.swift */,
 			);
-			path = App;
+			path = "App";
 			sourceTree = "<group>";
 		};
 		00000000000000000010000C /* Auth */ = {
@@ -203,7 +203,7 @@
 				00000000000000000010000E /* AuthViewModel.swift */,
 				000000000000000000100010 /* SaveResultsView.swift */,
 			);
-			path = Auth;
+			path = "Auth";
 			sourceTree = "<group>";
 		};
 		000000000000000000100013 /* Dashboard */ = {
@@ -214,7 +214,7 @@
 				000000000000000000100017 /* DashboardViewModel.swift */,
 				000000000000000000100019 /* SyncaTabBar.swift */,
 			);
-			path = Dashboard;
+			path = "Dashboard";
 			sourceTree = "<group>";
 		};
 		00000000000000000010001C /* Matching */ = {
@@ -225,7 +225,7 @@
 				000000000000000000100020 /* MatchListView.swift */,
 				000000000000000000100022 /* MatchListViewModel.swift */,
 			);
-			path = Matching;
+			path = "Matching";
 			sourceTree = "<group>";
 		};
 		000000000000000000100025 /* Profile */ = {
@@ -234,7 +234,7 @@
 				000000000000000000100024 /* ProfileView.swift */,
 				000000000000000000100027 /* ProfileViewModel.swift */,
 			);
-			path = Profile;
+			path = "Profile";
 			sourceTree = "<group>";
 		};
 		00000000000000000010002A /* Shared */ = {
@@ -252,7 +252,7 @@
 				00000000000000000010003C /* SyncaTextField.swift */,
 				00000000000000000010003E /* Typography.swift */,
 			);
-			path = Shared;
+			path = "Shared";
 			sourceTree = "<group>";
 		};
 		000000000000000000100041 /* Signals */ = {
@@ -263,7 +263,7 @@
 				000000000000000000100045 /* SignalAggregatorService.swift */,
 				000000000000000000100047 /* SignalsViewModel.swift */,
 			);
-			path = Signals;
+			path = "Signals";
 			sourceTree = "<group>";
 		};
 		00000000000000000010004A /* Spark */ = {
@@ -280,7 +280,7 @@
 				00000000000000000010005A /* SparkResultView.swift */,
 				00000000000000000010005C /* SparkViewModel.swift */,
 			);
-			path = Spark;
+			path = "Spark";
 			sourceTree = "<group>";
 		};
 		00000000000000000010000B /* Features */ = {
@@ -294,7 +294,7 @@
 				000000000000000000100041 /* Signals */,
 				00000000000000000010004A /* Spark */,
 			);
-			path = Features;
+			path = "Features";
 			sourceTree = "<group>";
 		};
 		00000000000000000010005F /* Models */ = {
@@ -311,7 +311,7 @@
 				00000000000000000010006F /* SparkSession.swift */,
 				000000000000000000100071 /* User.swift */,
 			);
-			path = Models;
+			path = "Models";
 			sourceTree = "<group>";
 		};
 		000000000000000000100074 /* Services */ = {
@@ -322,7 +322,7 @@
 				000000000000000000100078 /* JSONCoding.swift */,
 				00000000000000000010007A /* KeychainService.swift */,
 			);
-			path = Services;
+			path = "Services";
 			sourceTree = "<group>";
 		};
 		000000000000000000100001 /* Synca */ = {
@@ -334,7 +334,7 @@
 				000000000000000000100074 /* Services */,
 				00000000000000000010009A /* Resources */,
 			);
-			path = Synca;
+			path = "Synca";
 			sourceTree = "<group>";
 		};
 		000000000000000000100083 /* Mocks */ = {
@@ -345,7 +345,7 @@
 				000000000000000000100087 /* MockKeychainService.swift */,
 				000000000000000000100089 /* MockURLProtocol.swift */,
 			);
-			path = Mocks;
+			path = "Mocks";
 			sourceTree = "<group>";
 		};
 		000000000000000000100002 /* SyncaTests */ = {
@@ -359,7 +359,7 @@
 				00000000000000000010008D /* SparkProximityServiceTests.swift */,
 				00000000000000000010008F /* SparkViewModelTests.swift */,
 			);
-			path = SyncaTests;
+			path = "SyncaTests";
 			sourceTree = "<group>";
 		};
 		000000000000000000100099 /* Products */ = {
@@ -368,7 +368,7 @@
 				000000000000000000100095 /* Synca.app */,
 				000000000000000000100096 /* SyncaTests.xctest */,
 			);
-			name = Products;
+			name = "Products";
 			sourceTree = "<group>";
 		};
 		000000000000000000100098 = {
@@ -395,8 +395,8 @@
 			);
 			dependencies = (
 			);
-			name = Synca;
-			productName = Synca;
+			name = "Synca";
+			productName = "Synca";
 			productReference = 000000000000000000100095 /* Synca.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -413,8 +413,8 @@
 			dependencies = (
 				0000000000000000001000AD /* PBXTargetDependency */,
 			);
-			name = SyncaTests;
-			productName = SyncaTests;
+			name = "SyncaTests";
+			productName = "SyncaTests";
 			productReference = 000000000000000000100096 /* SyncaTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
