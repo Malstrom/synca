@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Synca API
-  version: "1.1"
+  version: "1.2"
   description: >
     Synca is a health-based dating app. This API serves iOS and Android clients.
     All health data is aggregated on-device before being sent. Raw HealthKit/Health Connect
@@ -10,6 +10,13 @@ info:
     **Live interactive docs** (when running locally): `GET /api-docs`
     — powered by Scalar. The source of truth is `docs/api/openapi.yaml`,
     kept in sync with controller tests.
+
+    **Status legend** used on individual operations below:
+    - *(implemented)* — matches `backend/api/app/controllers` today, verified against the
+      controller/contract/serializer source as of this revision.
+    - *(needed — not yet implemented)* — required by the iOS app (see
+      `docs/architecture/ios-structure.md`, `apps/ios/Synca/`) but has no Rails controller yet.
+      Tracked in `docs/product/decisions.md`. Do not assume these work against a running server.
   contact:
     name: Synca Engineering
 servers:
@@ -25,19 +32,22 @@ security:
 
 tags:
   - name: Auth
-    description: Registration, login, token refresh
+    description: Registration, guest onboarding, login, token refresh, activation
   - name: Profile
     description: User profile management
   - name: Health
     description: Aggregated health summary upload
   - name: Preferences
-    description: User preference profile
+    description: Declared-preferences questionnaire (also doubles as the Spark micro-questionnaire)
   - name: Matching
     description: Compatibility scores and match list
   - name: Spark
     description: Synca Spark — live in-person compatibility sessions
   - name: DateProposals
-    description: Date proposal lifecycle
+    description: >
+      Date proposal lifecycle. Phase 1 (Moments, see docs/features/moments-v1.md).
+      No backend model/controller exists yet — this section is a forward-looking
+      contract, not a description of running code.
 
 paths:
 
@@ -48,7 +58,7 @@ paths:
   /auth/register:
     post:
       tags: [Auth]
-      summary: Register a new user
+      summary: Register a new full account (implemented)
       security: []
       requestBody:
         required: true
@@ -81,7 +91,7 @@ paths:
   /auth/login:
     post:
       tags: [Auth]
-      summary: Authenticate an existing user
+      summary: Authenticate an existing user (implemented)
       security: []
       requestBody:
         required: true
@@ -122,9 +132,9 @@ paths:
   /auth/refresh:
     post:
       tags: [Auth]
-      summary: Refresh access token
+      summary: Refresh access token (implemented)
       description: >
-        Pass the refresh_token obtained at login. Passing an access_token
+        Pass the refresh_token obtained at login/register. Passing an access_token
         instead will return 401 invalid_token.
         Returns a new access_token only — the refresh_token is NOT rotated.
       security: []
@@ -167,11 +177,164 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /auth/guest:
+    post:
+      tags: [Auth]
+      summary: Create or resume a guest account (implemented, see note)
+      description: >
+        Creates a guest account (`account_type: guest`) from an email and/or phone, or
+        returns a fresh token for an existing non-active user with that email.
+        Returns `email_already_active` if the email already belongs to an activated account.
+
+        **Note — needed change, not yet implemented:** the current
+        `GuestRegistrationContract` rejects a request where both `email` and `phone`
+        are blank ("email or phone is required"). The iOS guest-Spark flow
+        (docs/features/spark-v1.md, reordered per product review — see
+        docs/product/decisions.md#spark-guest-anonymous-identity) needs to open a guest
+        session with **no identifier at all** — email is collected only after the Spark
+        result, on the "Save your results" screen (`POST /auth/guest/claim_email`).
+        Until the contract is relaxed to allow an empty `auth: {}` body, calling this
+        endpoint with no email/phone returns `422 validation_failed`.
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auth:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                      nullable: true
+                    phone:
+                      type: string
+                      nullable: true
+                    password:
+                      type: string
+                      nullable: true
+            examples:
+              anonymous:
+                summary: Anonymous guest (needed — currently rejected, see description)
+                value:
+                  auth: {}
+              email_only:
+                summary: Guest with email (works today)
+                value:
+                  auth:
+                    email: "guest@example.com"
+      responses:
+        '201':
+          description: Guest session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestAuthResponse'
+              examples:
+                success:
+                  value:
+                    access_token: "eyJhbGciOiJIUzI1NiJ9..."
+                    token_type: "Bearer"
+                    expires_in: 900
+                    account_type: "guest"
+        '422':
+          description: >
+            Validation failed, or `email_already_active` if the email belongs to an
+            activated account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/guest/claim_email:
+    post:
+      tags: [Auth]
+      summary: Attach an email to the current anonymous guest session (needed — not yet implemented)
+      description: >
+        Called from the "Save your results" screen, after the Spark result is shown.
+        Attaches an email to the already-authenticated (anonymous) guest user without
+        creating a new user record, so the Spark/health data already associated with
+        this session's JWT `sub` stays linked. Distinct from `/auth/register`, which
+        creates a brand-new user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [auth]
+              properties:
+                auth:
+                  type: object
+                  required: [email]
+                  properties:
+                    email:
+                      type: string
+                      format: email
+      responses:
+        '200':
+          description: Email attached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserBase'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/activate:
+    post:
+      tags: [Auth]
+      summary: Activate a guest account (needed — not yet implemented)
+      description: >
+        Sets `display_name` (the only required field) and upgrades `account_type`
+        from `guest` to `active`, issuing a permanent access + refresh token pair.
+        Called from the in-session "Almost there" screen right after `claim_email`,
+        and — for the deferred case where the user closed the app first — from the
+        magic-link deep link described in docs/features/profile-v1.md.
+        → Ref: docs/product/phases/phase-0.md#uf-04 · docs/features/profile-v1.md.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profile]
+              properties:
+                profile:
+                  type: object
+                  required: [display_name]
+                  properties:
+                    display_name:
+                      type: string
+                activation_token:
+                  type: string
+                  nullable: true
+                  description: >
+                    Present only when activating via the out-of-band magic-link deep
+                    link (user closed the app before activating in-session).
+                    Omit when activating in the same session that ran the Spark.
+      responses:
+        '200':
+          description: Account activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
   /me:
     get:
       tags: [Profile]
-      summary: Get full current user object
-      description: Returns user + profile + latest health summary + preference profile.
+      summary: Get full current user object (implemented)
+      description: Returns user + profile + active health summary. Either may be null.
       responses:
         '200':
           description: Full user object
@@ -186,40 +349,53 @@ paths:
   # Profile
   # ---------------------------------------------------------------------------
 
-  /profile:
+  /me/profile:
     put:
       tags: [Profile]
-      summary: Update current user profile
+      summary: Update current user profile (implemented)
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: [profile]
               properties:
-                display_name:
-                  type: string
-                bio:
-                  type: string
-                  maxLength: 300
-                city:
-                  type: string
-                photo_url_main:
-                  type: string
-                  format: uri
-                photo_urls:
-                  type: array
-                  items:
-                    type: string
-                    format: uri
-                  maxItems: 6
+                profile:
+                  type: object
+                  required: [display_name]
+                  properties:
+                    display_name:
+                      type: string
+                    bio:
+                      type: string
+                    city:
+                      type: string
+                    gender:
+                      type: string
+                      enum: [male, female, non_binary, other]
+                    birth_date:
+                      type: string
+                      format: date
+                    photo_url_main:
+                      type: string
+                      format: uri
+                    photo_urls:
+                      type: array
+                      items:
+                        type: string
+                        format: uri
+                      maxItems: 6
       responses:
         '200':
           description: Profile updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Profile'
+                type: object
+                properties:
+                  profile:
+                    $ref: '#/components/schemas/Profile'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '422':
@@ -229,58 +405,67 @@ paths:
   # Health Summary
   # ---------------------------------------------------------------------------
 
-  /health_summary:
+  /me/health_summary:
     put:
       tags: [Health]
-      summary: Upload aggregated health metrics
+      summary: Upload aggregated health metrics (implemented)
       description: >
         Called by iOS/Android after local aggregation of HealthKit / Health Connect data.
         Raw samples must never be sent. Only aggregated metrics are accepted.
-        Always updates (or creates) the active health summary for the authenticated user.
+        Always updates (or creates) the active health summary (`effective_to: nil`)
+        for the authenticated user. `effective_from` is required by the contract —
+        the client should send today's date.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/HealthSummaryInput'
+              type: object
+              required: [health_summary]
+              properties:
+                health_summary:
+                  $ref: '#/components/schemas/HealthSummaryInput'
       responses:
         '200':
           description: Health summary updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthSummary'
+                type: object
+                properties:
+                  health_summary:
+                    $ref: '#/components/schemas/HealthSummary'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
 
   # ---------------------------------------------------------------------------
-  # Preferences
+  # Preferences (declared preferences / Spark questionnaire)
   # ---------------------------------------------------------------------------
 
-  /preferences:
-    get:
+  /signals/preferences:
+    patch:
       tags: [Preferences]
-      summary: Get current user preference profile
-      responses:
-        '200':
-          description: Preference profile
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PreferenceProfile'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-    put:
-      tags: [Preferences]
-      summary: Update preferences
+      summary: Upsert declared preferences (implemented)
+      description: >
+        Backs the 5-question declared-preferences questionnaire
+        (docs/features/signals-v1.md). Per product decision (Igor, design review),
+        this is now also the Spark on-the-spot questionnaire — asked once, right
+        after scanning the QR and before the result, both for first-time guests
+        (acts as their initial declared-preferences setup) and returning users
+        (updates their existing record). There is no separate onboarding
+        questionnaire screen. Upserts by `user_id` — no duplicate record is created.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PreferenceProfileInput'
+              type: object
+              required: [preferences]
+              properties:
+                preferences:
+                  $ref: '#/components/schemas/PreferenceProfileInput'
       responses:
         '200':
           description: Updated preference profile
@@ -293,6 +478,35 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
 
+  /signals/me/summary:
+    get:
+      tags: [Health]
+      summary: Human-readable summary of the current user's own signals (implemented)
+      description: >
+        Derived at request time from the active health summary and preference
+        profile. Powers the Profile → "My Health" screen.
+        Returns `404 no_signals` if the user has no health summary yet, or if
+        `chronotype` hasn't been computed — the client should show the
+        "connect Apple Health" prompt in that case.
+      responses:
+        '200':
+          description: Signals summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    $ref: '#/components/schemas/SignalsSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No signals yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   # ---------------------------------------------------------------------------
   # Matching
   # ---------------------------------------------------------------------------
@@ -300,11 +514,13 @@ paths:
   /matches:
     get:
       tags: [Matching]
-      summary: Get curated match list
+      summary: Get curated match list (implemented)
       description: >
-        Returns 3–5 matches above the compatibility threshold.
-        Profiles below threshold are silently excluded (ghost matching).
-        Each match includes all participants via the match_participants join.
+        Returns every Match the current user participates in (Spark-origin today;
+        algorithm-origin is Phase 1, see docs/features/matching-v1.md).
+        Not wired into iOS navigation yet — the Dashboard shows Spark history only
+        (see `GET /sparks` below). The Matches tab is marked "Concept — not yet
+        built" in the design and intentionally left out of the tab bar.
       responses:
         '200':
           description: Match list
@@ -323,7 +539,7 @@ paths:
   /matches/simulate:
     post:
       tags: [Matching]
-      summary: Simulate compatibility between two users (internal/testing)
+      summary: Simulate compatibility between two users (internal/testing) (implemented)
       requestBody:
         required: true
         content:
@@ -351,13 +567,38 @@ paths:
   # ---------------------------------------------------------------------------
 
   /sparks:
+    get:
+      tags: [Spark]
+      summary: List the current user's Spark sessions (needed — not yet implemented)
+      description: >
+        Powers the Dashboard "YOUR SPARKS" list (compatibility % + date + status
+        per session). No `SparksController#index` exists yet — only `create`,
+        `join`, `submit_answers`, and `result` are implemented. Deliberately NOT
+        `SparkSession`/`SparkSerializer`'s shape — that serializer has no
+        `compatibility_score`, which this list needs.
+      responses:
+        '200':
+          description: Spark session list, most recent first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sparks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SparkHistoryEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags: [Spark]
-      summary: Create a new Spark session
+      summary: Create a new Spark session (implemented)
       description: >
-        Creates a pending Spark session. Returns a 6-digit session_code and a
-        qr_token UUID. Only one active session per user at a time.
-        Session expires after 10 minutes if not joined.
+        Registered users only (the iOS "Start a Spark" QR-generation screen is
+        gated behind login — see docs/features/spark-v1.md). Creates a pending
+        Spark session with a 6-digit session_code and a qr_token UUID. Only one
+        active session per user at a time. Session expires
+        (`config/settings/spark.yml` → `expiry_minutes`, default 10) if not joined.
       requestBody:
         required: false
         content:
@@ -365,14 +606,17 @@ paths:
             schema:
               type: object
               properties:
-                lat:
-                  type: number
-                  format: float
-                  description: Approximate latitude (optional)
-                lng:
-                  type: number
-                  format: float
-                  description: Approximate longitude (optional)
+                spark:
+                  type: object
+                  properties:
+                    lat:
+                      type: number
+                      format: float
+                      description: Approximate latitude (optional)
+                    lng:
+                      type: number
+                      format: float
+                      description: Approximate longitude (optional)
       responses:
         '201':
           description: Spark session created
@@ -385,14 +629,67 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
 
+  /sparks/join:
+    post:
+      tags: [Spark]
+      summary: Join a Spark session by code or QR token, without knowing its id (needed — not yet implemented)
+      description: >
+        What the iOS "Scan QR" / "Enter code manually" screen actually calls.
+        `POST /sparks/{id}/join` (below) requires the numeric Spark id in the
+        path, but a scanning/typing guest never has it — the QR only encodes
+        `qr_token`, and a manually-typed `session_code` is 6 digits with no id
+        alongside it. This collection-level variant looks the Spark up by
+        `session_code`/`qr_token` internally (both are already unique) and
+        otherwise behaves exactly like `/sparks/{id}/join`. Requires the joining
+        user to already hold a valid access token — see the `/auth/guest`
+        anonymous-identity note above for how a brand-new guest gets one before
+        ever entering an email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [spark]
+              properties:
+                spark:
+                  type: object
+                  properties:
+                    session_code:
+                      type: string
+                      example: "834920"
+                    qr_token:
+                      type: string
+                      format: uuid
+      responses:
+        '200':
+          description: Session joined — status is now active. Response includes `id` for subsequent submit_answers/result calls.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparkSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: >
+            Validation failed, `cannot_join_own_spark`, `spark_not_joinable`
+            (already joined/expired), or `invalid_code`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /sparks/{id}/join:
     post:
       tags: [Spark]
-      summary: Join an existing Spark session
+      summary: Join an existing Spark session by id (implemented)
       description: >
-        User B joins the session using session_code or qr_token.
-        Sets partner_id and transitions status to active.
-        Optional GPS proximity check (< configured meters).
+        Requires already knowing the numeric Spark id — realistic for
+        server-to-server/testing use, not for the QR-scan/manual-code UX (see
+        `POST /sparks/join` above, which is what the iOS app calls). Sets
+        partner_id and transitions status to active.
       parameters:
         - $ref: '#/components/parameters/IdPath'
       requestBody:
@@ -401,13 +698,17 @@ paths:
           application/json:
             schema:
               type: object
+              required: [spark]
               properties:
-                session_code:
-                  type: string
-                  example: "834920"
-                qr_token:
-                  type: string
-                  format: uuid
+                spark:
+                  type: object
+                  properties:
+                    session_code:
+                      type: string
+                      example: "834920"
+                    qr_token:
+                      type: string
+                      format: uuid
       responses:
         '200':
           description: Session joined — status is now active
@@ -420,16 +721,23 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '422':
-          $ref: '#/components/responses/ValidationError'
+          description: >
+            Validation failed, `cannot_join_own_spark`, `spark_not_joinable`
+            (already joined/expired), or `invalid_code`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /sparks/{id}/submit_answers:
     post:
       tags: [Spark]
-      summary: Submit micro-test answers
+      summary: Submit the Spark questionnaire answers (implemented)
       description: >
-        Each participant submits their answers independently.
-        When both sides have submitted, scoring is triggered asynchronously
-        via Solid Queue (spark queue).
+        Each participant submits their answers independently, right after
+        scanning/creating the session and before the result is available.
+        When both sides have submitted, `SparkScoringJob` is enqueued
+        automatically (Solid Queue, spark queue).
       parameters:
         - $ref: '#/components/parameters/IdPath'
       requestBody:
@@ -438,35 +746,56 @@ paths:
           application/json:
             schema:
               type: object
-              required: [answers]
+              required: [spark]
               properties:
-                answers:
-                  type: array
-                  items:
-                    type: string
-                  description: Array of answer IDs from the micro-test
+                spark:
+                  type: object
+                  required: [answers]
+                  properties:
+                    answers:
+                      type: array
+                      items:
+                        type: integer
+                      description: >
+                        Encoded answer indices for the 5-question set, in the same
+                        order as docs/features/signals-v1.md § Questionnaire.
       responses:
         '200':
           description: Answers stored
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SparkSession'
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [pending, active, completed, expired]
         '401':
           $ref: '#/components/responses/Unauthorized'
         '422':
-          $ref: '#/components/responses/ValidationError'
+          description: Validation failed, or `session_not_active`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /sparks/{id}/result:
     get:
       tags: [Spark]
-      summary: Get Spark session result
+      summary: Get Spark session result (implemented)
       description: >
-        Returns the compatibility score once both participants have submitted answers.
-        Also creates or updates the Match via match_participants and issues SparkRewards.
-        TrustScore and spark_verified updates are planned for a later phase (Trust,
-        ref: docs/features/trust-v1.md) and are not part of this response yet.
-        Returns 202 if scoring is still in progress.
+        Returns the compatibility score once both participants have submitted
+        answers and `SparkScoringJob` has run. `dimensions` is `{}` if either
+        participant has no health summary (score falls back to declared
+        preferences only, per docs/features/spark-v1.md § UC-05).
+        TrustScore and spark_verified updates are planned for a later phase
+        (Trust, ref: docs/features/trust-v1.md) and are not part of this
+        response yet. Match creation/reward issuance happens as a side effect
+        the first time this is called after completion; poll with backoff if
+        the spark isn't `completed` yet — there is no push/WebSocket event for
+        this in the current implementation (`docs/conventions/ios.md` describes
+        an Action Cable `spark:scored` event as the target design; it is not
+        wired up server-side yet).
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
@@ -476,17 +805,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SparkResult'
-        '202':
-          description: Scoring in progress — retry in a few seconds
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Not a participant in this Spark
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          description: Spark not completed yet — retry in a few seconds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /spark_rewards:
     get:
       tags: [Spark]
-      summary: List rewards for the current user
+      summary: List rewards for the current user (implemented)
       responses:
         '200':
           description: Reward list
@@ -503,13 +842,15 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 
   # ---------------------------------------------------------------------------
-  # Date Proposals
+  # Date Proposals — Phase 1 (Moments). Not implemented; see docs/features/moments-v1.md.
+  # No backend model, controller, or route exists for this yet. Kept here only as
+  # the forward-looking contract for when Moments is built.
   # ---------------------------------------------------------------------------
 
   /date_proposals:
     get:
       tags: [DateProposals]
-      summary: List date proposals for current user
+      summary: List date proposals for current user (needed — Phase 1, not implemented)
       responses:
         '200':
           description: List of proposals
@@ -526,7 +867,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
     post:
       tags: [DateProposals]
-      summary: Create a new date proposal
+      summary: Create a new date proposal (needed — Phase 1, not implemented)
       description: References a Match (via match_id) rather than raw user IDs.
       requestBody:
         required: true
@@ -563,7 +904,7 @@ paths:
   /date_proposals/{id}/accept:
     post:
       tags: [DateProposals]
-      summary: Accept a date proposal
+      summary: Accept a date proposal (needed — Phase 1, not implemented)
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
@@ -581,7 +922,7 @@ paths:
   /date_proposals/{id}/decline:
     post:
       tags: [DateProposals]
-      summary: Decline a date proposal
+      summary: Decline a date proposal (needed — Phase 1, not implemented)
       parameters:
         - $ref: '#/components/parameters/IdPath'
       responses:
@@ -616,8 +957,8 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: >
-        JWT access token obtained from POST /auth/login or POST /auth/register.
-        Pass as: Authorization: Bearer <access_token>
+        JWT access token obtained from POST /auth/login, /auth/register, or
+        /auth/guest. Pass as: Authorization: Bearer <access_token>
 
   responses:
     Unauthorized:
@@ -696,12 +1037,27 @@ components:
       properties:
         access_token:
           type: string
-          description: Short-lived JWT — use for all authenticated requests
+          description: Short-lived JWT (15 min) — use for all authenticated requests
         refresh_token:
           type: string
-          description: Long-lived token — use only for POST /auth/refresh
+          description: Long-lived token (30 days) — use only for POST /auth/refresh
         user:
           $ref: '#/components/schemas/UserBase'
+
+    GuestAuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer
+          description: Seconds until access_token expiry
+        account_type:
+          type: string
+          enum: [guest, active]
 
     # -------------------------------------------------------------------------
     # User & Profile
@@ -716,14 +1072,19 @@ components:
           type: string
           format: email
           nullable: true
+        phone:
+          type: string
+          nullable: true
+        auth_provider:
+          type: string
+          enum: [email, apple, google, telegram]
 
     Profile:
       type: object
       properties:
-        user_id:
-          type: integer
         display_name:
           type: string
+          nullable: true
         birth_date:
           type: string
           format: date
@@ -736,6 +1097,7 @@ components:
           nullable: true
         city:
           type: string
+          nullable: true
         photo_url_main:
           type: string
           format: uri
@@ -760,10 +1122,11 @@ components:
           $ref: '#/components/schemas/UserBase'
         profile:
           $ref: '#/components/schemas/Profile'
+          nullable: true
+          description: null until the user has a profiles row (e.g. before activation)
         health_summary:
           $ref: '#/components/schemas/HealthSummary'
-        preference_profile:
-          $ref: '#/components/schemas/PreferenceProfile'
+          nullable: true
 
     # -------------------------------------------------------------------------
     # Health
@@ -771,7 +1134,16 @@ components:
 
     HealthSummaryInput:
       type: object
+      required: [effective_from]
       properties:
+        effective_from:
+          type: string
+          format: date
+          description: Send today's date — the client aggregates a rolling window ending today.
+        effective_to:
+          type: string
+          format: date
+          nullable: true
         chronotype:
           type: string
           enum: [early_bird, intermediate, night_owl]
@@ -815,55 +1187,75 @@ components:
     HealthSummary:
       allOf:
         - $ref: '#/components/schemas/HealthSummaryInput'
-        - type: object
+
+    SignalsSummary:
+      type: object
+      description: Human-readable, derived-at-request-time — no additional DB row.
+      properties:
+        chronotype_label:
+          type: string
+          example: "Night owl"
+        peak_energy_window:
+          type: string
+          nullable: true
+          example: "21:00–23:00"
+        routine_stability_tier:
+          type: string
+          nullable: true
+          example: "High"
+        activity_tier:
+          type: string
+          nullable: true
+          enum: [low, medium, high]
+        avg_sleep_duration_minutes:
+          type: integer
+          nullable: true
+        self_report_alignment:
+          type: object
           properties:
-            id:
-              type: integer
-            user_id:
-              type: integer
-            effective_from:
-              type: string
-              format: date
-            effective_to:
-              type: string
-              format: date
+            aligned:
+              type: boolean
               nullable: true
-            created_at:
+              description: null when the user has not declared a self-reported chronotype
+            note:
               type: string
-              format: date-time
+              nullable: true
+              example: "You told us you're a morning person — your data says otherwise. No judgment, just noting it."
 
     # -------------------------------------------------------------------------
-    # Preferences
+    # Preferences (declared preferences / Spark questionnaire)
     # -------------------------------------------------------------------------
 
     PreferenceProfileInput:
       type: object
+      description: One key per question in docs/features/signals-v1.md § Questionnaire.
       properties:
-        visual_embedding:
-          type: object
-          description: Compressed vector from preference game result
-          example: { "v": [0.1, 0.7, 0.2] }
-        travel_style:
+        sleep_together_importance:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: "Q1 — Is it important to fall asleep at the same time as your partner?"
+        temperature_preference:
           type: string
-          enum: [homebody, balanced, explorer]
-          nullable: true
-        music_profile:
-          type: object
-          nullable: true
-          description: Optional music taste embedding (Spotify integration future)
+          enum: [cool, warm, no_preference]
+          description: "Q2 — Cool or warm sleeping environment?"
+        movement_preference:
+          type: string
+          enum: [very_little, moderate, a_lot, as_much_as_possible]
+          description: "Q3 — How much daily movement feels right?"
+        rhythm_importance:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: "Q4 — Importance that people close to you share your daily rhythm"
+        self_chronotype:
+          type: string
+          enum: [morning, night, depends]
+          description: "Q5 — Morning person, night person, or depends?"
 
     PreferenceProfile:
       allOf:
         - $ref: '#/components/schemas/PreferenceProfileInput'
-        - type: object
-          properties:
-            id:
-              type: integer
-            user_id:
-              type: integer
-            created_at:
-              type: string
-              format: date-time
 
     # -------------------------------------------------------------------------
     # Matching
@@ -879,13 +1271,10 @@ components:
           enum: [initiator, member]
         profile:
           type: object
+          nullable: true
           properties:
             display_name:
               type: string
-            photo_url_main:
-              type: string
-              format: uri
-              nullable: true
 
     Match:
       type: object
@@ -900,14 +1289,14 @@ components:
           format: float
           minimum: 0
           maximum: 100
+        accepted_at:
+          type: string
+          format: date-time
+          nullable: true
         participants:
           type: array
           items:
             $ref: '#/components/schemas/MatchParticipant'
-          description: All participants via match_participants join table (supports 1-to-1 and future group matches)
-        created_at:
-          type: string
-          format: date-time
 
     CompatibilityResult:
       type: object
@@ -917,25 +1306,21 @@ components:
           format: float
           minimum: 0
           maximum: 100
-        breakdown:
+        dimensions:
           type: object
           properties:
             sleep_rhythm:
               type: number
               format: float
               description: Weight 35%
-            activity:
+            energy_overlap:
               type: number
               format: float
               description: Weight 30%
             lifestyle:
               type: number
               format: float
-              description: Weight 20%
-            preferences:
-              type: number
-              format: float
-              description: Weight 15%
+              description: Weight 20% (routine_stability_index only in Step 1.0)
 
     # -------------------------------------------------------------------------
     # Spark
@@ -955,10 +1340,9 @@ components:
         status:
           type: string
           enum: [pending, active, completed, expired]
-        initiator_id:
-          type: integer
-        partner_id:
-          type: integer
+        started_at:
+          type: string
+          format: date-time
           nullable: true
         location_lat:
           type: number
@@ -968,6 +1352,21 @@ components:
           type: number
           format: float
           nullable: true
+
+    SparkHistoryEntry:
+      type: object
+      description: "`GET /sparks` row — see the note on that operation."
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum: [pending, active, completed, expired]
+        compatibility_score:
+          type: number
+          format: float
+          nullable: true
+          description: null until status is completed
         started_at:
           type: string
           format: date-time
@@ -976,9 +1375,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        created_at:
-          type: string
-          format: date-time
 
     SparkResult:
       type: object
@@ -993,6 +1389,7 @@ components:
           additionalProperties:
             type: number
             format: float
+          description: "{} when either participant has no health summary yet"
           example:
             sleep_rhythm: 90
             energy_overlap: 85
@@ -1000,18 +1397,19 @@ components:
         rewards:
           type: array
           items:
-            $ref: '#/components/schemas/SparkReward'
-        match:
-          $ref: '#/components/schemas/Match'
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [premium_week, match_credit, boost]
+              status:
+                type: string
+                enum: [pending, redeemed, expired]
 
     SparkReward:
       type: object
       properties:
         id:
-          type: integer
-        user_id:
-          type: integer
-        spark_id:
           type: integer
         reward_type:
           type: string
@@ -1029,7 +1427,7 @@ components:
           nullable: true
 
     # -------------------------------------------------------------------------
-    # Date Proposals
+    # Date Proposals (Phase 1 — not implemented)
     # -------------------------------------------------------------------------
 
     DateProposal:

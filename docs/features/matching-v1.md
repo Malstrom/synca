@@ -13,8 +13,12 @@ users and creates `Match` records through two distinct origins: `:spark` (IRL se
 and `:algorithm` (nightly batch job).
 
 Every match carries a human-readable explanation of why two people are compatible.
-The raw score (0–100) is **never exposed to users** — only plain-language insights
-(e.g. "Your sleep schedules are well aligned").
+The score is always paired with plain-language insights (e.g. "Your sleep
+schedules are well aligned") — it is never shown as a bare number with no
+context. An earlier version of this rule said the raw score must never be
+exposed at all; the approved Spark result / match detail design (see
+docs/design/ui-system.md) does show it, in a ring alongside the explanation, and
+the design review overruled the stricter reading.
 
 Matching deliberately produces **few, high-quality matches**. The system does not
 produce an infinite swipeable feed.
