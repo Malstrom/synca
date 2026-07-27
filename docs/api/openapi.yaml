@@ -463,8 +463,9 @@ paths:
       summary: Get Spark session result
       description: >
         Returns the compatibility score once both participants have submitted answers.
-        Also creates or updates the Match via match_participants,
-        issues SparkRewards, updates TrustScore and spark_verified flag.
+        Also creates or updates the Match via match_participants and issues SparkRewards.
+        TrustScore and spark_verified updates are planned for a later phase (Trust,
+        ref: docs/features/trust-v1.md) and are not part of this response yet.
         Returns 202 if scoring is still in progress.
       parameters:
         - $ref: '#/components/parameters/IdPath'
