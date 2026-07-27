@@ -92,6 +92,61 @@ directly into the relevant feature doc text.
 
 ## Spark
 
+- id: spark-guest-anonymous-identity
+  status: open
+  owner: tech
+  source: docs/features/spark-v1.md · apps/ios/Synca (design review, Igor, 2026-07)
+  question: >
+    Design review moved email collection from *before* the first Spark to
+    *after* the result ("Connect Apple Health → scan QR → questionnaire →
+    result → email capture", see chats/chat1.md). But `/sparks/:id/join`,
+    `/sparks/:id/submit_answers`, and `/sparks/:id/result` all require a
+    valid JWT (`ApplicationController#authenticate_user!`), and
+    `GuestRegistrationContract` currently rejects `POST /auth/guest` unless
+    at least one of `email`/`phone` is present. There is no way today to get
+    an authenticated session before the result is shown. What should the
+    guest identity look like pre-email — a fully anonymous guest user
+    (relax the contract to allow an empty `auth: {}` body, see
+    `docs/api/openapi.yaml` § `/auth/guest`), or a device-bound identifier
+    (e.g. `identifierForVendor`) sent as a pseudo-phone? If anonymous,
+    what happens to an anonymous guest who never returns to claim an email —
+    same 30-day guest purge as `profile-guest-magic-link-timing`, or shorter?
+  decision:
+
+- id: spark-join-by-code-without-id
+  status: open
+  owner: tech
+  source: docs/api/openapi.yaml § /sparks/join · apps/ios/Synca/Features/Spark
+  question: >
+    `POST /sparks/:id/join` needs the numeric Spark id in the URL, but a user
+    scanning a QR only has `qr_token`, and a user typing a 6-digit
+    `session_code` manually never sees an id either. Add a collection-level
+    `POST /sparks/join` that looks the Spark up by `session_code`/`qr_token`
+    (both already unique)? Proposed shape is in docs/api/openapi.yaml. The iOS
+    client (`SparkProximityService`, `SparkViewModel`) already calls this
+    endpoint — it 404s against the real server until it exists.
+  decision:
+
+- id: spark-result-recap-data-source
+  status: open
+  owner: product
+  source: chats/chat1.md (Igor, on [data-dc-tpl="239"]) · apps/ios/Synca/Features/Spark/SparkResultView.swift
+  question: >
+    Igor's richer-result request asked for a recap with "attività media, quando
+    le due persone vanno a dormire, quanto dormono di media" (avg activity,
+    bedtimes, sleep avg) shown as raw You/Them values — that's what the
+    prototype pixels show. But `GET /sparks/:id/result` only returns
+    `dimensions: {sleep_rhythm, energy_overlap, lifestyle}` percentages, not
+    either participant's raw health summary — and there's no endpoint that
+    would return a stranger's exact bedtime/step count even if we wanted one.
+    The iOS implementation shows the three dimension percentages instead (also
+    used by the Match Detail concept screen) — safer privacy-wise (no raw
+    metric of someone you just met is exposed) and it's what the backend
+    actually returns today. Confirm this is the intended tradeoff, or scope a
+    "comparison summary" endpoint that returns rounded/bucketed (not raw)
+    values for both participants if the literal You/Them table is wanted.
+  decision:
+
 - id: spark-discovery-method-step1
   status: open
   owner: product

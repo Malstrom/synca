@@ -107,9 +107,12 @@ Before writing any iOS code, verify the pattern is not deprecated at
 - **JWT in Keychain only.** Never store tokens in `UserDefaults` or any plain-text storage.
 - **No raw HealthKit samples leave the device.** Only aggregated metrics from
   `SignalAggregatorService` are sent to the API.
-- **Raw compatibility score (0–100) is never shown in the UI.** Display only the
-  plain-language explanation returned by the backend.
-  → See [features/matching-v1.md](../features/matching-v1.md).
+- **The compatibility score is always paired with a plain-language explanation** —
+  never shown as a bare number with no context. The approved design (Spark result,
+  match detail — see docs/design/ui-system.md) does display the numeric score
+  (a ring with "84%") alongside "Strong compatibility" and a one-line explanation;
+  earlier drafts of this rule said the score must never be shown at all, which the
+  design review overruled. → See [features/matching-v1.md](../features/matching-v1.md).
 
 ---
 

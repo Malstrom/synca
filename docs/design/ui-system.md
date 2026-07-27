@@ -4,6 +4,11 @@
 > For coding conventions and MVVM rules → See [docs/conventions/ios.md](../conventions/ios.md).
 > For feature-level UI flows → See the relevant `docs/features/<feature>-v1.md`.
 
+**Version 3.0 — July 2026.** Supersedes the v2 navy/coral light+dark tokens below with the
+system actually shipped in `apps/ios/Synca` — the "Nocturne" theme from the Claude Design
+handoff (see `chats/chat1.md`). Dark-only for MVP; no light variant exists in the approved
+design.
+
 ---
 
 ## Design Principles
@@ -11,6 +16,9 @@
 - **Calm, not flashy.** Synca is health-based: the UI should feel clean and trustworthy.
 - **Content first.** No decorative chrome. Every element earns its place.
 - **Privacy visible.** When health data is shown, always make clear it stays on-device.
+- **Two accents, two jobs.** Cool (purple) reads as compatibility & trust — scores, rings,
+  confirmations. Warm (coral) reads as vitality & live moments — the pulsing QR, energy
+  windows, anything happening *right now*. Don't swap their roles.
 
 ---
 
@@ -18,49 +26,87 @@
 
 ### Colors
 
+Dark-only ground. Define these as Color Sets in `Assets.xcassets` with only a Dark
+Appearance value for MVP (add a Light Appearance later if/when a light mode ships —
+there is no approved light design to derive one from today).
+
 ```swift
-// Resources/Assets.xcassets — define these as Color Sets for dark mode support
+// Resources/Assets.xcassets — Color Sets, dark appearance only for MVP
 
 extension Color {
-    // Brand
-    static let syncaPrimary    = Color("SyncaPrimary")    // #1A1A2E deep navy
-    static let syncaAccent     = Color("SyncaAccent")     // #E94560 coral red
-    static let syncaBackground = Color("SyncaBackground") // #F7F7F7 light / #121212 dark
+    // Ground
+    static let syncaBackground = Color("SyncaBackground") // #161826
+    static let syncaSurface    = Color("SyncaSurface")    // #232532
+    static let syncaText       = Color("SyncaText")       // #e9e9ed
+    static let syncaDivider    = Color("SyncaDivider")    // SyncaText @ 16% opacity
+
+    // Accent — cool: compatibility & trust (scores, rings, confirmed tags, links)
+    static let syncaAccent  = Color("SyncaAccent")  // #9184d9 — OKLCH hue 289.2, L 0.660, C 0.125
+    static let syncaAccent2 = Color("SyncaAccent2") // #a7a1db — same hue, L 0.734 (Suggested/algorithm tags)
+
+    // Accent — warm: vitality & live moments (QR pulse, energy windows, in-progress Spark).
+    // Added per design review (Igor): "aggiungi anche un altro colore al design".
+    static let syncaWarm       = Color("SyncaWarm")       // oklch(72% 0.14 55)
+    static let syncaWarmStrong = Color("SyncaWarmStrong") // oklch(60% 0.16 55)
+    static let syncaWarmBg     = Color("SyncaWarmBg")     // oklch(28% 0.05 55)
+    static let syncaWarmSoft   = Color("SyncaWarmSoft")   // oklch(90% 0.04 55)
+
+    // Neutral ramp (100 lightest → 900 darkest) — tonal, generated in OKLCH
+    static let syncaNeutral100 = Color("SyncaNeutral100") // #f3f5fe
+    static let syncaNeutral200 = Color("SyncaNeutral200") // #e4e7f5
+    static let syncaNeutral300 = Color("SyncaNeutral300") // #cfd3e5
+    static let syncaNeutral400 = Color("SyncaNeutral400") // #b2b6ca
+    static let syncaNeutral500 = Color("SyncaNeutral500") // #9397ab
+    static let syncaNeutral600 = Color("SyncaNeutral600") // #75798c
+    static let syncaNeutral700 = Color("SyncaNeutral700") // #595d6c
+    static let syncaNeutral800 = Color("SyncaNeutral800") // #3f424d
+    static let syncaNeutral900 = Color("SyncaNeutral900") // #292b31
+
+    // Accent ramp (800/900/100 used for tag fills — tag-accent, tag-accent-2)
+    static let syncaAccent100 = Color("SyncaAccent100") // #f5f4ff
+    static let syncaAccent800 = Color("SyncaAccent800") // #423a6a
+    static let syncaAccent900 = Color("SyncaAccent900") // #2b2741
+    static let syncaAccent2_100 = Color("SyncaAccent2_100") // #f5f4ff
+    static let syncaAccent2_800 = Color("SyncaAccent2_800") // #423e5d
+    static let syncaAccent2_700 = Color("SyncaAccent2_700") // #5c5783 — "concept" outline
 
     // Semantic
-    static let syncaSuccess    = Color("SyncaSuccess")    // #27AE60
-    static let syncaWarning    = Color("SyncaWarning")    // #F39C12
-    static let syncaError      = Color("SyncaError")      // #E74C3C
-    static let syncaTextPrimary   = Color("SyncaTextPrimary")    // #1A1A2E / #FFFFFF
-    static let syncaTextSecondary = Color("SyncaTextSecondary")  // #6B7280 / #9CA3AF
+    static let syncaError = Color("SyncaError") // #E74C3C — Nocturne has no native error hue; kept for destructive actions
 }
 ```
 
-All colors must be defined as **Color Sets** in `Assets.xcassets` with light and dark variants.
-Never use hardcoded hex values in View code.
+Never use hardcoded hex values in View code — reference these tokens.
 
 ### Typography
 
+Inter throughout (heading weight 500 — medium, not bold).
+
 ```swift
 extension Font {
-    static let syncaLargeTitle  = Font.system(size: 34, weight: .bold,   design: .rounded)
-    static let syncaTitle       = Font.system(size: 22, weight: .semibold, design: .rounded)
-    static let syncaHeadline    = Font.system(size: 17, weight: .semibold, design: .default)
-    static let syncaBody        = Font.system(size: 16, weight: .regular,  design: .default)
-    static let syncaCaption     = Font.system(size: 12, weight: .regular,  design: .default)
+    static let syncaH1     = Font.custom("Inter-Medium", size: 42) // hero titles
+    static let syncaH2     = Font.custom("Inter-Medium", size: 32)
+    static let syncaH3     = Font.custom("Inter-Medium", size: 25)
+    static let syncaH4     = Font.custom("Inter-Medium", size: 20)
+    static let syncaH6     = Font.custom("Inter-Medium", size: 13) // uppercase, +0.08em tracking — eyebrow/kicker
+    static let syncaBody   = Font.custom("Inter-Regular", size: 15)
+    static let syncaSmall  = Font.custom("Inter-Regular", size: 13)
+    static let syncaCaption = Font.custom("Inter-Regular", size: 11)
 }
 ```
+
+`.syncaH6` is always applied with `.textCase(.uppercase)` and `.tracking(1.0)` — used as the
+screen eyebrow ("STEP 1 OF 2", "SPARK QUESTIONNAIRE") and card kicker.
 
 ### Spacing
 
 ```swift
 enum Spacing {
-    static let xs:  CGFloat = 4
-    static let sm:  CGFloat = 8
-    static let md:  CGFloat = 16
-    static let lg:  CGFloat = 24
-    static let xl:  CGFloat = 32
-    static let xxl: CGFloat = 48
+    static let space1: CGFloat = 3   // 2.8px in the web tokens, rounded to the point grid
+    static let space2: CGFloat = 6
+    static let space3: CGFloat = 8
+    static let space4: CGFloat = 11
+    static let space6: CGFloat = 17
+    static let space8: CGFloat = 22
 }
 ```
 
@@ -68,10 +114,25 @@ enum Spacing {
 
 ```swift
 enum Radius {
-    static let sm:  CGFloat = 8
-    static let md:  CGFloat = 12
-    static let lg:  CGFloat = 20
+    static let sm: CGFloat = 4
+    static let md: CGFloat = 8
+    static let lg: CGFloat = 14
     static let full: CGFloat = 999 // pill shape
+}
+```
+
+### Elevation
+
+SwiftUI has no `box-shadow` ring equivalent — approximate the web tokens' hairline + ambient
+shadow with a `.overlay(RoundedRectangle().stroke(...))` plus `.shadow(...)`:
+
+```swift
+enum Elevation {
+    static func md(_ view: some View) -> some View {
+        view
+            .overlay(RoundedRectangle(cornerRadius: Radius.md).stroke(Color.syncaNeutral700, lineWidth: 1))
+            .shadow(color: .black.opacity(0.55), radius: 18, y: 6)
+    }
 }
 ```
 
@@ -79,7 +140,7 @@ enum Radius {
 
 ## Reusable Components
 
-All shared components live in `Features/Shared/` (create this folder).
+All shared components live in `Features/Shared/`.
 Never duplicate a component — if two screens need the same element, extract it here.
 
 ### SyncaButton
@@ -92,32 +153,99 @@ struct SyncaButton: View {
     var style: Style = .primary
     var isLoading: Bool = false
 
-    enum Style { case primary, secondary, destructive }
+    enum Style { case primary, secondary }
 
     var body: some View {
         Button(action: action) {
             Group {
                 if isLoading {
-                    ProgressView().tint(.white)
+                    ProgressView().tint(foregroundColor)
                 } else {
-                    Text(title).font(.syncaHeadline)
+                    Text(title).font(.syncaH6.weight(.medium))
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, Spacing.md)
-            .background(backgroundColor)
-            .foregroundColor(.white)
-            .cornerRadius(Radius.lg)
+            .padding(.vertical, Spacing.space3)
+            .foregroundColor(foregroundColor)
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.md)
+                    .stroke(borderColor, lineWidth: 1)
+            )
         }
         .disabled(isLoading)
+        .opacity(isLoading ? 0.45 : 1)
+    }
+
+    private var foregroundColor: Color { style == .primary ? .syncaAccent : .syncaText }
+    private var borderColor: Color { style == .primary ? .syncaAccent : .syncaDivider }
+}
+```
+
+Matches the prototype's `.btn-primary` (accent outline, no fill) / `.btn-secondary` (divider
+outline) — Nocturne buttons are outlined, not filled.
+
+### SyncaTag
+
+```swift
+// Features/Shared/SyncaTag.swift
+struct SyncaTag: View {
+    let text: String
+    var style: Style = .neutral
+
+    enum Style { case accent, accent2, neutral, outline }
+
+    var body: some View {
+        Text(text)
+            .font(.syncaCaption)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 3)
+            .background(backgroundColor)
+            .foregroundColor(foregroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.md * 0.75))
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.md * 0.75)
+                    .stroke(style == .outline ? Color.syncaAccent : .clear, lineWidth: 1)
+            )
     }
 
     private var backgroundColor: Color {
         switch style {
-        case .primary:     return .syncaAccent
-        case .secondary:   return .syncaPrimary
-        case .destructive: return .syncaError
+        case .accent: return .syncaAccent900
+        case .accent2: return .syncaAccent2_800
+        case .neutral: return .syncaNeutral800
+        case .outline: return .clear
         }
+    }
+
+    private var foregroundColor: Color {
+        switch style {
+        case .accent: return .syncaAccent100
+        case .accent2: return .syncaAccent2_100
+        case .neutral: return .syncaNeutral100
+        case .outline: return .syncaAccent
+        }
+    }
+}
+```
+
+`.accent` = "Synca Confirmed" (Spark-origin, high confidence). `.accent2` = "Suggested"
+(algorithm-origin, Phase 1). `.outline` = structural labels ("Registered users only",
+"Concept — not yet built").
+
+### SyncaCard
+
+```swift
+// Features/Shared/SyncaCard.swift
+struct SyncaCard<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Spacing.space2) {
+            content
+        }
+        .padding(Spacing.space3)
+        .background(Color.syncaSurface)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
     }
 }
 ```
@@ -129,11 +257,12 @@ struct SyncaButton: View {
 struct LoadingView: View {
     var message: String = "Loading..."
     var body: some View {
-        VStack(spacing: Spacing.md) {
-            ProgressView()
-            Text(message).font(.syncaCaption).foregroundColor(.syncaTextSecondary)
+        VStack(spacing: Spacing.space4) {
+            ProgressView().tint(.syncaAccent)
+            Text(message).font(.syncaCaption).foregroundColor(.syncaText.opacity(0.6))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.syncaBackground)
     }
 }
 ```
@@ -147,15 +276,16 @@ struct ErrorView: View {
     var retryAction: (() -> Void)? = nil
 
     var body: some View {
-        VStack(spacing: Spacing.md) {
+        VStack(spacing: Spacing.space4) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.title).foregroundColor(.syncaError)
-            Text(message).font(.syncaBody).multilineTextAlignment(.center)
+            Text(message).font(.syncaBody).multilineTextAlignment(.center).foregroundColor(.syncaText)
             if let retry = retryAction {
                 SyncaButton(title: "Retry", action: retry, style: .secondary)
             }
         }
-        .padding(Spacing.lg)
+        .padding(Spacing.space6)
+        .background(Color.syncaBackground)
     }
 }
 ```
@@ -183,28 +313,38 @@ var body: some View {
 
 ## Navigation Map
 
-All screens and how they connect. `AppRouter` destinations → See [architecture/ios-structure.md § AppRouter](../architecture/ios-structure.md).
+All screens and how they connect. `AppRouter` destinations → See
+[architecture/ios-structure.md § AppRouter](../architecture/ios-structure.md).
+
+Revised per design review (`chats/chat1.md`, Igor): the guest flow opens directly on Apple
+Health, then straight into scanning a Spark QR — no separate onboarding questionnaire (the
+Spark questionnaire doubles as it), one recap-rich result screen, email capture moved to
+*after* the result. QR generation is registered-users-only. The tab bar is Home / Spark /
+Profile only — Matching screens exist in code (`Features/Matching/`) but are a labelled
+"Concept — not yet built" and are **not** wired into the tab bar or reachable from Dashboard.
 
 ```
 App Launch
-    ├── No token in Keychain ──▶ LoginView
-    │       └── "Register" ▶ RegisterView
-    │               └── Success ▶ OnboardingView (preferences)
-    │                               └── Done ▶ DashboardView
+    ├── Valid token in Keychain, account_type == active ──▶ DashboardView (home hub)
+    │       ├── "Start a Spark" ▶ GenerateQRView (registered users only)
+    │       ├── Spark row ▶ SparkResultView (past result)
+    │       ├── Profile tab ▶ ProfileView ("My Health")
+    │       └── Home tab ▶ DashboardView
     │
-    ├── Token valid ──▶ DashboardView (home hub)
-    │       ├── "Start Spark" ▶ SparkView
-    │       │       └── Result ▶ MatchDetailView (if match created)
-    │       ├── Match row ▶ MatchDetailView
-    │       │       └── "Plan a Moment" ▶ MomentView
-    │       ├── Circle row ▶ CircleView
-    │       │       └── Messages ▶ CircleMessageView
-    │       ├── Profile tab ▶ ProfileView
-    │       │       ├── "My Health" ▶ SignalsView
-    │       │       └── "Verify" ▶ TrustView
-    │       └── (background) deep link ▶ ActivationView
-    │
-    └── Universal link (QR scan) ──▶ OnboardingView (guest) ▶ SparkView
+    └── No token, or account_type == guest ──▶ ConnectHealthView (guest Spark flow)
+            └── "Connect Apple Health" ▶ ScanQRView
+                    └── QR scanned / code entered ▶ SparkQuestionnaireView (5 questions)
+                            └── Submitted, both sides in ▶ SparkResultView (rich recap)
+                                    └── "Save this connection" ▶ SaveResultsView (email)
+                                            └── "Continue" ▶ ActivationView (display name)
+                                                    └── Activated ▶ DashboardView
+```
+
+`Features/Matching/` (not in the map above — reachable only via SwiftUI previews or a debug
+menu today):
+
+```
+MatchListView ▶ MatchDetailView ▶ (Phase 1) "Propose a Moment"
 ```
 
 ---
