@@ -1,12 +1,12 @@
 import Foundation
 
-enum Chronotype: String, Codable {
+enum Chronotype: String, Codable, Hashable {
     case earlyBird = "early_bird"
     case intermediate
     case nightOwl = "night_owl"
 }
 
-enum ActivityLevel: String, Codable {
+enum ActivityLevel: String, Codable, Hashable {
     case low, medium, high
 }
 
@@ -16,7 +16,10 @@ enum ActivityLevel: String, Codable {
 /// `effectiveFrom`/`sleepStartLocal`/etc. are short date/time strings ("2026-07-27",
 /// "23:30"), not full timestamps, so they're modeled as `String` rather than `Date` —
 /// avoids a custom date-decoding strategy for a handful of fields.
-struct HealthSummary: Codable, Equatable {
+///
+/// `Hashable` (not just `Equatable`) because `AppDestination.sparkFlow` carries a
+/// `HealthSummary` and `AppDestination` needs to be `Hashable` for `NavigationPath`.
+struct HealthSummary: Codable, Hashable {
     var chronotype: Chronotype?
     var source: String?
     var effectiveFrom: String

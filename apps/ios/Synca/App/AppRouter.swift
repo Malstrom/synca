@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 import Observation
 
 /// Programmatic `NavigationStack` routing — the iOS equivalent of `redirect_to` in

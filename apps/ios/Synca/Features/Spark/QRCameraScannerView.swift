@@ -21,12 +21,19 @@ final class ScannerViewController: UIViewController, AVCaptureMetadataOutputObje
     var onCodeScanned: ((String) -> Void)?
 
     private let captureSession = AVCaptureSession()
+    private var previewLayer: AVCaptureVideoPreviewLayer?
     private var hasEmittedCode = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
         configureSession()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // CALayer.autoresizingMask is unavailable on iOS — resize manually instead.
+        previewLayer?.frame = view.bounds
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -61,8 +68,8 @@ final class ScannerViewController: UIViewController, AVCaptureMetadataOutputObje
         let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         previewLayer.videoGravity = .resizeAspectFill
         previewLayer.frame = view.bounds
-        previewLayer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
         view.layer.addSublayer(previewLayer)
+        self.previewLayer = previewLayer
     }
 
     func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
