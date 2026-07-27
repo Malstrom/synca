@@ -18,7 +18,7 @@ struct SyncaButton: View {
                     ProgressView().tint(foregroundColor)
                 } else {
                     Text(title)
-                        .font(.syncaH6.weight(.medium))
+                        .font(.syncaH6)
                         .textCase(nil)
                 }
             }

@@ -8,6 +8,23 @@ struct ScanQRView: View {
     @State private var showManualEntry = false
 
     var body: some View {
+        ScrollView {
+            content
+                .padding(.horizontal, 22)
+                .padding(.top, Spacing.space8)
+                .padding(.bottom, 28)
+                .frame(maxWidth: .infinity)
+        }
+        .background(Color.syncaBackground)
+        .navigationBarBackButtonHidden(true)
+        .overlay {
+            if viewModel.isLoading {
+                LoadingView(message: "Joining Spark…")
+            }
+        }
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
                 ZStack {
@@ -20,7 +37,6 @@ struct ScanQRView: View {
                     .font(.syncaCaption)
                     .foregroundColor(.syncaText.opacity(0.7))
             }
-            .padding(.top, Spacing.space8)
             .padding(.bottom, 24)
 
             Text("Scan their QR code")
@@ -44,7 +60,7 @@ struct ScanQRView: View {
                     QRViewfinderCorners()
                 }
             }
-            .frame(minHeight: 260, maxHeight: .infinity)
+            .frame(height: 280)
 
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
@@ -74,16 +90,6 @@ struct ScanQRView: View {
                 .foregroundColor(.syncaText.opacity(0.5))
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 8)
-        }
-        .padding(.horizontal, 22)
-        .padding(.bottom, 28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color.syncaBackground)
-        .navigationBarBackButtonHidden(true)
-        .overlay {
-            if viewModel.isLoading {
-                LoadingView(message: "Joining Spark…")
-            }
         }
     }
 
