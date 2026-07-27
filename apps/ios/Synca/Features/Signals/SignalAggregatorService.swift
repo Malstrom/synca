@@ -57,14 +57,22 @@ final class SignalAggregatorService {
             start: start,
             end: end
         )
+        async let restingHeartRateSamplesTask = healthStore.quantitySamples(
+            for: HKObjectType.quantityType(forIdentifier: .restingHeartRate)!,
+            start: start,
+            end: end
+        )
 
         let sleepSamples = try await sleepSamplesTask
         let stepSamples = try await stepSamplesTask
         let energySamples = try await energySamplesTask
+        let restingHeartRateSamples = try await restingHeartRateSamplesTask
 
         let sleepMetrics = Self.sleepMetrics(from: sleepSamples)
-        let activityLevel = Self.activityLevel(fromDailyAverageSteps: Self.dailyAverage(of: stepSamples, over: aggregationWindowDays))
+        let dailyStepsAverage = Self.dailyAverage(of: stepSamples, over: aggregationWindowDays)
+        let activityLevel = Self.activityLevel(fromDailyAverageSteps: dailyStepsAverage)
         let peakEnergyWindow = Self.peakEnergyWindow(from: energySamples)
+        let avgRestingHeartRateBpm = Self.averageBeatsPerMinute(of: restingHeartRateSamples)
 
         return HealthSummary(
             chronotype: sleepMetrics.chronotype,
@@ -78,7 +86,9 @@ final class SignalAggregatorService {
             activityLevel: activityLevel,
             peakEnergyStartLocal: peakEnergyWindow?.startLocal,
             peakEnergyEndLocal: peakEnergyWindow?.endLocal,
-            recoveryScore: nil
+            recoveryScore: nil,
+            avgDailySteps: dailyStepsAverage > 0 ? Int(dailyStepsAverage.rounded()) : nil,
+            avgRestingHeartRateBpm: avgRestingHeartRateBpm
         )
     }
 
@@ -199,6 +209,16 @@ final class SignalAggregatorService {
         if steps < 5000 { return .low }
         if steps < 10000 { return .medium }
         return .high
+    }
+
+    /// Resting heart rate samples are already a bpm rate per sample (not a
+    /// cumulative quantity like steps/energy), so this is a plain average
+    /// across the window, not a daily average.
+    private static func averageBeatsPerMinute(of samples: [HKQuantitySample]) -> Int? {
+        guard !samples.isEmpty else { return nil }
+        let beatsPerMinuteUnit = HKUnit.count().unitDivided(by: .minute())
+        let total = samples.reduce(0.0) { $0 + $1.quantity.doubleValue(for: beatsPerMinuteUnit) }
+        return Int((total / Double(samples.count)).rounded())
     }
 
     private struct PeakWindow {

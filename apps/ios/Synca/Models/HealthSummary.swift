@@ -32,6 +32,11 @@ struct HealthSummary: Codable, Hashable {
     var peakEnergyStartLocal: String?
     var peakEnergyEndLocal: String?
     var recoveryScore: String?
+
+    /// Needed — not yet implemented server-side (no column on `health_summaries`
+    /// yet). See docs/product/decisions.md#signals-steps-resting-hr-in-summary.
+    var avgDailySteps: Int? = nil
+    var avgRestingHeartRateBpm: Int? = nil
 }
 
 /// `PUT /me/health_summary` request body wraps under `health_summary:`.
@@ -58,6 +63,11 @@ struct SignalsSummary: Codable, Equatable {
     let activityTier: String?
     let avgSleepDurationMinutes: Int?
     let selfReportAlignment: SelfReportAlignment
+
+    /// Needed — not yet implemented server-side, see
+    /// docs/product/decisions.md#signals-steps-resting-hr-in-summary.
+    let avgDailySteps: Int?
+    let avgRestingHeartRateBpm: Int?
 }
 
 struct SignalsSummaryResponse: Codable {

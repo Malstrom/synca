@@ -64,6 +64,11 @@ struct SparkResultView: View {
                 .frame(maxWidth: 280)
                 .padding(.bottom, 18)
 
+            if let yourRate = result.yourAvgHeartRate, let partnerRate = result.partnerAvgHeartRate {
+                heartRateCard(yourRate: yourRate, partnerRate: partnerRate)
+                    .padding(.bottom, 12)
+            }
+
             recapCard(result)
                 .padding(.bottom, 20)
 
@@ -72,6 +77,44 @@ struct SparkResultView: View {
                 router.navigate(to: .saveResults(sparkId: sparkId))
             })
         }
+    }
+
+    /// Needed — not yet implemented server-side, see
+    /// docs/product/decisions.md#spark-heart-rate-during-session. Shown only
+    /// when both readings are present; no fabricated waveform between them —
+    /// just the two averages, matching the recap card's own data-honesty rule.
+    private func heartRateCard(yourRate: Int, partnerRate: Int) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.space2) {
+            SyncaCardKicker(text: "HEART RATE DURING THIS SPARK")
+            HStack(spacing: 16) {
+                heartRateReading(bpm: yourRate, label: "you")
+                heartRateReading(bpm: partnerRate, label: "them")
+            }
+            .padding(.top, 4)
+        }
+        .padding(Spacing.space3)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.syncaAccent2_900)
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.md)
+                .stroke(Color.syncaAccent2_700, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+    }
+
+    private func heartRateReading(bpm: Int, label: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Image(systemName: "heart.fill")
+                .font(.system(size: 12))
+                .foregroundColor(.syncaWarm)
+            Text("\(bpm)")
+                .font(.custom("Inter-Medium", size: 18))
+                .foregroundColor(.syncaText)
+            Text("bpm avg · \(label)")
+                .font(.syncaCaption)
+                .foregroundColor(.syncaText.opacity(0.6))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func recapCard(_ result: SparkResult) -> some View {

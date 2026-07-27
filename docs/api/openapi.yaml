@@ -1183,6 +1183,20 @@ components:
         source:
           type: string
           enum: [apple_health, health_connect]
+        avg_daily_steps:
+          type: integer
+          nullable: true
+          description: >
+            Needed — not yet implemented. No column on `health_summaries` yet;
+            see docs/product/decisions.md#signals-steps-resting-hr-in-summary.
+        avg_resting_heart_rate_bpm:
+          type: integer
+          nullable: true
+          description: >
+            Needed — not yet implemented. No column on `health_summaries` yet;
+            see docs/product/decisions.md#signals-steps-resting-hr-in-summary.
+            Distinct from the existing `recovery_score` enum above (low/medium/high) —
+            this is the raw bpm number.
 
     HealthSummary:
       allOf:
@@ -1210,6 +1224,19 @@ components:
         avg_sleep_duration_minutes:
           type: integer
           nullable: true
+        avg_daily_steps:
+          type: integer
+          nullable: true
+          description: >
+            Needed — not yet implemented (depends on the `health_summaries`
+            column of the same name). See
+            docs/product/decisions.md#signals-steps-resting-hr-in-summary.
+        avg_resting_heart_rate_bpm:
+          type: integer
+          nullable: true
+          description: >
+            Needed — not yet implemented. See
+            docs/product/decisions.md#signals-steps-resting-hr-in-summary.
         self_report_alignment:
           type: object
           properties:
@@ -1405,6 +1432,22 @@ components:
               status:
                 type: string
                 enum: [pending, redeemed, expired]
+        your_avg_heart_rate:
+          type: integer
+          nullable: true
+          description: >
+            Needed — not yet implemented. No column on `sparks` yet, and no
+            submission path — see
+            docs/product/decisions.md#spark-heart-rate-during-session.
+            Resolved server-side to the requester's own perspective (same as
+            `compatibility_score`) since `SparkSerializer` exposes neither
+            `initiator_id` nor `partner_id` for the client to disambiguate itself.
+        partner_avg_heart_rate:
+          type: integer
+          nullable: true
+          description: >
+            Needed — not yet implemented. See
+            docs/product/decisions.md#spark-heart-rate-during-session.
 
     SparkReward:
       type: object

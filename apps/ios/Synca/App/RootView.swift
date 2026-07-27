@@ -58,6 +58,8 @@ struct RootView: View {
             GenerateQRView()
         case .matchDetail(let matchId):
             MatchDetailView(matchId: matchId)
+        case .login:
+            LoginView()
         }
     }
 }

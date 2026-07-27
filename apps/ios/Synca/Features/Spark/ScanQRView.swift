@@ -4,6 +4,7 @@ import SwiftUI
 /// ("2 · Scan QR to join a Spark").
 struct ScanQRView: View {
     @Bindable var viewModel: SparkViewModel
+    @Environment(AppRouter.self) private var router
     @State private var showManualEntry = false
 
     var body: some View {
@@ -58,6 +59,21 @@ struct ScanQRView: View {
                 style: .secondary
             )
             .padding(.top, 20)
+
+            HStack(spacing: 10) {
+                Rectangle().fill(Color.syncaDivider).frame(height: 1)
+                Text("OR").font(.syncaCaption).foregroundColor(.syncaText.opacity(0.5))
+                Rectangle().fill(Color.syncaDivider).frame(height: 1)
+            }
+            .padding(.vertical, 18)
+
+            SyncaButton(title: "Go to my profile instead", action: { router.navigate(to: .login) }, style: .ghost)
+
+            Text("Requires signing in with your email")
+                .font(.syncaCaption)
+                .foregroundColor(.syncaText.opacity(0.5))
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 8)
         }
         .padding(.horizontal, 22)
         .padding(.bottom, 28)
@@ -119,5 +135,6 @@ private struct CornerBracket: Shape {
 
 #Preview {
     ScanQRView(viewModel: SparkViewModel(pendingHealthSummary: HealthSummary(effectiveFrom: "2026-07-27")))
+        .environment(AppRouter())
         .preferredColorScheme(.dark)
 }

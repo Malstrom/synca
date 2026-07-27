@@ -16,4 +16,12 @@ struct SparkResult: Codable, Equatable {
     let compatibilityScore: Double
     let dimensions: [String: Double]
     let rewards: [SparkResultReward]
+
+    /// Needed — not yet implemented server-side. Framed as "you"/"partner"
+    /// (not initiator/partner) because `SparkSerializer` exposes neither id, so
+    /// the client can't resolve which side it is itself — the server would
+    /// return these already resolved to the requester's perspective, same as
+    /// `compatibilityScore`. See docs/product/decisions.md#spark-heart-rate-during-session.
+    var yourAvgHeartRate: Int? = nil
+    var partnerAvgHeartRate: Int? = nil
 }

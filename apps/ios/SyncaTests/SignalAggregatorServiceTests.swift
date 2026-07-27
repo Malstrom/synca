@@ -88,7 +88,7 @@ final class SignalAggregatorServiceTests: XCTestCase {
         XCTAssertNil(summary.routineStabilityIndex)
     }
 
-    func test_aggregate_withHighStepCount_reportsHighActivityLevel() async throws {
+    func test_aggregate_withHighStepCount_reportsHighActivityLevelAndAvgDailySteps() async throws {
         let stepType = HKObjectType.quantityType(forIdentifier: .stepCount)!
         // 30-day total so the /30-day average lands at 12,000/day (> 10,000 = high).
         let quantity = HKQuantity(unit: .count(), doubleValue: 12000 * 30)
@@ -98,11 +98,31 @@ final class SignalAggregatorServiceTests: XCTestCase {
         let summary = try await sut.aggregate()
 
         XCTAssertEqual(summary.activityLevel, .high)
+        XCTAssertEqual(summary.avgDailySteps, 12000)
     }
 
-    func test_aggregate_withNoStepSamples_reportsLowActivityLevel() async throws {
+    func test_aggregate_withNoStepSamples_reportsLowActivityLevelAndNilAvgDailySteps() async throws {
         let summary = try await sut.aggregate()
         XCTAssertEqual(summary.activityLevel, .low)
+        XCTAssertNil(summary.avgDailySteps)
+    }
+
+    func test_aggregate_withRestingHeartRateSamples_computesAverageBpm() async throws {
+        let heartRateType = HKObjectType.quantityType(forIdentifier: .restingHeartRate)!
+        let beatsPerMinuteUnit = HKUnit.count().unitDivided(by: .minute())
+        let samples = [58.0, 60.0, 64.0].map { bpm in
+            HKQuantitySample(type: heartRateType, quantity: HKQuantity(unit: beatsPerMinuteUnit, doubleValue: bpm), start: Date(), end: Date())
+        }
+        healthStore.quantitySamplesByIdentifier[heartRateType.identifier] = samples
+
+        let summary = try await sut.aggregate()
+
+        XCTAssertEqual(summary.avgRestingHeartRateBpm, 61) // (58 + 60 + 64) / 3 = 60.67 -> rounds to 61
+    }
+
+    func test_aggregate_withNoRestingHeartRateSamples_leavesAvgRestingHeartRateNil() async throws {
+        let summary = try await sut.aggregate()
+        XCTAssertNil(summary.avgRestingHeartRateBpm)
     }
 
     func test_aggregate_setsEffectiveFromToToday() async throws {

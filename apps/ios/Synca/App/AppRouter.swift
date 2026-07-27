@@ -16,6 +16,9 @@ enum AppDestination: Hashable {
     case activation
     case generateQR
     case matchDetail(matchId: Int)
+    /// "Go to my profile instead" shortcut on the Scan QR screen, for a
+    /// returning user with a full account — see `LoginView`.
+    case login
 }
 
 @Observable

@@ -16,6 +16,9 @@ private struct ClaimEmailRequestBody: Encodable { let auth: ClaimEmailAuthPayloa
 private struct ActivateProfilePayload: Encodable { let displayName: String }
 private struct ActivateRequestBody: Encodable { let profile: ActivateProfilePayload }
 
+private struct LoginAuthPayload: Encodable { let email: String; let password: String }
+private struct LoginRequestBody: Encodable { let auth: LoginAuthPayload }
+
 /// Typed calls for every endpoint the app needs, on top of the generic
 /// `APIClient.request(_:)`. Keeps path strings and request/response envelopes out of
 /// ViewModels. Mirrors docs/api/openapi.yaml exactly — including the endpoints
@@ -44,6 +47,18 @@ extension APIClientProtocol {
             path: "auth/guest/claim_email",
             method: .post,
             body: ClaimEmailRequestBody(auth: ClaimEmailAuthPayload(email: email))
+        )
+        return try await request(endpoint)
+    }
+
+    /// `POST /auth/login` — "Go to my profile instead" shortcut on the Scan QR
+    /// screen, for a returning user who already has a full (non-guest) account.
+    func login(email: String, password: String) async throws -> AuthResponse {
+        let endpoint = APIEndpoint(
+            path: "auth/login",
+            method: .post,
+            body: LoginRequestBody(auth: LoginAuthPayload(email: email, password: password)),
+            requiresAuth: false
         )
         return try await request(endpoint)
     }

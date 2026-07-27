@@ -49,6 +49,25 @@ directly into the relevant feature doc text.
 
 ## Signals
 
+- id: signals-steps-resting-hr-in-summary
+  status: open
+  owner: tech
+  source: chats (Igor, design review round 2) · apps/ios/Synca/Features/Profile/ProfileView.swift
+  question: >
+    Igor asked to show daily step count on the Profile "My Health" screen, and
+    a later comment asked for resting heart rate too. Neither is stored today —
+    `health_summaries` has `activity_level` (a low/medium/high enum) and
+    `recovery_score` (also an enum) but no raw step count or bpm column, and
+    `SignalsSummaryService`/`SignalsSummarySerializer` don't expose either.
+    The iOS app (`SignalAggregatorService`) already computes both locally —
+    `avg_daily_steps` from the same step samples used for `activity_level`,
+    and `avg_resting_heart_rate_bpm` from `HKQuantityType(.restingHeartRate)`
+    (already a requested read permission, just never queried before). Add
+    `avg_daily_steps integer` and `avg_resting_heart_rate_bpm integer` to
+    `health_summaries`, accept them in `HealthSummaryContract`, and expose both
+    on `GET /signals/me/summary`? Proposed shapes are in docs/api/openapi.yaml.
+  decision:
+
 - id: signals-reask-preferences
   status: open
   owner: product
@@ -91,6 +110,32 @@ directly into the relevant feature doc text.
 ---
 
 ## Spark
+
+- id: spark-heart-rate-during-session
+  status: open
+  owner: product
+  source: chats (Igor, design review round 2, on the Spark result screen) · apps/ios/Synca/Features/Spark/SparkResultView.swift
+  question: >
+    Igor asked to show both participants' heart rate during the Spark itself
+    on the result screen — not the 30-day resting HR average
+    (`signals-steps-resting-hr-in-summary`), a live/session-scoped reading
+    tied to that specific encounter. Nothing stores this today: `sparks` has
+    no heart-rate columns, and there's no submission path — `submit_answers`
+    only carries questionnaire answers. Needs: (1) `sparks` columns for each
+    participant's avg bpm during the session window (`started_at` →
+    `completed_at`), (2) a submission mechanism — most naturally, extend
+    `submit_answers`'s payload to optionally carry an avg-HR-during-session
+    value alongside the questionnaire answers, since that's already the point
+    where each participant reports in independently, and (3) `SparkResultService`
+    resolving both values to the requester's own perspective
+    (`your_avg_heart_rate`/`partner_avg_heart_rate`) on `GET /sparks/:id/result`,
+    the same way `compatibility_score` already is — `SparkSerializer` exposes
+    neither `initiator_id` nor `partner_id`, so the client has no way to
+    resolve "which side am I" itself. iOS would also need to actually sample
+    `HKQuantityType(.heartRate)` bracketed to the Spark's live window, which
+    `SignalAggregatorService` doesn't do today (it only aggregates a rolling
+    30-day history, not a specific live session).
+  decision:
 
 - id: spark-guest-anonymous-identity
   status: open

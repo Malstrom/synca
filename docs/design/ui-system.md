@@ -153,7 +153,7 @@ struct SyncaButton: View {
     var style: Style = .primary
     var isLoading: Bool = false
 
-    enum Style { case primary, secondary }
+    enum Style { case primary, secondary, ghost }
 
     var body: some View {
         Button(action: action) {
@@ -182,7 +182,8 @@ struct SyncaButton: View {
 ```
 
 Matches the prototype's `.btn-primary` (accent outline, no fill) / `.btn-secondary` (divider
-outline) — Nocturne buttons are outlined, not filled.
+outline) / `.btn-ghost` (accent text, no border — "Go to my profile instead" on Scan QR) —
+Nocturne buttons are outlined or ghost, never filled.
 
 ### SyncaTag
 
@@ -333,11 +334,13 @@ App Launch
     │
     └── No token, or account_type == guest ──▶ ConnectHealthView (guest Spark flow)
             └── "Connect Apple Health" ▶ ScanQRView
-                    └── QR scanned / code entered ▶ SparkQuestionnaireView (5 questions)
-                            └── Submitted, both sides in ▶ SparkResultView (rich recap)
-                                    └── "Save this connection" ▶ SaveResultsView (email)
-                                            └── "Continue" ▶ ActivationView (display name)
-                                                    └── Activated ▶ DashboardView
+                    ├── QR scanned / code entered ▶ SparkQuestionnaireView (5 questions)
+                    │       └── Submitted, both sides in ▶ SparkResultView (rich recap)
+                    │               └── "Save this connection" ▶ SaveResultsView (email)
+                    │                       └── "Continue" ▶ ActivationView (display name)
+                    │                               └── Activated ▶ DashboardView
+                    └── "Go to my profile instead" ▶ LoginView (returning user, email + password)
+                            └── Signed in ▶ DashboardView
 ```
 
 `Features/Matching/` (not in the map above — reachable only via SwiftUI previews or a debug

@@ -70,6 +70,28 @@ struct ProfileView: View {
             .frame(maxWidth: .infinity)
         }
 
+        // Needed — not yet implemented server-side, see
+        // docs/product/decisions.md#signals-steps-resting-hr-in-summary.
+        if summary.avgDailySteps != nil || summary.avgRestingHeartRateBpm != nil {
+            HStack(spacing: 12) {
+                if let steps = summary.avgDailySteps {
+                    SyncaCard {
+                        SyncaCardKicker(text: "DAILY STEPS")
+                        SyncaCardTitle(text: steps.formatted())
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+
+                if let restingHeartRate = summary.avgRestingHeartRateBpm {
+                    SyncaCard {
+                        SyncaCardKicker(text: "RESTING HR")
+                        SyncaCardTitle(text: "\(restingHeartRate) bpm")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+        }
+
         if let note = summary.selfReportAlignment.note {
             selfReportCheckCard(note)
         }

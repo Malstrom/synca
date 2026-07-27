@@ -37,8 +37,9 @@ extension Color {
     static let syncaAccent800 = Color("SyncaAccent800")
     static let syncaAccent900 = Color("SyncaAccent900")
     static let syncaAccent2_100 = Color("SyncaAccent2_100")
-    static let syncaAccent2_800 = Color("SyncaAccent2_800")
     static let syncaAccent2_700 = Color("SyncaAccent2_700")
+    static let syncaAccent2_800 = Color("SyncaAccent2_800")
+    static let syncaAccent2_900 = Color("SyncaAccent2_900")
 
     static let syncaError = Color("SyncaError")
 }
