@@ -1,7 +1,9 @@
 # Solid Queue — recurring jobs
 # Docs: https://github.com/rails/solid_queue#recurring-tasks
 
-database_backup:
-  class: DatabaseBackupJob
-  schedule: every day at 3:00am
-  queue: default
+# database_backup: deferred — DatabaseBackupJob doesn't exist yet (Yandex
+# Object Storage backups aren't wired up). Re-enable once that job lands.
+# database_backup:
+#   class: DatabaseBackupJob
+#   schedule: every day at 3:00am
+#   queue: default
