@@ -173,10 +173,12 @@ directly into the relevant feature doc text.
   decision: >
     Implemented. `config/routes.rb` adds a collection-level `post :join`
     alongside the existing member one, both routed to
-    `Api::V1::SparksController#join`. `set_spark` now looks the Spark up by
-    `session_code`/`qr_token` when `params[:id]` is absent (unknown code →
-    404), otherwise unchanged. No new service needed — `JoinSparkService`
-    already only needed a resolved `Spark`, not an id.
+    `Api::V1::SparksController#join`. `set_spark` sets `@spark` only when
+    `params[:id]` is present; `JoinSparkService` now resolves the Spark
+    itself from the `JoinSparkContract`-validated `session_code`/`qr_token`
+    when `spark:` isn't given (unknown code → `Failure[:not_found, ...]` →
+    404), keeping validation in the contract and lookup/business rules in
+    the service rather than the controller — no ad-hoc param digging.
 
 - id: spark-result-recap-data-source
   status: open

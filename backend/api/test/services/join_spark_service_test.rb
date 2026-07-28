@@ -54,4 +54,36 @@ class JoinSparkServiceTest < ActiveSupport::TestCase
     assert result.failure?
     assert_equal :invalid_code, result.failure.first
   end
+
+  # --- resolving spark by code (no spark: given, the QR-scan/manual-code UX) ---
+
+  test "joins pending spark resolved by session_code alone" do
+    spark  = sparks(:alice_pending_spark)
+    result = JoinSparkService.call(
+      current_user: @bob,
+      params:       { "spark" => { "session_code" => spark.session_code } }
+    )
+    assert result.success?, "expected Success, got #{result.inspect}"
+    assert_equal spark.id, result.value!.id
+    assert_equal "active", result.value!.status
+  end
+
+  test "joins pending spark resolved by qr_token alone" do
+    spark  = sparks(:alice_pending_spark)
+    result = JoinSparkService.call(
+      current_user: @bob,
+      params:       { "spark" => { "qr_token" => spark.qr_token } }
+    )
+    assert result.success?, "expected Success, got #{result.inspect}"
+    assert_equal spark.id, result.value!.id
+  end
+
+  test "returns not_found when no spark matches the given session_code" do
+    result = JoinSparkService.call(
+      current_user: @bob,
+      params:       { "spark" => { "session_code" => "ZZZZZZ" } }
+    )
+    assert result.failure?
+    assert_equal :not_found, result.failure.first
+  end
 end

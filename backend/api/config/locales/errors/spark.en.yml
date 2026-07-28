@@ -1,6 +1,7 @@
 en:
   errors:
     spark:
+      not_found: "Spark not found"
       spark_not_completed: "Spark scoring is not yet complete"
       not_participant: "You are not a participant of this spark"
       spark_not_joinable: "This spark is no longer joinable"

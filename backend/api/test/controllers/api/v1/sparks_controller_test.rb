@@ -151,12 +151,13 @@ class Api::V1::SparksControllerTest < ApiTestCase
     assert_response :not_found
   end
 
-  test "join by code with neither session_code nor qr_token returns 404" do
+  test "join by code with neither session_code nor qr_token returns 422" do
     post_json "/api/v1/sparks/join",
       params: { spark: {} },
       headers: @bob_headers
 
-    assert_response :not_found
+    assert_response :unprocessable_entity
+    assert_equal "validation_failed", json.dig(:error, :code)
   end
 
   test "join by code own spark returns 422" do

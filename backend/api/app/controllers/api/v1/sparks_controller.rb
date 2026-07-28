@@ -24,6 +24,8 @@ module Api
           render_success(SparkSerializer.new(spark).serialize)
         in Failure[:contract_invalid, result]
           render_contract_errors(result)
+        in Failure[:not_found, _message]
+          render_not_found("Spark")
         in Failure[:cannot_join_own_spark, message]
           render_error(code: "cannot_join_own_spark", message: message, status: :unprocessable_entity)
         in Failure[:spark_not_joinable, message]
@@ -60,21 +62,13 @@ module Api
         # `POST /sparks/:id/join` (id known — server-to-server/testing use) and
         # `POST /sparks/join` (id unknown — the real QR-scan/manual-code UX,
         # see docs/product/decisions.md#spark-join-by-code-without-id) both
-        # route to this same `join` action; only the lookup differs.
+        # route to this same `join` action. Without an id, `@spark` stays nil
+        # and `JoinSparkService` resolves it from the contract-validated
+        # session_code/qr_token instead.
         def set_spark
-          @spark = params[:id] ? Spark.find(params[:id]) : spark_from_code
+          @spark = Spark.find(params[:id]) if params[:id]
         rescue ActiveRecord::RecordNotFound
           render_not_found("Spark")
-        end
-
-        def spark_from_code
-          spark_params  = params[:spark] || {}
-          session_code  = spark_params[:session_code].presence
-          qr_token      = spark_params[:qr_token].presence
-
-          spark = Spark.find_by(session_code: session_code) if session_code
-          spark ||= Spark.find_by(qr_token: qr_token) if qr_token
-          spark || raise(ActiveRecord::RecordNotFound)
         end
     end
   end
