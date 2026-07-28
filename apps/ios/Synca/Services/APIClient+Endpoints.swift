@@ -21,16 +21,15 @@ private struct LoginRequestBody: Encodable { let auth: LoginAuthPayload }
 
 /// Typed calls for every endpoint the app needs, on top of the generic
 /// `APIClient.request(_:)`. Keeps path strings and request/response envelopes out of
-/// ViewModels. Mirrors docs/api/openapi.yaml exactly — including the endpoints
-/// marked "needed — not yet implemented" there, which will 404/422 against a real
-/// server today. See docs/product/decisions.md#spark-guest-anonymous-identity.
+/// ViewModels. Mirrors docs/api/openapi.yaml. Some endpoints listed there as
+/// "needed — not yet implemented" may still lag the backend; check
+/// docs/api/openapi.yaml before assuming a given call is live.
+/// See docs/product/decisions.md#spark-guest-anonymous-identity.
 extension APIClientProtocol {
 
     // MARK: Auth
 
-    /// `POST /auth/guest`. Passing `email: nil` requests a fully anonymous guest —
-    /// this is the "needed" half described in openapi.yaml; today's
-    /// `GuestRegistrationContract` rejects an empty body.
+    /// `POST /auth/guest`. Passing `email: nil` requests a fully anonymous guest.
     func createGuestSession(email: String? = nil) async throws -> GuestAuthResponse {
         let endpoint = APIEndpoint(
             path: "auth/guest",

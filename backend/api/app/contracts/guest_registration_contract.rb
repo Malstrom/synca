@@ -20,10 +20,4 @@ class GuestRegistrationContract < Dry::Validation::Contract
     next unless value
     key.failure("must be at least 8 characters") if value.length < 8
   end
-
-  rule(:auth) do
-    next unless value[:email].nil? || value[:email].strip.empty?
-    next unless value[:phone].nil? || value[:phone].strip.empty?
-    key.failure("email or phone is required")
-  end
 end

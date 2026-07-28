@@ -24,18 +24,16 @@ class GuestRegistrationContractTest < ActiveSupport::TestCase
     assert result.success?
   end
 
-  # --- email_or_phone rule ---
+  # --- anonymous guest (no email, no phone) ---
 
-  test "missing both email and phone returns failure" do
+  test "missing both email and phone returns success (fully anonymous guest)" do
     result = contract.call({ auth: {} })
-    assert result.failure?
-    assert_includes result.errors.to_h[:auth],
-      I18n.t("contracts.errors.email_or_phone")
+    assert result.success?
   end
 
-  test "nil email and nil phone returns failure" do
+  test "nil email and nil phone returns success (fully anonymous guest)" do
     result = contract.call({ auth: { email: nil, phone: nil } })
-    assert result.failure?
+    assert result.success?
   end
 
   # --- email format rule ---

@@ -40,12 +40,14 @@ class Api::V1::Auth::GuestRegistrationsControllerTest < ApiTestCase
     assert_equal "email_already_active", body.dig("error", "code")
   end
 
-  test "POST /api/v1/auth/guest returns 422 when email is missing" do
+  test "POST /api/v1/auth/guest creates a fully anonymous guest when auth is empty" do
     post api_v1_auth_guest_path,
          params: { auth: {} },
          as: :json
-    assert_response :unprocessable_entity
-    assert response.parsed_body.key?("error")
+    assert_response :created
+    body = response.parsed_body
+    assert body.key?("access_token")
+    assert_equal "guest", body["account_type"]
   end
 
   test "POST /api/v1/auth/guest does not require Authorization header" do

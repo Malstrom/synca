@@ -14,10 +14,12 @@ Rails.application.routes.draw do
       put  "me/health_summary", to: "health_summary#update"
 
       namespace :auth do
-        post "register", to: "registrations#create"
-        post "login",    to: "sessions#create"
-        post "refresh",  to: "tokens#create"
-        post "guest",    to: "guest_registrations#create"
+        post "register",           to: "registrations#create"
+        post "login",              to: "sessions#create"
+        post "refresh",            to: "tokens#create"
+        post "guest",              to: "guest_registrations#create"
+        post "guest/claim_email",  to: "claim_email#create"
+        post "activate",           to: "activations#create"
       end
 
       resources :sparks, only: [ :create ] do

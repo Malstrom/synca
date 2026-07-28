@@ -180,21 +180,16 @@ paths:
   /auth/guest:
     post:
       tags: [Auth]
-      summary: Create or resume a guest account (implemented, see note)
+      summary: Create or resume a guest account (implemented)
       description: >
         Creates a guest account (`account_type: guest`) from an email and/or phone, or
-        returns a fresh token for an existing non-active user with that email.
-        Returns `email_already_active` if the email already belongs to an activated account.
-
-        **Note — needed change, not yet implemented:** the current
-        `GuestRegistrationContract` rejects a request where both `email` and `phone`
-        are blank ("email or phone is required"). The iOS guest-Spark flow
+        with neither for a fully anonymous guest — see the iOS guest-Spark flow
         (docs/features/spark-v1.md, reordered per product review — see
-        docs/product/decisions.md#spark-guest-anonymous-identity) needs to open a guest
-        session with **no identifier at all** — email is collected only after the Spark
-        result, on the "Save your results" screen (`POST /auth/guest/claim_email`).
-        Until the contract is relaxed to allow an empty `auth: {}` body, calling this
-        endpoint with no email/phone returns `422 validation_failed`.
+        docs/product/decisions.md#spark-guest-anonymous-identity), which opens a guest
+        session with no identifier at all and collects email only afterwards, on the
+        "Save your results" screen (`POST /auth/guest/claim_email`). Also returns a
+        fresh token for an existing non-active user with the given email.
+        Returns `email_already_active` if the email already belongs to an activated account.
       security: []
       requestBody:
         required: false
@@ -218,7 +213,7 @@ paths:
                       nullable: true
             examples:
               anonymous:
-                summary: Anonymous guest (needed — currently rejected, see description)
+                summary: Anonymous guest (works today)
                 value:
                   auth: {}
               email_only:
@@ -252,7 +247,7 @@ paths:
   /auth/guest/claim_email:
     post:
       tags: [Auth]
-      summary: Attach an email to the current anonymous guest session (needed — not yet implemented)
+      summary: Attach an email to the current anonymous guest session (implemented)
       description: >
         Called from the "Save your results" screen, after the Spark result is shown.
         Attaches an email to the already-authenticated (anonymous) guest user without
@@ -289,7 +284,7 @@ paths:
   /auth/activate:
     post:
       tags: [Auth]
-      summary: Activate a guest account (needed — not yet implemented)
+      summary: Activate a guest account (implemented)
       description: >
         Sets `display_name` (the only required field) and upgrades `account_type`
         from `guest` to `active`, issuing a permanent access + refresh token pair.
@@ -1037,7 +1032,9 @@ components:
       properties:
         access_token:
           type: string
-          description: Short-lived JWT (15 min) — use for all authenticated requests
+          description: >
+            Short-lived JWT (see config/settings/auth.yml's access_token_ttl,
+            1 hour by default) — use for all authenticated requests
         refresh_token:
           type: string
           description: Long-lived token (30 days) — use only for POST /auth/refresh

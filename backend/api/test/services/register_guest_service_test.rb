@@ -52,11 +52,11 @@ class RegisterGuestServiceTest < ActiveSupport::TestCase
     assert_equal I18n.t("errors.auth.email_already_active"), result.failure.last
   end
 
-  # --- validation_failed ---
+  # --- fully anonymous guest ---
 
-  test "returns Failure[:validation_failed] when email is missing" do
+  test "returns Success with a fully anonymous guest when auth is empty" do
     result = RegisterGuestService.call(params: { auth: {} })
-    assert_pattern { result => Failure[:validation_failed, _] }
+    assert_pattern { result => Success(_) }
     pass
   end
 end
