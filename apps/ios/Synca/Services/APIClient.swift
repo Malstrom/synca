@@ -35,17 +35,7 @@ final class APIClient: APIClientProtocol {
     static let shared = APIClient()
     static let unauthorizedNotification = Notification.Name("APIClient.unauthorized")
 
-    static var defaultBaseURL: URL {
-        #if DEBUG
-        // terminus VPS, plain HTTP over its static IP — no domain/TLS yet
-        // (see Info.plist's NSAppTransportSecurity exception scoped to this
-        // IP). Switch back to a domain once one's bought and Kamal handles
-        // TLS.
-        return URL(string: "http://72.56.97.181/api/v1")!
-        #else
-        return URL(string: "https://api.synca.app/api/v1")!
-        #endif
-    }
+    static var defaultBaseURL: URL { APIConfig.baseURL }
 
     private let session: URLSession
     private let baseURL: URL

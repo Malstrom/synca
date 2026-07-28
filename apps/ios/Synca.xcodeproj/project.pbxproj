@@ -77,6 +77,7 @@
 		000000000000000000200096 /* SparkProximityServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200095 /* SparkProximityServiceTests.swift */; };
 		000000000000000000200098 /* SparkViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200097 /* SparkViewModelTests.swift */; };
 		00000000000000000020009A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200099 /* Assets.xcassets */; };
+		0000000000000000002000B5 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000B4 /* APIConfig.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -164,6 +165,7 @@
 		00000000000000000020009C /* Synca.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Synca.entitlements"; sourceTree = "<group>"; };
 		00000000000000000020009D /* Synca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Synca.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		00000000000000000020009E /* SyncaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SyncaTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0000000000000000002000B4 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIConfig.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -336,10 +338,19 @@
 			path = "Services";
 			sourceTree = "<group>";
 		};
+		0000000000000000002000B6 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				0000000000000000002000B4 /* APIConfig.swift */,
+			);
+			path = "Config";
+			sourceTree = "<group>";
+		};
 		000000000000000000200001 /* Synca */ = {
 			isa = PBXGroup;
 			children = (
 				000000000000000000200004 /* App */,
+				0000000000000000002000B6 /* Config */,
 				00000000000000000020000B /* Features */,
 				000000000000000000200063 /* Models */,
 				000000000000000000200078 /* Services */,
@@ -549,6 +560,7 @@
 				00000000000000000020007D /* DemoAPIClient.swift in Sources */,
 				00000000000000000020007F /* JSONCoding.swift in Sources */,
 				000000000000000000200081 /* KeychainService.swift in Sources */,
+				0000000000000000002000B5 /* APIConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

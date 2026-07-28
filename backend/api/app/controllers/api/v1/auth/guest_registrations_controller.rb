@@ -11,10 +11,11 @@ module Api
         def create
           case RegisterGuestService.call(params: params.to_unsafe_h)
           in Success(user)
+            guest_ttl = Settings.auth.guest_token_ttl.seconds
             render_created({
-              access_token: JwtService.access_token(user),
+              access_token: JwtService.access_token(user, exp: guest_ttl),
               token_type:   "Bearer",
-              expires_in:   Settings.auth.guest_token_ttl,
+              expires_in:   guest_ttl.to_i,
               account_type: user.account_type
             })
           in Failure[:email_already_active, message]

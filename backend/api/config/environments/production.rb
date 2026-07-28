@@ -23,11 +23,17 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
+  # No domain/TLS yet — deploy.yml runs plain HTTP on port 80 (see config/deploy.yml).
+  # Both default to false so the app works as actually deployed today. Once a
+  # domain is bought and Kamal's proxy terminates TLS (deploy.yml: proxy.ssl = true),
+  # set FORCE_SSL=true in the Kamal env to re-enable both without touching this file.
+  force_ssl = ActiveModel::Type::Boolean.new.cast(ENV.fetch("FORCE_SSL", "false"))
+
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  config.assume_ssl = true
+  config.assume_ssl = force_ssl
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  config.force_ssl = force_ssl
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }

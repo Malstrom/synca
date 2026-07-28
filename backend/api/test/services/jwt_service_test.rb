@@ -22,12 +22,12 @@ class JwtServiceTest < ActiveSupport::TestCase
     assert_equal "access",  payload["type"]
   end
 
-  test "access_token expires in ~15 minutes" do
+  test "access_token expires in ~1 hour" do
     token = JwtService.access_token(@user)
     payload = JwtService.decode(token)
     remaining = payload["exp"] - Time.now.to_i
     assert_operator remaining, :>, 0
-    assert_operator remaining, :<=, 16.minutes.to_i
+    assert_operator remaining, :<=, Settings.auth.access_token_ttl + 1.minute.to_i
   end
 
   # --- refresh_token ---
