@@ -23,6 +23,9 @@ Rails.application.routes.draw do
       end
 
       resources :sparks, only: [ :create ] do
+        collection do
+          post :join
+        end
         member do
           post :join
           post :submit_answers

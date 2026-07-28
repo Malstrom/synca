@@ -110,6 +110,75 @@ class Api::V1::SparksControllerTest < ApiTestCase
     assert_equal "spark_not_joinable", json.dig(:error, :code)
   end
 
+  # --- POST /sparks/join (no id — the real QR-scan/manual-code UX) ---
+
+  test "join by session_code (no id) sets partner, transitions to active and returns 200" do
+    spark = sparks(:alice_pending_spark)
+
+    post_json "/api/v1/sparks/join",
+      params: { spark: { session_code: spark.session_code } },
+      headers: @bob_headers
+
+    assert_response :ok
+    assert_equal "active", json[:status]
+    assert_equal spark.id, json[:id]
+  end
+
+  test "join by qr_token (no id) sets partner, transitions to active and returns 200" do
+    spark = sparks(:alice_pending_spark)
+
+    post_json "/api/v1/sparks/join",
+      params: { spark: { qr_token: spark.qr_token } },
+      headers: @bob_headers
+
+    assert_response :ok
+    assert_equal "active", json[:status]
+  end
+
+  test "join by code with an unknown session_code returns 404" do
+    post_json "/api/v1/sparks/join",
+      params: { spark: { session_code: "ZZZZZZ" } },
+      headers: @bob_headers
+
+    assert_response :not_found
+  end
+
+  test "join by code with an unknown qr_token returns 404" do
+    post_json "/api/v1/sparks/join",
+      params: { spark: { qr_token: "00000000-0000-0000-0000-000000000000" } },
+      headers: @bob_headers
+
+    assert_response :not_found
+  end
+
+  test "join by code with neither session_code nor qr_token returns 404" do
+    post_json "/api/v1/sparks/join",
+      params: { spark: {} },
+      headers: @bob_headers
+
+    assert_response :not_found
+  end
+
+  test "join by code own spark returns 422" do
+    spark = sparks(:alice_pending_spark)
+
+    post_json "/api/v1/sparks/join",
+      params: { spark: { session_code: spark.session_code } },
+      headers: @alice_headers
+
+    assert_response :unprocessable_entity
+    assert_equal "cannot_join_own_spark", json.dig(:error, :code)
+  end
+
+  test "join by code without a token returns 401" do
+    spark = sparks(:alice_pending_spark)
+
+    post_json "/api/v1/sparks/join",
+      params: { spark: { session_code: spark.session_code } }
+
+    assert_response :unauthorized
+  end
+
   # --- POST /sparks/:id/submit_answers ---
 
   test "submit_answers stores initiator answers and returns 200" do

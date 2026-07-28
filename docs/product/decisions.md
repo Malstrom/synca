@@ -159,7 +159,7 @@ directly into the relevant feature doc text.
   decision:
 
 - id: spark-join-by-code-without-id
-  status: open
+  status: decided
   owner: tech
   source: docs/api/openapi.yaml § /sparks/join · apps/ios/Synca/Features/Spark
   question: >
@@ -170,7 +170,13 @@ directly into the relevant feature doc text.
     (both already unique)? Proposed shape is in docs/api/openapi.yaml. The iOS
     client (`SparkProximityService`, `SparkViewModel`) already calls this
     endpoint — it 404s against the real server until it exists.
-  decision:
+  decision: >
+    Implemented. `config/routes.rb` adds a collection-level `post :join`
+    alongside the existing member one, both routed to
+    `Api::V1::SparksController#join`. `set_spark` now looks the Spark up by
+    `session_code`/`qr_token` when `params[:id]` is absent (unknown code →
+    404), otherwise unchanged. No new service needed — `JoinSparkService`
+    already only needed a resolved `Spark`, not an id.
 
 - id: spark-result-recap-data-source
   status: open

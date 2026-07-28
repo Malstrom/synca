@@ -133,7 +133,7 @@ extension APIClientProtocol {
     }
 
     /// `POST /sparks/join` — what the Scan QR / manual code entry screen actually
-    /// calls (no Spark id known client-side). Needed, not yet implemented — see
+    /// calls (no Spark id known client-side) — see
     /// docs/product/decisions.md#spark-join-by-code-without-id.
     func joinSpark(sessionCode: String? = nil, qrToken: String? = nil) async throws -> SparkSession {
         let endpoint = APIEndpoint(

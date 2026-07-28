@@ -636,7 +636,7 @@ paths:
   /sparks/join:
     post:
       tags: [Spark]
-      summary: Join a Spark session by code or QR token, without knowing its id (needed — not yet implemented)
+      summary: Join a Spark session by code or QR token, without knowing its id (implemented)
       description: >
         What the iOS "Scan QR" / "Enter code manually" screen actually calls.
         `POST /sparks/{id}/join` (below) requires the numeric Spark id in the
