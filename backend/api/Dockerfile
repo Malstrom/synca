@@ -65,6 +65,8 @@ USER 1000:1000
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Start server via Thruster by default, this can be overwritten at runtime
+# Thruster isn't in the bundle (Gemfile never added it) — run Puma directly.
+# This can be overwritten at runtime.
+ENV PORT=80
 EXPOSE 80
-CMD ["./bin/thrust", "./bin/rails", "server"]
+CMD ["./bin/rails", "server"]
