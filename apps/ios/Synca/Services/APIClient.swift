@@ -30,7 +30,9 @@ protocol APIClientProtocol {
 
 /// `URLSession` wrapper: injects `Authorization: Bearer <token>`, decodes with
 /// `.convertFromSnakeCase`, clears the Keychain and broadcasts `unauthorizedNotification`
-/// on 401 — see docs/conventions/ios.md § Networking.
+/// on a 401 from an *authenticated* request (a 401 from an unauthenticated one,
+/// e.g. a wrong login password, is just a normal `.server` error) — see
+/// docs/conventions/ios.md § Networking.
 final class APIClient: APIClientProtocol {
     static let shared = APIClient()
     static let unauthorizedNotification = Notification.Name("APIClient.unauthorized")
@@ -93,7 +95,10 @@ final class APIClient: APIClientProtocol {
         switch httpResponse.statusCode {
         case 200..<300:
             return data
-        case 401:
+        case 401 where endpoint.requiresAuth:
+            // Only an authenticated call's 401 means "your token was rejected" —
+            // a 401 from an unauthenticated endpoint (e.g. wrong login password)
+            // is a normal server error, not a reason to wipe an unrelated session.
             keychain.clear()
             NotificationCenter.default.post(name: APIClient.unauthorizedNotification, object: nil)
             throw APIClientError.unauthorized

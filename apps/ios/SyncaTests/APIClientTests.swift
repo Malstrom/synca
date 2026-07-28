@@ -89,6 +89,33 @@ final class APIClientTests: XCTestCase {
         XCTAssertNil(keychain.loadSession())
     }
 
+    func test_request_on401FromUnauthenticatedEndpoint_doesNotClearKeychainOrNotify() async {
+        keychain.storedSession = StoredSession(accessToken: "unrelated-active-token", refreshToken: "r", accountType: .active)
+        MockURLProtocol.requestHandler = { _ in
+            let json = """
+            {"error":{"code":"invalid_credentials","message":"Invalid email or password"}}
+            """
+            return (HTTPURLResponse(url: URL(string: "https://test.synca.app")!, statusCode: 401, httpVersion: nil, headerFields: nil)!, Data(json.utf8))
+        }
+
+        do {
+            let _: MeResponse = try await sut.request(APIEndpoint(path: "auth/login", method: .post, requiresAuth: false))
+            XCTFail("Expected server error")
+        } catch let error as APIClientError {
+            guard case .server(let code, let message, _, let statusCode) = error else {
+                return XCTFail("Expected .server case, got \(error)")
+            }
+            XCTAssertEqual(code, "invalid_credentials")
+            XCTAssertEqual(message, "Invalid email or password")
+            XCTAssertEqual(statusCode, 401)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+
+        XCTAssertEqual(keychain.clearCallCount, 0)
+        XCTAssertNotNil(keychain.loadSession())
+    }
+
     func test_request_decodesServerErrorEnvelope() async {
         keychain.storedSession = StoredSession(accessToken: "token", refreshToken: nil, accountType: .guest)
         MockURLProtocol.requestHandler = { _ in
