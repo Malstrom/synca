@@ -2,10 +2,13 @@
 # Docs: https://kamal-deploy.org
 
 service: synca-api
-image: ghcr.io/malstrom/synca-api
+image: malstrom/synca-api
 
 ssh:
+  user: root
   port: 2222
+  keys:
+    - ~/.ssh/eu_exit
 
 servers:
   web:
@@ -18,7 +21,7 @@ proxy:
   healthcheck:
     path: /up
     interval: 10
-    threshold: 5
+    timeout: 5
 
 registry:
   server: ghcr.io
