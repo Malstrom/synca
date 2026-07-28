@@ -177,14 +177,86 @@ Workflow: [../../.github/workflows/rails-ci.yml](../../.github/workflows/rails-c
 
 ### Continuous Deployment
 
-Triggered automatically after CI passes on `main`.
+> ⚠️ **Not currently active.** The GitHub Actions deploy workflow was removed while the
+> production server wasn't ready yet. Deploys are manual for now — see
+> [Deploying to Production](#deploying-to-production-terminus) below.
 
 ```text
 CI passes → Build Docker image → Push ghcr.io → Kamal deploy → db:migrate
 ```
 
-Workflow: [../../.github/workflows/deploy.yml](../../.github/workflows/deploy.yml)
-Full guide: [../../docs/infra/deployment.md](../../docs/infra/deployment.md)
+Full guide: [../../docs/infra/deployment.md](../../docs/infra/deployment.md) (describes the
+intended future CI/CD setup — not what's actually running today).
+
+---
+
+## Deploying to Production (terminus)
+
+The API runs on a VPS nicknamed **terminus** (`ssh terminus`, IP `72.56.97.181`), managed with
+[Kamal](https://kamal-deploy.org). Plain HTTP for now (`http://72.56.97.181`) — no domain/TLS
+yet. Deploys are **manual** (no CI/CD automation — see note above).
+
+### One-time machine setup
+
+```bash
+gem install kamal   # standalone gem, not in Gemfile
+```
+
+You also need `backend/api/.env.kamal` (gitignored, never committed) with:
+
+```bash
+export KAMAL_SERVER_IP=72.56.97.181
+export KAMAL_REGISTRY_PASSWORD=<GitHub PAT with write:packages + read:packages, for ghcr.io>
+export SECRET_KEY_BASE=<bin/rails secret>
+export POSTGRES_PASSWORD=<openssl rand -hex 32>
+export DATABASE_URL="postgres://synca:${POSTGRES_PASSWORD}@synca-api-db:5432/synca_production"
+```
+
+Ask a teammate for the actual values, or regenerate fresh ones (`POSTGRES_PASSWORD` must match
+whatever the `db` accessory on terminus was created with — coordinate before rotating it).
+`RAILS_MASTER_KEY` doesn't need to be exported — `.kamal/secrets` reads it from
+`config/master.key` directly.
+
+### Every deploy
+
+```bash
+git add -A && git commit -m "..."
+git push origin main
+
+cd backend/api
+source .env.kamal
+kamal deploy
+```
+
+**Kamal builds from the last commit pushed to the remote, not your working directory or local
+commits** — always commit and push first, or the deploy will silently ship stale code.
+
+### Useful commands
+
+| Command | What it does |
+|---------|---------------|
+| `kamal app logs` | Tail live logs |
+| `kamal app details` | Container status |
+| `kamal app stop` / `kamal app start` | Stop/start the whole app (proxy stays up) |
+| `kamal accessory stop db` / `start db` | Stop/start Postgres (data volume persists) |
+| `kamal lock release` | Force-release a stuck deploy lock |
+
+### Troubleshooting
+
+- **`Deploy lock already in place!`** — usually left over from a deploy that got interrupted
+  mid-flight (e.g. your laptop went to sleep over the SSH connection). Run `kamal lock release`,
+  then retry `kamal deploy`. Consider `caffeinate -i kamal deploy` on macOS for long deploys.
+- **Non-ASCII / `Encoding::CompatibilityError`** — set `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`
+  before running Kamal if your shell locale is unset (`C`/`POSIX`), which breaks on non-ASCII
+  bytes in git history.
+
+### Current limitations (Phase 1)
+
+- Plain HTTP only, no TLS (`proxy.ssl: false` in `deploy.yml`) — no domain purchased yet.
+- GlitchTip accessory commented out in `deploy.yml` — terminus only has ~1GB RAM (+ 2GB swap),
+  not enough headroom yet to add it on top of app + Postgres.
+- terminus: Ubuntu 24.04, SSH on port 2222, ufw enabled (2222/tcp ssh, 80/tcp http,
+  51820/udp WireGuard — the box also runs a WireGuard VPN, unrelated to this app).
 
 ---
 
