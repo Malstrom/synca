@@ -134,15 +134,25 @@ struct ProfileView: View {
     }
 
     private var noSignalsPrompt: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Connect Apple Health to see your rhythm")
                 .font(.custom("Inter-Medium", size: 17))
                 .foregroundColor(.syncaText)
-            Text("Your health profile shows up here once you've connected Apple Health during a Spark.")
+            Text("Synca reads your sleep, activity, and rhythm from Apple Health. Raw data never leaves your phone.")
                 .font(.syncaSmall)
                 .foregroundColor(.syncaText.opacity(0.7))
+            if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .font(.syncaCaption)
+                    .foregroundColor(.syncaError)
+            }
+            SyncaButton(title: "Connect Apple Health", action: connectHealthTapped, isLoading: viewModel.isLoading)
         }
         .padding(.top, 40)
+    }
+
+    private func connectHealthTapped() {
+        Task { await viewModel.connectHealth() }
     }
 
     // MARK: - Peak energy bar chart
