@@ -286,11 +286,14 @@ paths:
       tags: [Auth]
       summary: Activate a guest account (implemented)
       description: >
-        Sets `display_name` (the only required field) and upgrades `account_type`
-        from `guest` to `active`, issuing a permanent access + refresh token pair.
-        Called from the in-session "Almost there" screen right after `claim_email`,
-        and — for the deferred case where the user closed the app first — from the
-        magic-link deep link described in docs/features/profile-v1.md.
+        Sets `display_name` and a password, and upgrades `account_type` from
+        `guest` to `active`, issuing a permanent access + refresh token pair.
+        The password is required here — it's the only point in the guest flow
+        where one is ever collected — so the account can later authenticate via
+        `POST /auth/login`. Called from the in-session "Almost there" screen
+        right after `claim_email`, and — for the deferred case where the user
+        closed the app first — from the magic-link deep link described in
+        docs/features/profile-v1.md.
         → Ref: docs/product/phases/phase-0.md#uf-04 · docs/features/profile-v1.md.
       requestBody:
         required: true
@@ -298,13 +301,19 @@ paths:
           application/json:
             schema:
               type: object
-              required: [profile]
+              required: [profile, auth]
               properties:
                 profile:
                   type: object
                   required: [display_name]
                   properties:
                     display_name:
+                      type: string
+                auth:
+                  type: object
+                  required: [password]
+                  properties:
+                    password:
                       type: string
                 activation_token:
                   type: string

@@ -21,12 +21,21 @@ struct ActivationView: View {
                 .frame(maxWidth: 280, alignment: .leading)
                 .padding(.bottom, 28)
 
-            SyncaTextField(
-                label: "Display name",
-                placeholder: "e.g. Alex",
-                text: $viewModel.displayName,
-                textContentType: .name
-            )
+            VStack(spacing: 12) {
+                SyncaTextField(
+                    label: "Display name",
+                    placeholder: "e.g. Alex",
+                    text: $viewModel.displayName,
+                    textContentType: .name
+                )
+                SyncaTextField(
+                    label: "Password",
+                    placeholder: "••••••••",
+                    text: $viewModel.password,
+                    textContentType: .newPassword,
+                    isSecure: true
+                )
+            }
 
             if let errorMessage = viewModel.errorMessage {
                 Text(errorMessage)
@@ -49,6 +58,18 @@ struct ActivationView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.syncaBackground)
         .navigationBarBackButtonHidden(true)
+        .alert(
+            "Activation failed",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            ),
+            presenting: viewModel.errorMessage
+        ) { _ in
+            Button("OK") { viewModel.errorMessage = nil }
+        } message: { message in
+            Text(message)
+        }
     }
 
     private func activateTapped() {

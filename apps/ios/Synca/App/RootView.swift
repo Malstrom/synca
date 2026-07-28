@@ -29,7 +29,20 @@ struct RootView: View {
         .tint(.syncaAccent)
         .task { determineRootScreen() }
         .onReceive(NotificationCenter.default.publisher(for: APIClient.unauthorizedNotification)) { _ in
+            router.sessionExpiredMessage = APIClientError.unauthorized.errorDescription
             router.resetToGuestFlow()
+        }
+        .alert(
+            "Session expired",
+            isPresented: Binding(
+                get: { router.sessionExpiredMessage != nil },
+                set: { if !$0 { router.sessionExpiredMessage = nil } }
+            ),
+            presenting: router.sessionExpiredMessage
+        ) { _ in
+            Button("OK") { router.sessionExpiredMessage = nil }
+        } message: { message in
+            Text(message)
         }
     }
 

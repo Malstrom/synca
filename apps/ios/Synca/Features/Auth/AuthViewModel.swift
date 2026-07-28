@@ -14,8 +14,11 @@ final class AuthViewModel {
 
     var email: String = ""
     var displayName: String = ""
+    var password: String = ""
     var isLoading = false
     var errorMessage: String?
+
+    private static let minPasswordLength = 8
 
     init(apiClient: APIClientProtocol = DemoMode.apiClient, keychain: KeychainServiceProtocol = KeychainService.shared) {
         self.apiClient = apiClient
@@ -43,13 +46,18 @@ final class AuthViewModel {
         }
     }
 
-    /// "Almost there" screen — `POST /auth/activate`. On success the guest
-    /// account is upgraded to `active` and a permanent token pair replaces the
-    /// short-lived guest one in the Keychain.
+    /// "Almost there" screen — `POST /auth/activate`. Sets the password this
+    /// account will use to log back in later (guest accounts otherwise never
+    /// have one). On success the guest account is upgraded to `active` and a
+    /// permanent token pair replaces the short-lived guest one in the Keychain.
     func activate() async -> Bool {
         let trimmedName = displayName.trimmingCharacters(in: .whitespaces)
         guard !trimmedName.isEmpty else {
             errorMessage = "Enter a display name to activate your account."
+            return false
+        }
+        guard password.count >= Self.minPasswordLength else {
+            errorMessage = "Password must be at least \(Self.minPasswordLength) characters."
             return false
         }
 
@@ -58,7 +66,7 @@ final class AuthViewModel {
         defer { isLoading = false }
 
         do {
-            let response = try await apiClient.activate(displayName: trimmedName)
+            let response = try await apiClient.activate(displayName: trimmedName, password: password)
             try keychain.save(StoredSession(
                 accessToken: response.accessToken,
                 refreshToken: response.refreshToken,

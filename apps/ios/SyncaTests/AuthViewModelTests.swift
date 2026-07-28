@@ -59,6 +59,17 @@ final class AuthViewModelTests: XCTestCase {
 
     func test_activate_withBlankDisplayName_failsWithoutCallingAPI() async {
         sut.displayName = ""
+        sut.password = "password123"
+
+        let succeeded = await sut.activate()
+
+        XCTAssertFalse(succeeded)
+        XCTAssertTrue(apiClient.requestedPaths.isEmpty)
+    }
+
+    func test_activate_withTooShortPassword_failsWithoutCallingAPI() async {
+        sut.displayName = "Alex"
+        sut.password = "short"
 
         let succeeded = await sut.activate()
 
@@ -68,6 +79,7 @@ final class AuthViewModelTests: XCTestCase {
 
     func test_activate_onSuccess_persistsActiveSessionToKeychain() async {
         sut.displayName = "Alex"
+        sut.password = "password123"
         apiClient.responses["auth/activate"] = .success(
             AuthResponse(accessToken: "permanent-access", refreshToken: "permanent-refresh", user: User(id: 1, email: "a@b.com", phone: nil, authProvider: "email"))
         )
@@ -82,6 +94,7 @@ final class AuthViewModelTests: XCTestCase {
 
     func test_activate_onFailure_doesNotTouchKeychain() async {
         sut.displayName = "Alex"
+        sut.password = "password123"
         apiClient.responses["auth/activate"] = .failure(APIClientError.unauthorized)
 
         let succeeded = await sut.activate()

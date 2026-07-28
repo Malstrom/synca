@@ -56,6 +56,18 @@ struct LoginView: View {
         .padding(.bottom, 32)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.syncaBackground)
+        .alert(
+            "Sign in failed",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            ),
+            presenting: viewModel.errorMessage
+        ) { _ in
+            Button("OK") { viewModel.errorMessage = nil }
+        } message: { message in
+            Text(message)
+        }
     }
 
     private func signInTapped() {

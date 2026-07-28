@@ -31,6 +31,10 @@ final class AppRouter {
 
     var path = NavigationPath()
     var rootScreen: RootScreen = .loading
+    /// Set right before `resetToGuestFlow()` runs because of a 401 from any
+    /// authenticated call, so `RootView` can tell the user why they landed
+    /// back at Connect Apple Health instead of silently resetting.
+    var sessionExpiredMessage: String?
 
     func navigate(to destination: AppDestination) {
         path.append(destination)

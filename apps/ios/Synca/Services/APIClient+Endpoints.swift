@@ -14,7 +14,8 @@ private struct ClaimEmailAuthPayload: Encodable { let email: String }
 private struct ClaimEmailRequestBody: Encodable { let auth: ClaimEmailAuthPayload }
 
 private struct ActivateProfilePayload: Encodable { let displayName: String }
-private struct ActivateRequestBody: Encodable { let profile: ActivateProfilePayload }
+private struct ActivateAuthPayload: Encodable { let password: String }
+private struct ActivateRequestBody: Encodable { let profile: ActivateProfilePayload; let auth: ActivateAuthPayload }
 
 private struct LoginAuthPayload: Encodable { let email: String; let password: String }
 private struct LoginRequestBody: Encodable { let auth: LoginAuthPayload }
@@ -63,11 +64,14 @@ extension APIClientProtocol {
     }
 
     /// `POST /auth/activate` — "Almost there" screen.
-    func activate(displayName: String) async throws -> AuthResponse {
+    func activate(displayName: String, password: String) async throws -> AuthResponse {
         let endpoint = APIEndpoint(
             path: "auth/activate",
             method: .post,
-            body: ActivateRequestBody(profile: ActivateProfilePayload(displayName: displayName))
+            body: ActivateRequestBody(
+                profile: ActivateProfilePayload(displayName: displayName),
+                auth: ActivateAuthPayload(password: password)
+            )
         )
         return try await request(endpoint)
     }

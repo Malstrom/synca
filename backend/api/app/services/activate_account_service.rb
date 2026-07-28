@@ -24,7 +24,7 @@ class ActivateAccountService
 
     profile = @user.profile || @user.build_profile
     profile.update!(display_name: result[:profile][:display_name])
-    @user.update!(account_type: :active)
+    @user.update!(account_type: :active, password: result[:auth][:password])
 
     Success(@user)
   end
