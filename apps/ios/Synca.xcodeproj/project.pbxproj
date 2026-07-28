@@ -78,6 +78,10 @@
 		000000000000000000200098 /* SparkViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200097 /* SparkViewModelTests.swift */; };
 		00000000000000000020009A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200099 /* Assets.xcassets */; };
 		0000000000000000002000B5 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000B4 /* APIConfig.swift */; };
+		0000000000000000002000B8 /* EntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000B7 /* EntryView.swift */; };
+		0000000000000000002000BA /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000B9 /* RegisterView.swift */; };
+		0000000000000000002000BC /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000BB /* RegisterViewModel.swift */; };
+		0000000000000000002000BE /* RegisterViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000BD /* RegisterViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -166,6 +170,10 @@
 		00000000000000000020009D /* Synca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Synca.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		00000000000000000020009E /* SyncaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SyncaTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0000000000000000002000B4 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIConfig.swift"; sourceTree = "<group>"; };
+		0000000000000000002000B7 /* EntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EntryView.swift"; sourceTree = "<group>"; };
+		0000000000000000002000B9 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RegisterView.swift"; sourceTree = "<group>"; };
+		0000000000000000002000BB /* RegisterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RegisterViewModel.swift"; sourceTree = "<group>"; };
+		0000000000000000002000BD /* RegisterViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "RegisterViewModelTests.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -211,8 +219,11 @@
 			children = (
 				00000000000000000020000A /* ActivationView.swift */,
 				00000000000000000020000E /* AuthViewModel.swift */,
+				0000000000000000002000B7 /* EntryView.swift */,
 				000000000000000000200010 /* LoginView.swift */,
 				000000000000000000200012 /* LoginViewModel.swift */,
+				0000000000000000002000B9 /* RegisterView.swift */,
+				0000000000000000002000BB /* RegisterViewModel.swift */,
 				000000000000000000200014 /* SaveResultsView.swift */,
 			);
 			path = "Auth";
@@ -378,6 +389,7 @@
 				000000000000000000200084 /* AuthViewModelTests.swift */,
 				000000000000000000200086 /* KeychainServiceTests.swift */,
 				000000000000000000200088 /* LoginViewModelTests.swift */,
+				0000000000000000002000BD /* RegisterViewModelTests.swift */,
 				000000000000000000200093 /* SignalAggregatorServiceTests.swift */,
 				000000000000000000200095 /* SparkProximityServiceTests.swift */,
 				000000000000000000200097 /* SparkViewModelTests.swift */,
@@ -561,6 +573,9 @@
 				00000000000000000020007F /* JSONCoding.swift in Sources */,
 				000000000000000000200081 /* KeychainService.swift in Sources */,
 				0000000000000000002000B5 /* APIConfig.swift in Sources */,
+				0000000000000000002000B8 /* EntryView.swift in Sources */,
+				0000000000000000002000BA /* RegisterView.swift in Sources */,
+				0000000000000000002000BC /* RegisterViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -572,6 +587,7 @@
 				000000000000000000200085 /* AuthViewModelTests.swift in Sources */,
 				000000000000000000200087 /* KeychainServiceTests.swift in Sources */,
 				000000000000000000200089 /* LoginViewModelTests.swift in Sources */,
+				0000000000000000002000BE /* RegisterViewModelTests.swift in Sources */,
 				00000000000000000020008C /* MockAPIClient.swift in Sources */,
 				00000000000000000020008E /* MockHealthKitStore.swift in Sources */,
 				000000000000000000200090 /* MockKeychainService.swift in Sources */,

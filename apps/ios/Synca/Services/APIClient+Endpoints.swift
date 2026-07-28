@@ -20,6 +20,9 @@ private struct ActivateRequestBody: Encodable { let profile: ActivateProfilePayl
 private struct LoginAuthPayload: Encodable { let email: String; let password: String }
 private struct LoginRequestBody: Encodable { let auth: LoginAuthPayload }
 
+private struct RegisterAuthPayload: Encodable { let email: String; let password: String; let authProvider: String }
+private struct RegisterRequestBody: Encodable { let auth: RegisterAuthPayload }
+
 /// Typed calls for every endpoint the app needs, on top of the generic
 /// `APIClient.request(_:)`. Keeps path strings and request/response envelopes out of
 /// ViewModels. Mirrors docs/api/openapi.yaml. Some endpoints listed there as
@@ -47,6 +50,18 @@ extension APIClientProtocol {
             path: "auth/guest/claim_email",
             method: .post,
             body: ClaimEmailRequestBody(auth: ClaimEmailAuthPayload(email: email))
+        )
+        return try await request(endpoint)
+    }
+
+    /// `POST /auth/register` — "Create account" on the entry screen, for a
+    /// brand-new user who isn't going through a Spark session first.
+    func register(email: String, password: String) async throws -> AuthResponse {
+        let endpoint = APIEndpoint(
+            path: "auth/register",
+            method: .post,
+            body: RegisterRequestBody(auth: RegisterAuthPayload(email: email, password: password, authProvider: "email")),
+            requiresAuth: false
         )
         return try await request(endpoint)
     }

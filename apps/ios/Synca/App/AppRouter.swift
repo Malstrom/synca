@@ -19,21 +19,26 @@ enum AppDestination: Hashable {
     /// "Go to my profile instead" shortcut on the Scan QR screen, for a
     /// returning user with a full account — see `LoginView`.
     case login
+    /// "Create account" on `EntryView`, for a brand-new user not going
+    /// through a Spark session first — see `RegisterView`.
+    case register
 }
 
 @Observable
 final class AppRouter {
     enum RootScreen {
         case loading
+        /// The choice screen (scan / create account / sign in) — see `EntryView`.
+        case entry
         case guestSparkFlow
         case dashboard
     }
 
     var path = NavigationPath()
     var rootScreen: RootScreen = .loading
-    /// Set right before `resetToGuestFlow()` runs because of a 401 from any
+    /// Set right before `resetToEntry()` runs because of a 401 from any
     /// authenticated call, so `RootView` can tell the user why they landed
-    /// back at Connect Apple Health instead of silently resetting.
+    /// back at the entry screen instead of silently resetting.
     var sessionExpiredMessage: String?
 
     func navigate(to destination: AppDestination) {
@@ -44,12 +49,12 @@ final class AppRouter {
         path.removeLast(path.count)
     }
 
-    /// Sends the user back to the guest entry point (Connect Apple Health) — used
-    /// on launch when there's no active session, and on a 401 from any authenticated
-    /// call (see `APIClient.unauthorizedNotification`).
-    func resetToGuestFlow() {
+    /// Sends the user back to the entry choice screen — used on launch when
+    /// there's no active session, and on a 401 from any authenticated call
+    /// (see `APIClient.unauthorizedNotification`).
+    func resetToEntry() {
         popToRoot()
-        rootScreen = .guestSparkFlow
+        rootScreen = .entry
     }
 
     /// Used after activation succeeds, and on launch when a valid active-account
