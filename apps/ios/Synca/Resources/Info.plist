@@ -40,5 +40,18 @@
 	<string>Synca reads your sleep and activity data on-device to estimate lifestyle compatibility. Nothing leaves your phone without your consent.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Synca uses your camera to scan a Spark QR code so you can see your compatibility with someone in person.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>72.56.97.181</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<false/>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>

@@ -37,7 +37,11 @@ final class APIClient: APIClientProtocol {
 
     static var defaultBaseURL: URL {
         #if DEBUG
-        return URL(string: "http://localhost:3000/api/v1")!
+        // terminus VPS, plain HTTP over its static IP — no domain/TLS yet
+        // (see Info.plist's NSAppTransportSecurity exception scoped to this
+        // IP). Switch back to a domain once one's bought and Kamal handles
+        // TLS.
+        return URL(string: "http://72.56.97.181/api/v1")!
         #else
         return URL(string: "https://api.synca.app/api/v1")!
         #endif
