@@ -10,7 +10,7 @@ final class DashboardViewModel {
     var isLoading = false
     private(set) var sparks: [SparkHistoryEntry] = []
 
-    init(apiClient: APIClientProtocol = APIClient.shared) {
+    init(apiClient: APIClientProtocol = DemoMode.apiClient) {
         self.apiClient = apiClient
     }
 

@@ -18,7 +18,7 @@ final class MatchDetailViewModel {
     private(set) var match: Match?
     private(set) var dimensions: [(label: String, value: Double)] = []
 
-    init(apiClient: APIClientProtocol = APIClient.shared) {
+    init(apiClient: APIClientProtocol = DemoMode.apiClient) {
         self.apiClient = apiClient
     }
 

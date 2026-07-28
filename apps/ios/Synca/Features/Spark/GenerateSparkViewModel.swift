@@ -18,7 +18,7 @@ final class GenerateSparkViewModel {
     var remainingSeconds: Int
 
     init(
-        apiClient: APIClientProtocol = APIClient.shared,
+        apiClient: APIClientProtocol = DemoMode.apiClient,
         proximityService: SparkProximityService = SparkProximityService(),
         sessionDurationSeconds: Int = 10 * 60
     ) {

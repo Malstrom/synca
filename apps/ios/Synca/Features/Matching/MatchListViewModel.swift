@@ -14,7 +14,7 @@ final class MatchListViewModel {
     var errorMessage: String?
     private(set) var matches: [Match] = []
 
-    init(apiClient: APIClientProtocol = APIClient.shared) {
+    init(apiClient: APIClientProtocol = DemoMode.apiClient) {
         self.apiClient = apiClient
     }
 

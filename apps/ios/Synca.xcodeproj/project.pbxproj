@@ -62,26 +62,27 @@
 		000000000000000000200076 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200075 /* User.swift */; };
 		000000000000000000200079 /* APIClient+Endpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200077 /* APIClient+Endpoints.swift */; };
 		00000000000000000020007B /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020007A /* APIClient.swift */; };
-		00000000000000000020007D /* JSONCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020007C /* JSONCoding.swift */; };
-		00000000000000000020007F /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020007E /* KeychainService.swift */; };
-		000000000000000000200081 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200080 /* APIClientTests.swift */; };
-		000000000000000000200083 /* AuthViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200082 /* AuthViewModelTests.swift */; };
-		000000000000000000200085 /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200084 /* KeychainServiceTests.swift */; };
-		000000000000000000200087 /* LoginViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200086 /* LoginViewModelTests.swift */; };
-		00000000000000000020008A /* MockAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200088 /* MockAPIClient.swift */; };
-		00000000000000000020008C /* MockHealthKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020008B /* MockHealthKitStore.swift */; };
-		00000000000000000020008E /* MockKeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020008D /* MockKeychainService.swift */; };
-		000000000000000000200090 /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020008F /* MockURLProtocol.swift */; };
-		000000000000000000200092 /* SignalAggregatorServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200091 /* SignalAggregatorServiceTests.swift */; };
-		000000000000000000200094 /* SparkProximityServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200093 /* SparkProximityServiceTests.swift */; };
-		000000000000000000200096 /* SparkViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200095 /* SparkViewModelTests.swift */; };
-		000000000000000000200098 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200097 /* Assets.xcassets */; };
+		00000000000000000020007D /* DemoAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020007C /* DemoAPIClient.swift */; };
+		00000000000000000020007F /* JSONCoding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020007E /* JSONCoding.swift */; };
+		000000000000000000200081 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200080 /* KeychainService.swift */; };
+		000000000000000000200083 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200082 /* APIClientTests.swift */; };
+		000000000000000000200085 /* AuthViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200084 /* AuthViewModelTests.swift */; };
+		000000000000000000200087 /* KeychainServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200086 /* KeychainServiceTests.swift */; };
+		000000000000000000200089 /* LoginViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200088 /* LoginViewModelTests.swift */; };
+		00000000000000000020008C /* MockAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020008A /* MockAPIClient.swift */; };
+		00000000000000000020008E /* MockHealthKitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020008D /* MockHealthKitStore.swift */; };
+		000000000000000000200090 /* MockKeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000020008F /* MockKeychainService.swift */; };
+		000000000000000000200092 /* MockURLProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200091 /* MockURLProtocol.swift */; };
+		000000000000000000200094 /* SignalAggregatorServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200093 /* SignalAggregatorServiceTests.swift */; };
+		000000000000000000200096 /* SparkProximityServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200095 /* SparkProximityServiceTests.swift */; };
+		000000000000000000200098 /* SparkViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200097 /* SparkViewModelTests.swift */; };
+		00000000000000000020009A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000200099 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		0000000000000000002000B0 /* PBXContainerItemProxy */ = {
+		0000000000000000002000B2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 00000000000000000020009D /* Project object */;
+			containerPortal = 00000000000000000020009F /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 00000000000000000010009B;
 			remoteInfo = Synca;
@@ -144,35 +145,36 @@
 		000000000000000000200075 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User.swift"; sourceTree = "<group>"; };
 		000000000000000000200077 /* APIClient+Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIClient+Endpoints.swift"; sourceTree = "<group>"; };
 		00000000000000000020007A /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIClient.swift"; sourceTree = "<group>"; };
-		00000000000000000020007C /* JSONCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "JSONCoding.swift"; sourceTree = "<group>"; };
-		00000000000000000020007E /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeychainService.swift"; sourceTree = "<group>"; };
-		000000000000000000200080 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIClientTests.swift"; sourceTree = "<group>"; };
-		000000000000000000200082 /* AuthViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AuthViewModelTests.swift"; sourceTree = "<group>"; };
-		000000000000000000200084 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeychainServiceTests.swift"; sourceTree = "<group>"; };
-		000000000000000000200086 /* LoginViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoginViewModelTests.swift"; sourceTree = "<group>"; };
-		000000000000000000200088 /* MockAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockAPIClient.swift"; sourceTree = "<group>"; };
-		00000000000000000020008B /* MockHealthKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockHealthKitStore.swift"; sourceTree = "<group>"; };
-		00000000000000000020008D /* MockKeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockKeychainService.swift"; sourceTree = "<group>"; };
-		00000000000000000020008F /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockURLProtocol.swift"; sourceTree = "<group>"; };
-		000000000000000000200091 /* SignalAggregatorServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SignalAggregatorServiceTests.swift"; sourceTree = "<group>"; };
-		000000000000000000200093 /* SparkProximityServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkProximityServiceTests.swift"; sourceTree = "<group>"; };
-		000000000000000000200095 /* SparkViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkViewModelTests.swift"; sourceTree = "<group>"; };
-		000000000000000000200097 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets.xcassets"; sourceTree = "<group>"; };
-		000000000000000000200099 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info.plist"; sourceTree = "<group>"; };
-		00000000000000000020009A /* Synca.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Synca.entitlements"; sourceTree = "<group>"; };
-		00000000000000000020009B /* Synca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Synca.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		00000000000000000020009C /* SyncaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SyncaTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		00000000000000000020007C /* DemoAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DemoAPIClient.swift"; sourceTree = "<group>"; };
+		00000000000000000020007E /* JSONCoding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "JSONCoding.swift"; sourceTree = "<group>"; };
+		000000000000000000200080 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeychainService.swift"; sourceTree = "<group>"; };
+		000000000000000000200082 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIClientTests.swift"; sourceTree = "<group>"; };
+		000000000000000000200084 /* AuthViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AuthViewModelTests.swift"; sourceTree = "<group>"; };
+		000000000000000000200086 /* KeychainServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeychainServiceTests.swift"; sourceTree = "<group>"; };
+		000000000000000000200088 /* LoginViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoginViewModelTests.swift"; sourceTree = "<group>"; };
+		00000000000000000020008A /* MockAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockAPIClient.swift"; sourceTree = "<group>"; };
+		00000000000000000020008D /* MockHealthKitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockHealthKitStore.swift"; sourceTree = "<group>"; };
+		00000000000000000020008F /* MockKeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockKeychainService.swift"; sourceTree = "<group>"; };
+		000000000000000000200091 /* MockURLProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MockURLProtocol.swift"; sourceTree = "<group>"; };
+		000000000000000000200093 /* SignalAggregatorServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SignalAggregatorServiceTests.swift"; sourceTree = "<group>"; };
+		000000000000000000200095 /* SparkProximityServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkProximityServiceTests.swift"; sourceTree = "<group>"; };
+		000000000000000000200097 /* SparkViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SparkViewModelTests.swift"; sourceTree = "<group>"; };
+		000000000000000000200099 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets.xcassets"; sourceTree = "<group>"; };
+		00000000000000000020009B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info.plist"; sourceTree = "<group>"; };
+		00000000000000000020009C /* Synca.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Synca.entitlements"; sourceTree = "<group>"; };
+		00000000000000000020009D /* Synca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Synca.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		00000000000000000020009E /* SyncaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SyncaTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		0000000000000000002000AC /* Frameworks */ = {
+		0000000000000000002000AE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0000000000000000002000AF /* Frameworks */ = {
+		0000000000000000002000B1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -182,12 +184,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0000000000000000002000A0 /* Resources */ = {
+		0000000000000000002000A2 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000200097 /* Assets.xcassets */,
-				000000000000000000200099 /* Info.plist */,
-				00000000000000000020009A /* Synca.entitlements */,
+				000000000000000000200099 /* Assets.xcassets */,
+				00000000000000000020009B /* Info.plist */,
+				00000000000000000020009C /* Synca.entitlements */,
 			);
 			path = "Resources";
 			sourceTree = "<group>";
@@ -327,8 +329,9 @@
 			children = (
 				000000000000000000200077 /* APIClient+Endpoints.swift */,
 				00000000000000000020007A /* APIClient.swift */,
-				00000000000000000020007C /* JSONCoding.swift */,
-				00000000000000000020007E /* KeychainService.swift */,
+				00000000000000000020007C /* DemoAPIClient.swift */,
+				00000000000000000020007E /* JSONCoding.swift */,
+				000000000000000000200080 /* KeychainService.swift */,
 			);
 			path = "Services";
 			sourceTree = "<group>";
@@ -340,18 +343,18 @@
 				00000000000000000020000B /* Features */,
 				000000000000000000200063 /* Models */,
 				000000000000000000200078 /* Services */,
-				0000000000000000002000A0 /* Resources */,
+				0000000000000000002000A2 /* Resources */,
 			);
 			path = "Synca";
 			sourceTree = "<group>";
 		};
-		000000000000000000200089 /* Mocks */ = {
+		00000000000000000020008B /* Mocks */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000200088 /* MockAPIClient.swift */,
-				00000000000000000020008B /* MockHealthKitStore.swift */,
-				00000000000000000020008D /* MockKeychainService.swift */,
-				00000000000000000020008F /* MockURLProtocol.swift */,
+				00000000000000000020008A /* MockAPIClient.swift */,
+				00000000000000000020008D /* MockHealthKitStore.swift */,
+				00000000000000000020008F /* MockKeychainService.swift */,
+				000000000000000000200091 /* MockURLProtocol.swift */,
 			);
 			path = "Mocks";
 			sourceTree = "<group>";
@@ -359,33 +362,33 @@
 		000000000000000000200002 /* SyncaTests */ = {
 			isa = PBXGroup;
 			children = (
-				000000000000000000200089 /* Mocks */,
-				000000000000000000200080 /* APIClientTests.swift */,
-				000000000000000000200082 /* AuthViewModelTests.swift */,
-				000000000000000000200084 /* KeychainServiceTests.swift */,
-				000000000000000000200086 /* LoginViewModelTests.swift */,
-				000000000000000000200091 /* SignalAggregatorServiceTests.swift */,
-				000000000000000000200093 /* SparkProximityServiceTests.swift */,
-				000000000000000000200095 /* SparkViewModelTests.swift */,
+				00000000000000000020008B /* Mocks */,
+				000000000000000000200082 /* APIClientTests.swift */,
+				000000000000000000200084 /* AuthViewModelTests.swift */,
+				000000000000000000200086 /* KeychainServiceTests.swift */,
+				000000000000000000200088 /* LoginViewModelTests.swift */,
+				000000000000000000200093 /* SignalAggregatorServiceTests.swift */,
+				000000000000000000200095 /* SparkProximityServiceTests.swift */,
+				000000000000000000200097 /* SparkViewModelTests.swift */,
 			);
 			path = "SyncaTests";
 			sourceTree = "<group>";
 		};
-		00000000000000000020009F /* Products */ = {
+		0000000000000000002000A1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				00000000000000000020009B /* Synca.app */,
-				00000000000000000020009C /* SyncaTests.xctest */,
+				00000000000000000020009D /* Synca.app */,
+				00000000000000000020009E /* SyncaTests.xctest */,
 			);
 			name = "Products";
 			sourceTree = "<group>";
 		};
-		00000000000000000020009E = {
+		0000000000000000002000A0 = {
 			isa = PBXGroup;
 			children = (
 				000000000000000000200001 /* Synca */,
 				000000000000000000200002 /* SyncaTests */,
-				00000000000000000020009F /* Products */,
+				0000000000000000002000A1 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -394,11 +397,11 @@
 /* Begin PBXNativeTarget section */
 		00000000000000000010009B /* Synca */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0000000000000000002000A1 /* Build configuration list for PBXNativeTarget "Synca" */;
+			buildConfigurationList = 0000000000000000002000A3 /* Build configuration list for PBXNativeTarget "Synca" */;
 			buildPhases = (
-				0000000000000000002000AA /* Sources */,
-				0000000000000000002000AC /* Frameworks */,
-				0000000000000000002000AB /* Resources */,
+				0000000000000000002000AC /* Sources */,
+				0000000000000000002000AE /* Frameworks */,
+				0000000000000000002000AD /* Resources */,
 			);
 			buildRules = (
 			);
@@ -406,31 +409,31 @@
 			);
 			name = "Synca";
 			productName = "Synca";
-			productReference = 00000000000000000020009B /* Synca.app */;
+			productReference = 00000000000000000020009D /* Synca.app */;
 			productType = "com.apple.product-type.application";
 		};
 		00000000000000000010009C /* SyncaTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0000000000000000002000A2 /* Build configuration list for PBXNativeTarget "SyncaTests" */;
+			buildConfigurationList = 0000000000000000002000A4 /* Build configuration list for PBXNativeTarget "SyncaTests" */;
 			buildPhases = (
-				0000000000000000002000AD /* Sources */,
-				0000000000000000002000AF /* Frameworks */,
-				0000000000000000002000AE /* Resources */,
+				0000000000000000002000AF /* Sources */,
+				0000000000000000002000B1 /* Frameworks */,
+				0000000000000000002000B0 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				0000000000000000002000B1 /* PBXTargetDependency */,
+				0000000000000000002000B3 /* PBXTargetDependency */,
 			);
 			name = "SyncaTests";
 			productName = "SyncaTests";
-			productReference = 00000000000000000020009C /* SyncaTests.xctest */;
+			productReference = 00000000000000000020009E /* SyncaTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		00000000000000000020009D /* Project object */ = {
+		00000000000000000020009F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
@@ -446,7 +449,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 0000000000000000002000A3 /* Build configuration list for PBXProject "Synca" */;
+			buildConfigurationList = 0000000000000000002000A5 /* Build configuration list for PBXProject "Synca" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -454,8 +457,8 @@
 				en,
 				Base,
 			);
-			mainGroup = 00000000000000000020009E;
-			productRefGroup = 00000000000000000020009F /* Products */;
+			mainGroup = 0000000000000000002000A0;
+			productRefGroup = 0000000000000000002000A1 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -466,15 +469,15 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		0000000000000000002000AB /* Resources */ = {
+		0000000000000000002000AD /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				000000000000000000200098 /* Assets.xcassets in Resources */,
+				00000000000000000020009A /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0000000000000000002000AE /* Resources */ = {
+		0000000000000000002000B0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -484,7 +487,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		0000000000000000002000AA /* Sources */ = {
+		0000000000000000002000AC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -543,41 +546,42 @@
 				000000000000000000200076 /* User.swift in Sources */,
 				000000000000000000200079 /* APIClient+Endpoints.swift in Sources */,
 				00000000000000000020007B /* APIClient.swift in Sources */,
-				00000000000000000020007D /* JSONCoding.swift in Sources */,
-				00000000000000000020007F /* KeychainService.swift in Sources */,
+				00000000000000000020007D /* DemoAPIClient.swift in Sources */,
+				00000000000000000020007F /* JSONCoding.swift in Sources */,
+				000000000000000000200081 /* KeychainService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0000000000000000002000AD /* Sources */ = {
+		0000000000000000002000AF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				000000000000000000200081 /* APIClientTests.swift in Sources */,
-				000000000000000000200083 /* AuthViewModelTests.swift in Sources */,
-				000000000000000000200085 /* KeychainServiceTests.swift in Sources */,
-				000000000000000000200087 /* LoginViewModelTests.swift in Sources */,
-				00000000000000000020008A /* MockAPIClient.swift in Sources */,
-				00000000000000000020008C /* MockHealthKitStore.swift in Sources */,
-				00000000000000000020008E /* MockKeychainService.swift in Sources */,
-				000000000000000000200090 /* MockURLProtocol.swift in Sources */,
-				000000000000000000200092 /* SignalAggregatorServiceTests.swift in Sources */,
-				000000000000000000200094 /* SparkProximityServiceTests.swift in Sources */,
-				000000000000000000200096 /* SparkViewModelTests.swift in Sources */,
+				000000000000000000200083 /* APIClientTests.swift in Sources */,
+				000000000000000000200085 /* AuthViewModelTests.swift in Sources */,
+				000000000000000000200087 /* KeychainServiceTests.swift in Sources */,
+				000000000000000000200089 /* LoginViewModelTests.swift in Sources */,
+				00000000000000000020008C /* MockAPIClient.swift in Sources */,
+				00000000000000000020008E /* MockHealthKitStore.swift in Sources */,
+				000000000000000000200090 /* MockKeychainService.swift in Sources */,
+				000000000000000000200092 /* MockURLProtocol.swift in Sources */,
+				000000000000000000200094 /* SignalAggregatorServiceTests.swift in Sources */,
+				000000000000000000200096 /* SparkProximityServiceTests.swift in Sources */,
+				000000000000000000200098 /* SparkViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		0000000000000000002000B1 /* PBXTargetDependency */ = {
+		0000000000000000002000B3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 00000000000000000010009B /* Synca */;
-			targetProxy = 0000000000000000002000B0 /* PBXContainerItemProxy */;
+			targetProxy = 0000000000000000002000B2 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		0000000000000000002000A8 /* Debug */ = {
+		0000000000000000002000AA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = dwarf;
@@ -641,7 +645,7 @@
 			};
 			name = Debug;
 		};
-		0000000000000000002000A9 /* Release */ = {
+		0000000000000000002000AB /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -698,7 +702,7 @@
 			};
 			name = Release;
 		};
-		0000000000000000002000A4 /* Debug */ = {
+		0000000000000000002000A6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -721,7 +725,7 @@
 			};
 			name = Debug;
 		};
-		0000000000000000002000A5 /* Release */ = {
+		0000000000000000002000A7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -744,7 +748,7 @@
 			};
 			name = Release;
 		};
-		0000000000000000002000A6 /* Debug */ = {
+		0000000000000000002000A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -760,7 +764,7 @@
 			};
 			name = Debug;
 		};
-		0000000000000000002000A7 /* Release */ = {
+		0000000000000000002000A9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -779,25 +783,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0000000000000000002000A3 /* Build configuration list for PBXProject "Synca" */ = {
+		0000000000000000002000A5 /* Build configuration list for PBXProject "Synca" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0000000000000000002000A8 /* Debug */,
-				0000000000000000002000A9 /* Release */,
+				0000000000000000002000AA /* Debug */,
+				0000000000000000002000AB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0000000000000000002000A1 /* Build configuration list for PBXNativeTarget "Synca" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0000000000000000002000A4 /* Debug */,
-				0000000000000000002000A5 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		0000000000000000002000A2 /* Build configuration list for PBXNativeTarget "SyncaTests" */ = {
+		0000000000000000002000A3 /* Build configuration list for PBXNativeTarget "Synca" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				0000000000000000002000A6 /* Debug */,
@@ -806,8 +801,17 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		0000000000000000002000A4 /* Build configuration list for PBXNativeTarget "SyncaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0000000000000000002000A8 /* Debug */,
+				0000000000000000002000A9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 	};
-	rootObject = 00000000000000000020009D /* Project object */;
+	rootObject = 00000000000000000020009F /* Project object */;
 }

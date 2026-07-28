@@ -17,7 +17,7 @@ final class AuthViewModel {
     var isLoading = false
     var errorMessage: String?
 
-    init(apiClient: APIClientProtocol = APIClient.shared, keychain: KeychainServiceProtocol = KeychainService.shared) {
+    init(apiClient: APIClientProtocol = DemoMode.apiClient, keychain: KeychainServiceProtocol = KeychainService.shared) {
         self.apiClient = apiClient
         self.keychain = keychain
     }

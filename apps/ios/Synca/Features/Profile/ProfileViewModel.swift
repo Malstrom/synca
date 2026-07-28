@@ -13,7 +13,7 @@ final class ProfileViewModel {
     private(set) var profile: Profile?
     private(set) var signalsSummary: SignalsSummary?
 
-    init(apiClient: APIClientProtocol = APIClient.shared) {
+    init(apiClient: APIClientProtocol = DemoMode.apiClient) {
         self.apiClient = apiClient
     }
 

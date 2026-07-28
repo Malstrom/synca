@@ -39,7 +39,7 @@ final class SparkViewModel {
 
     init(
         pendingHealthSummary: HealthSummary,
-        apiClient: APIClientProtocol = APIClient.shared,
+        apiClient: APIClientProtocol = DemoMode.apiClient,
         keychain: KeychainServiceProtocol = KeychainService.shared,
         proximityService: SparkProximityService = SparkProximityService(),
         pollInterval: UInt64 = 2_000_000_000,
