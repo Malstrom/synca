@@ -17,19 +17,24 @@ production:
     url: <%= ENV["DATABASE_URL"] %>
 
   # Solid Cache — dedicated DB for Rails.cache
+  #
+  # NOTE: `url:` always wins over a sibling `database:` key (Rails merges the
+  # URL-derived hash on top), so a shared DATABASE_URL can't be combined with
+  # a `database:` override here — every secondary db would silently collapse
+  # onto the primary's database. Derive a distinct URL per db instead.
   cache:
     <<: *primary_production
-    database: synca_production_cache
+    url: <%= URI(ENV["DATABASE_URL"]).tap { |u| u.path = "/synca_production_cache" }.to_s %>
     migrations_paths: db/cache_migrate
 
   # Solid Queue — dedicated DB for background jobs
   queue:
     <<: *primary_production
-    database: synca_production_queue
+    url: <%= URI(ENV["DATABASE_URL"]).tap { |u| u.path = "/synca_production_queue" }.to_s %>
     migrations_paths: db/queue_migrate
 
   # Solid Cable — dedicated DB for Action Cable
   cable:
     <<: *primary_production
-    database: synca_production_cable
+    url: <%= URI(ENV["DATABASE_URL"]).tap { |u| u.path = "/synca_production_cable" }.to_s %>
     migrations_paths: db/cable_migrate
