@@ -91,7 +91,15 @@ directly into the relevant feature doc text.
   owner: product
   source: docs/features/profile-v1.md — Open Questions
   question: Is email verification mandatory before accessing the app, or optional in MVP?
-  decision: Email is not required at first Spark (guest mode). After the first completed Spark session, email registration with magic link verification is mandatory before further app use.
+  decision: >
+    Email is not required at first Spark (guest mode). Superseded in
+    implementation: rather than magic-link email verification, `POST
+    /auth/activate` (`ActivationContract`/`ActivateAccountService`) requires
+    a password at activation instead — the account becomes usable via
+    `POST /auth/login` immediately, with no email round-trip. See
+    `profile-guest-magic-link-timing` below and GitHub issue #102, which
+    still describes the original magic-link design and is not yet reconciled
+    with this pivot.
 
 - id: profile-completeness-storage
   status: decided
@@ -101,11 +109,20 @@ directly into the relevant feature doc text.
   decision: completeness_score is persisted on profiles and updated explicitly via Profile::CompletenessCalculator after each profile change. A nightly reconciliation job ensures consistency. Health signals data is synced separately and does not affect completeness_score directly.
 
 - id: profile-guest-magic-link-timing
-  status: open
+  status: superseded
   owner: product
   source: docs/features/profile-v1.md — Open Questions
   question: Should the magic link be sent immediately after guest account creation, or only after the first Spark session completes?
-  decision:
+  decision: >
+    Moot for the in-session case: activation (`POST /auth/activate`) now
+    happens synchronously, right after `claim_email`, with a password set
+    in the same request — no email/magic-link round-trip, so no timing
+    question. `docs/api/openapi.yaml` § `/auth/activate` still documents an
+    optional `activation_token` for a deferred, out-of-session case (user
+    closed the app before activating) — that path is unimplemented on both
+    iOS and backend (no mailer, no token column, no resend endpoint; see
+    GitHub issue #102). If that deferred case is still wanted, it needs its
+    own timing decision then.
 
 ---
 
@@ -138,7 +155,7 @@ directly into the relevant feature doc text.
   decision:
 
 - id: spark-guest-anonymous-identity
-  status: open
+  status: decided
   owner: tech
   source: docs/features/spark-v1.md · apps/ios/Synca (design review, Igor, 2026-07)
   question: >
@@ -156,7 +173,14 @@ directly into the relevant feature doc text.
     (e.g. `identifierForVendor`) sent as a pseudo-phone? If anonymous,
     what happens to an anonymous guest who never returns to claim an email —
     same 30-day guest purge as `profile-guest-magic-link-timing`, or shorter?
-  decision:
+  decision: >
+    Fully anonymous guest, not a device-bound pseudo-phone.
+    `GuestRegistrationContract` no longer requires either `email` or `phone`
+    — `POST /auth/guest` with an empty `auth: {}` body succeeds and returns a
+    real JWT, so the Spark flow can authenticate before any identifier is
+    collected. The purge-timing half of the question (what happens to a
+    guest who never claims an email) remains unanswered — no purge job
+    exists yet for either guest or unactivated-but-emailed accounts.
 
 - id: spark-join-by-code-without-id
   status: decided

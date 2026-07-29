@@ -12,8 +12,7 @@ User flows for each feature are documented in `docs/product/phases/`.
 
 | File | Description | Phase |
 |---|---|---|
-| [auth-v1.md](features/auth-v1.md) | Authentication — guest tokens, JWT, magic link | 0 |
-| [profile-v1.md](features/profile-v1.md) | User profile, onboarding, identity providers | 0–2 |
+| [profile-v1.md](features/profile-v1.md) | User profile, onboarding, identity providers, auth (guest tokens, JWT) | 0–2 |
 | [signals-v1.md](features/signals-v1.md) | Health, music, travel, cycle signals | 0–3 |
 | [spark-v1.md](features/spark-v1.md) | In-person Spark sessions and QR matching | 0–1 |
 | [matching-v1.md](features/matching-v1.md) | Algorithm-origin matching and compatibility score | 1 |

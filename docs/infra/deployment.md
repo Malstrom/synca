@@ -1,7 +1,18 @@
 # Synca — Deployment Architecture & CD Pipeline
 
-> **Status:** MVP / Development phase  
+> **Status:** MVP / Development phase
 > **Last updated:** May 2026
+>
+> ⚠️ **This document describes the original plan, not what's actually running.**
+> The real, current deploy process is documented in
+> `backend/api/README.md` § **Deploying to Production (terminus)**. Key
+> differences from the plan below: the VPS is nicknamed **terminus**
+> (`72.56.97.181`), not a fresh Hetzner box provisioned per Phase 4; deploys
+> are **manual** (`kamal deploy` from a developer machine) — the GitHub
+> Actions CD pipeline in Phase 3 was never built and was explicitly removed
+> from CI; and there is **no domain or TLS yet** — plain HTTP only
+> (`config/deploy.yml`'s `proxy.ssl: false`). See the TODO checklist at the
+> bottom for what's actually done vs. still pending.
 
 ---
 
@@ -211,13 +222,13 @@ Kamal keeps the previous image on the VPS for instant rollback.
 
 ## TODO — Ordered by priority
 
-- [ ] Create `config/deploy.yml` (Kamal configuration)
-- [ ] Create `.github/workflows/deploy.yml` (CD pipeline)
-- [ ] Add all secrets to GitHub repository settings
-- [ ] Provision Hetzner VPS
-- [ ] Run `kamal setup` + first manual `kamal deploy`
-- [ ] Verify health check endpoint (`GET /up`)
-- [ ] Configure domain + TLS
+- [x] Create `config/deploy.yml` (Kamal configuration)
+- [ ] Create `.github/workflows/deploy.yml` (CD pipeline) — deliberately deferred, deploys are manual for now (see `backend/api/README.md`)
+- [ ] Add all secrets to GitHub repository settings — not applicable while deploys are manual (`.env.kamal`, gitignored, used instead)
+- [x] Provision VPS — "terminus" (`72.56.97.181`), not the Hetzner CX22 originally envisioned
+- [x] Run `kamal setup` + first manual `kamal deploy`
+- [x] Verify health check endpoint (`GET /up`)
+- [ ] Configure domain + TLS — still plain HTTP on the bare IP, no domain purchased
 - [ ] Add `pg_dump` daily backup cron
 - [ ] Set up ngrok fixed subdomain (optional, paid plan)
 - [ ] RU-region infrastructure (future — post-MVP)

@@ -15,6 +15,13 @@ other feature — no feature is accessible without at least a guest account.
 Two tiers of account exist:
 - **Guest account** (Phase 0): created from email only. Enables Spark sessions immediately.
   Activated to a full account via magic link after the first completed Spark.
+  > ⚠️ **Implementation note:** what actually shipped (`POST /auth/activate`) requires a
+  > **password** set in-session, not a magic link — the account is immediately usable via
+  > `POST /auth/login`, with no email round-trip. See `docs/product/decisions.md` §
+  > `profile-email-verification-mvp`/`profile-guest-magic-link-timing` and GitHub issue #102
+  > (still open, still describes the magic-link design below) for the unreconciled gap. The
+  > deferred, out-of-session case (`activation_token` in `docs/api/openapi.yaml`) — user closed
+  > the app before activating — remains unimplemented on both iOS and backend.
 - **Full account** (Phase 1+): email + password or social login. Full onboarding wizard completed.
 
 Authentication uses `has_secure_password` (bcrypt) + JWT. The JWT is stored in

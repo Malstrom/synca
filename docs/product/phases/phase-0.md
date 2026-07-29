@@ -145,6 +145,12 @@ so that I don't lose my compatibility results.
 ### UF-04 — Guest account activation
 **Refs:** [profile-v1.md — Step 0](../../features/profile-v1.md#step-0--guest-onboarding-validation-mvp)
 
+> ⚠️ **What shipped instead:** no magic link, no email round-trip. Right after the Spark
+> result, in the same session: `POST /auth/guest/claim_email` (email) → `POST /auth/activate`
+> (display name **and password** in one request) → `account_type` upgraded to `:active`,
+> permanent JWT issued immediately. The diagram below is the original design (GitHub issue
+> #102, still open) — UC-10/UC-11 describe behavior that doesn't exist yet.
+
 ```
 Spark completed
         ↓

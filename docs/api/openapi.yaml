@@ -20,10 +20,14 @@ info:
   contact:
     name: Synca Engineering
 servers:
+  - url: http://72.56.97.181/api/v1
+    description: >
+      Production (terminus VPS) — actually live today. Plain HTTP, no domain/TLS
+      yet; see backend/api/README.md § Deploying to Production (terminus).
   - url: https://api.synca.app/api/v1
-    description: Production
-  - url: https://staging.synca.app/api/v1
-    description: Staging
+    description: >
+      Production (future) — this domain isn't purchased/DNS-configured yet;
+      do not use until a real deploy targets it.
   - url: http://localhost:3000/api/v1
     description: Local development
 
