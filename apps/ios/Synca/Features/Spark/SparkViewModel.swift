@@ -19,7 +19,11 @@ final class SparkViewModel {
     private let apiClient: APIClientProtocol
     private let keychain: KeychainServiceProtocol
     private let proximityService: SparkProximityService
-    private let pendingHealthSummary: HealthSummary
+    /// Only set when arriving from `ConnectHealthView`, which aggregates a
+    /// summary before any session exists and hands it over to be uploaded once
+    /// there is one. Nil when the flow starts from the Dashboard (an active
+    /// user's summary is already on the server) — see `join()`.
+    private let pendingHealthSummary: HealthSummary?
     private let pollInterval: UInt64
     private let maxPollAttempts: Int
 
@@ -37,8 +41,12 @@ final class SparkViewModel {
 
     let questions = SparkQuestionnaire.questions
 
+    /// `joinedSession` is for the initiator: they created the Spark from
+    /// `GenerateQRView` and polled until someone scanned it, so there is
+    /// nothing left to scan — the flow opens straight on the questionnaire.
     init(
-        pendingHealthSummary: HealthSummary,
+        pendingHealthSummary: HealthSummary? = nil,
+        joinedSession: SparkSession? = nil,
         apiClient: APIClientProtocol = DemoMode.apiClient,
         keychain: KeychainServiceProtocol = KeychainService.shared,
         proximityService: SparkProximityService = SparkProximityService(),
@@ -52,6 +60,11 @@ final class SparkViewModel {
         self.pollInterval = pollInterval
         self.maxPollAttempts = maxPollAttempts
         self.selectedOptionIndexes = Array(repeating: nil, count: SparkQuestionnaire.questions.count)
+
+        if let joinedSession {
+            self.sparkSession = joinedSession
+            self.step = .questionnaire
+        }
     }
 
     var currentQuestion: SparkQuestion { questions[currentQuestionIndex] }
@@ -79,7 +92,9 @@ final class SparkViewModel {
 
         do {
             try await ensureGuestSession()
-            try await apiClient.updateHealthSummary(pendingHealthSummary)
+            if let pendingHealthSummary {
+                try await apiClient.updateHealthSummary(pendingHealthSummary)
+            }
             let session = try await apiClient.joinSpark(sessionCode: sessionCode, qrToken: qrToken)
             sparkSession = session
             step = .questionnaire

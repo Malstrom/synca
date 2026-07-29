@@ -10,6 +10,81 @@ class Api::V1::SparksControllerTest < ApiTestCase
     @bob_headers   = auth_headers(@bob)
   end
 
+  # --- GET /sparks (index — Dashboard history) ---
+
+  test "index returns the current user's sparks with compatibility_score" do
+    get "/api/v1/sparks", headers: @alice_headers
+
+    assert_response :ok
+    completed = json[:sparks].find { |s| s[:id] == sparks(:alice_spark).id }
+    assert_not_nil completed, "expected alice's completed spark in the list"
+    assert_equal "completed", completed[:status]
+    assert_in_delta 75.0, completed[:compatibility_score], 0.01
+  end
+
+  test "index includes sparks the user joined as partner, not just initiated" do
+    get "/api/v1/sparks", headers: @bob_headers
+
+    assert_response :ok
+    # alice_spark: alice initiated, bob joined.
+    assert_includes json[:sparks].map { |s| s[:id] }, sparks(:alice_spark).id
+  end
+
+  test "index excludes other users' sparks" do
+    get "/api/v1/sparks", headers: auth_headers(users(:dave))
+
+    assert_response :ok
+    refute_includes json[:sparks].map { |s| s[:id] }, sparks(:alice_spark).id
+  end
+
+  test "index without a token returns 401" do
+    get "/api/v1/sparks"
+
+    assert_response :unauthorized
+  end
+
+  # --- GET /sparks/:id (show — initiator polling for a partner to join) ---
+
+  test "show returns the spark to its initiator" do
+    spark = sparks(:alice_pending_spark)
+
+    get "/api/v1/sparks/#{spark.id}", headers: @alice_headers
+
+    assert_response :ok
+    assert_equal spark.id, json[:id]
+    assert_equal "pending", json[:status]
+  end
+
+  test "show reflects the active status once a partner has joined" do
+    spark = sparks(:active_no_answers)
+
+    get "/api/v1/sparks/#{spark.id}", headers: @alice_headers
+
+    assert_response :ok
+    assert_equal "active", json[:status]
+  end
+
+  test "show returns 403 for a non-participant" do
+    spark = sparks(:alice_pending_spark)
+
+    get "/api/v1/sparks/#{spark.id}", headers: auth_headers(users(:dave))
+
+    assert_response :forbidden
+    assert_equal "forbidden", json.dig(:error, :code)
+  end
+
+  test "show returns 404 for an unknown id" do
+    get "/api/v1/sparks/999999", headers: @alice_headers
+
+    assert_response :not_found
+  end
+
+  test "show without a token returns 401" do
+    get "/api/v1/sparks/#{sparks(:alice_pending_spark).id}"
+
+    assert_response :unauthorized
+  end
+
   # --- POST /sparks (create) ---
 
   test "create returns 201 with session_code, qr_token and pending status" do

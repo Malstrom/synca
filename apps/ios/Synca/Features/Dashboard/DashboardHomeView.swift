@@ -20,7 +20,17 @@ struct DashboardHomeView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    SyncaButton(title: "Start a Spark", action: { router.navigate(to: .generateQR) })
+                    VStack(spacing: 10) {
+                        SyncaButton(title: "Start a Spark", action: { router.navigate(to: .generateQR) })
+                        // Without this an already-registered user could only
+                        // ever generate a QR, never scan one — so two people
+                        // who both have accounts could never Spark together.
+                        SyncaButton(
+                            title: "Scan a QR code",
+                            action: { router.navigate(to: .sparkFlow(pendingHealthSummary: nil, joinedSession: nil)) },
+                            style: .secondary
+                        )
+                    }
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text("YOUR SPARKS").syncaEyebrowStyle().foregroundColor(.syncaAccent)

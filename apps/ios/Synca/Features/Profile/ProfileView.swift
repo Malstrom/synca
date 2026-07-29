@@ -3,6 +3,7 @@ import SwiftUI
 /// Profile tab — "My Health". Design source: row 4, second screen ("Profile —
 /// My Health").
 struct ProfileView: View {
+    @Environment(AppRouter.self) private var router
     @State private var viewModel = ProfileViewModel()
 
     var body: some View {
@@ -33,6 +34,8 @@ struct ProfileView: View {
                     } else {
                         noSignalsPrompt
                     }
+
+                    preferencesSection
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 16)
@@ -155,6 +158,23 @@ struct ProfileView: View {
         Task { await viewModel.connectHealth() }
     }
 
+    /// The 5-question set used to be reachable only once, buried in a guest's
+    /// first Spark — a registered user had no way to revisit it.
+    private var preferencesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("YOUR PREFERENCES").syncaEyebrowStyle().foregroundColor(.syncaAccent)
+            Text("The 5 questions every Spark is scored against. Answer them again any time.")
+                .font(.syncaSmall)
+                .foregroundColor(.syncaText.opacity(0.7))
+            SyncaButton(
+                title: "Update my preferences",
+                action: { router.navigate(to: .preferences) },
+                style: .secondary
+            )
+        }
+        .padding(.top, 24)
+    }
+
     // MARK: - Peak energy bar chart
 
     /// The summary only returns a window string ("21:00–23:00"), not per-hour
@@ -189,6 +209,7 @@ struct ProfileView: View {
 
 #Preview {
     ProfileView()
+        .environment(AppRouter())
         .background(Color.syncaBackground)
         .preferredColorScheme(.dark)
 }

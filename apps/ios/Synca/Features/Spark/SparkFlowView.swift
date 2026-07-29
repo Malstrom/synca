@@ -7,8 +7,11 @@ import SwiftUI
 struct SparkFlowView: View {
     @State private var viewModel: SparkViewModel
 
-    init(pendingHealthSummary: HealthSummary) {
-        _viewModel = State(initialValue: SparkViewModel(pendingHealthSummary: pendingHealthSummary))
+    init(pendingHealthSummary: HealthSummary? = nil, joinedSession: SparkSession? = nil) {
+        _viewModel = State(initialValue: SparkViewModel(
+            pendingHealthSummary: pendingHealthSummary,
+            joinedSession: joinedSession
+        ))
     }
 
     var body: some View {

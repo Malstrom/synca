@@ -5,7 +5,24 @@ module Api
     class SparksController < ApplicationController
       include Dry::Monads[:result]
 
-      before_action :set_spark, only: [ :join, :submit_answers, :result ]
+      before_action :set_spark, only: [ :show, :join, :submit_answers, :result ]
+
+      def index
+        case ListSparksService.call(current_user: current_user)
+        in Success[sparks]
+          render_success({ sparks: sparks.map { |s| SparkHistorySerializer.new(s).serializable_hash } })
+        end
+      end
+
+      # Lets the initiator poll for a partner joining while the QR is on screen.
+      def show
+        case ShowSparkService.call(current_user: current_user, spark: @spark)
+        in Success(spark)
+          render_success(SparkSerializer.new(spark).serialize)
+        in Failure[:not_participant, message]
+          render_error(code: "forbidden", message: message, status: :forbidden)
+        end
+      end
 
       def create
         case CreateSparkService.call(current_user: current_user, params: params.to_unsafe_h)

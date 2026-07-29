@@ -24,7 +24,7 @@ struct SparkQuestionnaireView: View {
             }
             .padding(.bottom, 22)
 
-            Text(question.eyebrow)
+            Text(SparkQuestionnaire.eyebrow(forQuestionAt: viewModel.currentQuestionIndex, context: .spark))
                 .syncaEyebrowStyle()
                 .foregroundColor(.syncaAccent)
 
@@ -77,7 +77,9 @@ struct SparkQuestionnaireView: View {
     }
 }
 
-private struct QuestionOptionRow: View {
+/// Shared with `PreferencesView`, which asks the same question set outside a
+/// Spark — hence not private to this file.
+struct QuestionOptionRow: View {
     let label: String
     let isSelected: Bool
     let action: () -> Void

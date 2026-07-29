@@ -5,6 +5,7 @@ import SwiftUI
 /// "Start a Spark" button and the Spark tab.
 struct GenerateQRView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppRouter.self) private var router
     @State private var viewModel = GenerateSparkViewModel()
     @State private var isPulsing = false
 
@@ -22,7 +23,10 @@ struct GenerateQRView: View {
                 .foregroundColor(.syncaText)
                 .padding(.bottom, 6)
 
-            Text("Have them scan this with their camera")
+            // Not the system Camera app: the QR encodes a synca.app universal
+            // link, but there's no associated-domains entitlement (and no such
+            // domain yet), so it has to be scanned from inside Synca.
+            Text("Have them scan this from the Synca app")
                 .font(.syncaSmall)
                 .foregroundColor(.syncaText.opacity(0.7))
                 .padding(.bottom, 30)
@@ -36,10 +40,15 @@ struct GenerateQRView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, 16)
             } else {
-                Text("Expires in \(viewModel.formattedRemaining)")
-                    .font(.syncaSmall)
-                    .foregroundColor(.syncaAccent)
-                    .padding(.top, 28)
+                VStack(spacing: 6) {
+                    Text("Expires in \(viewModel.formattedRemaining)")
+                        .font(.syncaSmall)
+                        .foregroundColor(.syncaAccent)
+                    Text("Waiting for them to scan…")
+                        .font(.syncaCaption)
+                        .foregroundColor(.syncaText.opacity(0.5))
+                }
+                .padding(.top, 28)
             }
 
             Spacer()
@@ -54,6 +63,13 @@ struct GenerateQRView: View {
         .task { await viewModel.generate() }
         .onReceive(timer) { _ in viewModel.tick() }
         .onAppear { isPulsing = true }
+        .onDisappear { viewModel.stopPolling() }
+        .onChange(of: viewModel.joinedSession) { _, joined in
+            // Someone scanned the QR — the initiator still owes their own
+            // answers before the Spark can be scored, so go straight there.
+            guard let joined else { return }
+            router.navigate(to: .sparkFlow(pendingHealthSummary: nil, joinedSession: joined))
+        }
     }
 
     private var qrCode: some View {
@@ -86,5 +102,6 @@ struct GenerateQRView: View {
     NavigationStack {
         GenerateQRView()
     }
+    .environment(AppRouter())
     .preferredColorScheme(.dark)
 }

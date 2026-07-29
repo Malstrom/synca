@@ -83,6 +83,10 @@
 		0000000000000000002000BC /* RegisterViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000BB /* RegisterViewModel.swift */; };
 		0000000000000000002000BE /* RegisterViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000BD /* RegisterViewModelTests.swift */; };
 		0000000000000000002000C0 /* ProfileViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000BF /* ProfileViewModelTests.swift */; };
+		0000000000000000002000C2 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000C1 /* PreferencesView.swift */; };
+		0000000000000000002000C4 /* PreferencesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000C3 /* PreferencesViewModel.swift */; };
+		0000000000000000002000C6 /* PreferencesViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000C5 /* PreferencesViewModelTests.swift */; };
+		0000000000000000002000C8 /* GenerateSparkViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0000000000000000002000C7 /* GenerateSparkViewModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -176,6 +180,10 @@
 		0000000000000000002000BB /* RegisterViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterViewModel.swift; sourceTree = "<group>"; };
 		0000000000000000002000BD /* RegisterViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterViewModelTests.swift; sourceTree = "<group>"; };
 		0000000000000000002000BF /* ProfileViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModelTests.swift; sourceTree = "<group>"; };
+		0000000000000000002000C1 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		0000000000000000002000C3 /* PreferencesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesViewModel.swift; sourceTree = "<group>"; };
+		0000000000000000002000C5 /* PreferencesViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesViewModelTests.swift; sourceTree = "<group>"; };
+		0000000000000000002000C7 /* GenerateSparkViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerateSparkViewModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -215,7 +223,9 @@
 				00000000000000000020008B /* Mocks */,
 				000000000000000000200082 /* APIClientTests.swift */,
 				000000000000000000200084 /* AuthViewModelTests.swift */,
+				0000000000000000002000C7 /* GenerateSparkViewModelTests.swift */,
 				000000000000000000200086 /* KeychainServiceTests.swift */,
+				0000000000000000002000C5 /* PreferencesViewModelTests.swift */,
 				000000000000000000200088 /* LoginViewModelTests.swift */,
 				0000000000000000002000BF /* ProfileViewModelTests.swift */,
 				0000000000000000002000BD /* RegisterViewModelTests.swift */,
@@ -319,6 +329,8 @@
 			children = (
 				000000000000000000200044 /* ConnectHealthView.swift */,
 				000000000000000000200047 /* HealthKitProtocol.swift */,
+				0000000000000000002000C1 /* PreferencesView.swift */,
+				0000000000000000002000C3 /* PreferencesViewModel.swift */,
 				000000000000000000200049 /* SignalAggregatorService.swift */,
 				00000000000000000020004B /* SignalsViewModel.swift */,
 			);
@@ -576,6 +588,8 @@
 				00000000000000000020007F /* JSONCoding.swift in Sources */,
 				000000000000000000200081 /* KeychainService.swift in Sources */,
 				0000000000000000002000B5 /* APIConfig.swift in Sources */,
+				0000000000000000002000C2 /* PreferencesView.swift in Sources */,
+				0000000000000000002000C4 /* PreferencesViewModel.swift in Sources */,
 				0000000000000000002000B8 /* EntryView.swift in Sources */,
 				0000000000000000002000BA /* RegisterView.swift in Sources */,
 				0000000000000000002000BC /* RegisterViewModel.swift in Sources */,
@@ -592,6 +606,8 @@
 				000000000000000000200089 /* LoginViewModelTests.swift in Sources */,
 				0000000000000000002000BE /* RegisterViewModelTests.swift in Sources */,
 				0000000000000000002000C0 /* ProfileViewModelTests.swift in Sources */,
+				0000000000000000002000C6 /* PreferencesViewModelTests.swift in Sources */,
+				0000000000000000002000C8 /* GenerateSparkViewModelTests.swift in Sources */,
 				00000000000000000020008C /* MockAPIClient.swift in Sources */,
 				00000000000000000020008E /* MockHealthKitStore.swift in Sources */,
 				000000000000000000200090 /* MockKeychainService.swift in Sources */,

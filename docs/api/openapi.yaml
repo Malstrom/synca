@@ -577,13 +577,14 @@ paths:
   /sparks:
     get:
       tags: [Spark]
-      summary: List the current user's Spark sessions (needed — not yet implemented)
+      summary: List the current user's Spark sessions (implemented)
       description: >
         Powers the Dashboard "YOUR SPARKS" list (compatibility % + date + status
-        per session). No `SparksController#index` exists yet — only `create`,
-        `join`, `submit_answers`, and `result` are implemented. Deliberately NOT
+        per session). Returns every Spark the user took part in — either as
+        initiator or as partner — newest first. Deliberately NOT
         `SparkSession`/`SparkSerializer`'s shape — that serializer has no
-        `compatibility_score`, which this list needs.
+        `compatibility_score`, which this list needs, and carries join
+        credentials this one shouldn't. Served by `SparkHistorySerializer`.
       responses:
         '200':
           description: Spark session list, most recent first
@@ -598,6 +599,38 @@ paths:
                       $ref: '#/components/schemas/SparkHistoryEntry'
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /sparks/{id}:
+    get:
+      tags: [Spark]
+      summary: Get a single Spark session (implemented)
+      description: >
+        How the initiator polls for a partner joining while the QR is on screen:
+        `status` flips `pending` → `active` the moment someone scans it, which is
+        the initiator's only signal to move on to the questionnaire. `GET
+        /sparks/{id}/result` can't serve this — it 422s until *both* sides have
+        answered and scoring has run, which can never happen if the initiator is
+        still waiting on the QR screen. Restricted to the Spark's own
+        participants.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: The Spark session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SparkSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Not a participant of this Spark
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
     post:
       tags: [Spark]
       summary: Create a new Spark session (implemented)

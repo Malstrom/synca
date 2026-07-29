@@ -144,6 +144,13 @@ extension APIClientProtocol {
         return try await request(endpoint)
     }
 
+    /// `GET /sparks/:id` — how the initiator polls for a partner joining while
+    /// the QR is on screen. `sparkResult` can't serve that: it 422s until both
+    /// sides have answered and scoring has run.
+    func spark(id: Int) async throws -> SparkSession {
+        try await request(APIEndpoint(path: "sparks/\(id)", method: .get))
+    }
+
     func submitSparkAnswers(sparkId: Int, answers: [Int]) async throws -> SparkStatus {
         let endpoint = APIEndpoint(
             path: "sparks/\(sparkId)/submit_answers",
@@ -158,7 +165,7 @@ extension APIClientProtocol {
         try await request(APIEndpoint(path: "sparks/\(sparkId)/result", method: .get))
     }
 
-    /// `GET /sparks` — needed, not yet implemented server-side (see docs/api/openapi.yaml).
+    /// `GET /sparks` — the Dashboard's "YOUR SPARKS" history list.
     func listSparks() async throws -> [SparkHistoryEntry] {
         let response: SparkListResponse = try await request(APIEndpoint(path: "sparks", method: .get))
         return response.sparks

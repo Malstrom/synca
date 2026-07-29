@@ -61,7 +61,7 @@ struct ConnectHealthView: View {
     private func connect() {
         Task {
             if let summary = await viewModel.connectAppleHealth() {
-                router.navigate(to: .sparkFlow(pendingHealthSummary: summary))
+                router.navigate(to: .sparkFlow(pendingHealthSummary: summary, joinedSession: nil))
             }
         }
     }

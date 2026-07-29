@@ -63,8 +63,8 @@ struct RootView: View {
     @ViewBuilder
     private func destinationView(for destination: AppDestination) -> some View {
         switch destination {
-        case .sparkFlow(let pendingHealthSummary):
-            SparkFlowView(pendingHealthSummary: pendingHealthSummary)
+        case .sparkFlow(let pendingHealthSummary, let joinedSession):
+            SparkFlowView(pendingHealthSummary: pendingHealthSummary, joinedSession: joinedSession)
         case .saveResults(let sparkId):
             SaveResultsView(sparkId: sparkId)
         case .activation:
@@ -77,6 +77,8 @@ struct RootView: View {
             LoginView()
         case .register:
             RegisterView()
+        case .preferences:
+            PreferencesView()
         }
     }
 }

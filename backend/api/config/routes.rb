@@ -22,7 +22,7 @@ Rails.application.routes.draw do
         post "activate",           to: "activations#create"
       end
 
-      resources :sparks, only: [ :create ] do
+      resources :sparks, only: [ :create, :index, :show ] do
         collection do
           post :join
         end

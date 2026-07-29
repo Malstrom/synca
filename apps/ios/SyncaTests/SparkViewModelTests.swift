@@ -83,9 +83,42 @@ final class SparkViewModelTests: XCTestCase {
     }
 
     func test_advance_movesToNextQuestion_whenAnswered() {
+        // Starts on `.scanning`; only a join (or an initiator resuming with a
+        // joined session) puts the flow on the questionnaire — `advance()`
+        // moves between questions, it never changes the step.
+        let sut = SparkViewModel(
+            joinedSession: SparkSession(id: 1, sessionCode: "834920", qrToken: nil, status: .active, startedAt: nil, locationLat: nil, locationLng: nil),
+            apiClient: apiClient,
+            keychain: keychain
+        )
+        XCTAssertEqual(sut.step, .questionnaire)
+
         sut.selectOption(1)
         sut.advance()
+
         XCTAssertEqual(sut.currentQuestionIndex, 1)
+        XCTAssertEqual(sut.step, .questionnaire)
+    }
+
+    func test_init_withJoinedSession_startsOnQuestionnaireWithThatSession() {
+        let session = SparkSession(id: 42, sessionCode: nil, qrToken: nil, status: .active, startedAt: nil, locationLat: nil, locationLng: nil)
+
+        let sut = SparkViewModel(joinedSession: session, apiClient: apiClient, keychain: keychain)
+
+        XCTAssertEqual(sut.step, .questionnaire)
+        XCTAssertEqual(sut.sparkSession, session)
+    }
+
+    func test_join_withoutPendingHealthSummary_skipsTheHealthUpload() async {
+        keychain.storedSession = StoredSession(accessToken: "t", refreshToken: nil, accountType: .active)
+        let sut = SparkViewModel(apiClient: apiClient, keychain: keychain)
+        apiClient.responses["sparks/join"] = .success(
+            SparkSession(id: 7, sessionCode: "834920", qrToken: nil, status: .active, startedAt: nil, locationLat: nil, locationLng: nil)
+        )
+
+        await sut.join(sessionCode: "834920")
+
+        XCTAssertFalse(apiClient.requestedPaths.contains("me/health_summary"))
         XCTAssertEqual(sut.step, .questionnaire)
     }
 

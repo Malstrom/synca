@@ -11,7 +11,12 @@ import Observation
 /// for why (they need to share one in-flight Spark session, not be recreated
 /// per screen).
 enum AppDestination: Hashable {
-    case sparkFlow(pendingHealthSummary: HealthSummary)
+    /// `pendingHealthSummary` is only carried from `ConnectHealthView` (guest
+    /// flow — nothing is on the server yet); nil when an already-active user
+    /// starts from the Dashboard. `joinedSession` is set only for the
+    /// initiator resuming after someone scanned their QR, which opens the
+    /// flow directly on the questionnaire.
+    case sparkFlow(pendingHealthSummary: HealthSummary?, joinedSession: SparkSession?)
     case saveResults(sparkId: Int)
     case activation
     case generateQR
@@ -22,6 +27,9 @@ enum AppDestination: Hashable {
     /// "Create account" on `EntryView`, for a brand-new user not going
     /// through a Spark session first — see `RegisterView`.
     case register
+    /// The 5-question preference questionnaire on its own, outside a Spark —
+    /// reached from the Profile tab. See `PreferencesView`.
+    case preferences
 }
 
 @Observable
