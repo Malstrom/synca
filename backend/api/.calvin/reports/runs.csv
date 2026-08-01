@@ -100,3 +100,4 @@ run_at,workflow,ref,model,prompt_tokens,cached_tokens_explore,completion_tokens,
 2026-07-13T12:16:20Z,calvin,102,codestral-latest,3747,,2790,6537,0.003635,"",10,,,0.0,11,1956,,,
 2026-07-13T12:50:54Z,calvin,102,codestral-latest,3747,,2248,5995,0.003147,"",11,,,0.0,10,1956,,,
 2026-07-30T07:35:28Z,calvin,102,codestral-latest,4516,,3093,7609,0.004139,partial,14,,,0.0,12,1956,red,rubocop,3
+2026-08-01T21:34:58Z,calvin,166,codestral-latest,2558,,665,3223,0.001366,partial,11,,,0.0,3,884,red,structural,3
