@@ -23,15 +23,15 @@ class Match < ApplicationRecord
 
   private
 
-  def requires_initiator
-    unless match_participants.any?(&:initiator?)
-      errors.add(:base, "must have exactly one initiator")
+    def requires_initiator
+      unless match_participants.any?(&:initiator?)
+        errors.add(:base, "must have exactly one initiator")
+      end
     end
-  end
 
-  def requires_minimum_participants
-    if match_participants.size < 2
-      errors.add(:base, "must have at least two participants")
+    def requires_minimum_participants
+      if match_participants.size < 2
+        errors.add(:base, "must have at least two participants")
+      end
     end
-  end
 end
