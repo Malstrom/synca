@@ -20,6 +20,7 @@ Rails.application.routes.draw do
         post "guest",              to: "guest_registrations#create"
         post "guest/claim_email",  to: "claim_email#create"
         post "activate",           to: "activations#create"
+        post "resend_magic_link",  to: "resend_magic_link#create"
       end
 
       resources :sparks, only: [ :create, :index, :show ] do
